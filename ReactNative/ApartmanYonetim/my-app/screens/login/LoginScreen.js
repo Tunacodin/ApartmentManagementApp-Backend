@@ -57,22 +57,12 @@ const LoginScreen = ({ route }) => {
       style={{ flex: 1 }} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <LinearGradient colors={['#AAF', '#EFF']} style={styles.background}>
+      <LinearGradient colors={['#4B59CD', '#A0C4FF']} style={styles.background}>
         <View style={styles.container}>
           <Icon name={getRoleIcon()} size={60} color="#4B59CD" style={styles.roleIcon} />
           
           <Text style={[styles.title, { textAlign: 'center' }]}>
-            {role === 'admin'
-              ? 'Yönetici Girişi'
-              : role === 'owner'
-              ? 'Ev Sahibi Girişi'
-              : role === 'worker'
-              ? 'Çalışan Girişi'
-              : role === 'security'
-              ? 'Güvenlik Görevlisi Girişi'
-              : role === 'tenant'
-              ? 'Kiracı Girişi'
-              : 'Giriş Yap'}
+            {role === 'admin' ? 'Yönetici Girişi' : role === 'owner' ? 'Ev Sahibi Girişi' : role === 'worker' ? 'Çalışan Girişi' : role === 'security' ? 'Güvenlik Görevlisi Girişi' : role === 'tenant' ? 'Kiracı Girişi' : 'Giriş Yap'}
           </Text>
           
           {loginMessage ? <Text style={[styles.loginMessage, { textAlign: 'center' }]}>{loginMessage}</Text> : null}
@@ -133,11 +123,11 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   roleIcon: {
-    marginBottom: 5,
+    marginBottom: 15,
   },
   title: {
-    fontSize: 30,
-    fontWeight: '600',
+    fontSize: 28,
+    fontWeight: '700',
     marginBottom: 20,
     color: '#4B59CD',
   },
@@ -163,7 +153,8 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: '#4B59CD',
+    borderWidth: 1,
+    borderColor: '#4B59CD',
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
@@ -171,7 +162,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   buttonText: {
-    color: '#fff',
+    color: '#4B59CD',
     fontSize: 18,
     fontWeight: 'bold',
   },
