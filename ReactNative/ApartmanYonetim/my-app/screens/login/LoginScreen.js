@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import CreateAccountScreen from './CreateAccountScreen';
 
-const LoginScreen = ({ route }) => {
+const LoginScreen = ({ route, navigation }) => {
   const { role } = route.params || {};
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -92,7 +93,7 @@ const LoginScreen = ({ route }) => {
             <Text style={[styles.forgotPassword, { textAlign: 'center' }]}>Şifrenizi mi unuttunuz?</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity onPress={() => {/* Hesap oluşturma işlemleri burada yapılacak */}}>
+          <TouchableOpacity onPress={() => navigation.navigate('CreateAccountScreen')}>
             <Text style={[styles.createAccount, { textAlign: 'center' }]}>Hesap Oluştur</Text>
           </TouchableOpacity>
         </View>
@@ -141,21 +142,23 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 50,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 25,
     paddingHorizontal: 20,
     fontSize: 16,
-    marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#aaa',
     elevation: 1,
+    padding: 10,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderRadius: 5,
+  
   },
   button: {
     width: '100%',
     height: 50,
     borderWidth: 1,
-    borderColor: '#4B59CD',
-    borderRadius: 25,
+    borderColor: '#4B59AF',
+    borderRadius: 5,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
