@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import CreateAccountScreen from './CreateAccountScreen';
 
 const LoginScreen = ({ route, navigation }) => {
   const { role } = route.params || {};
@@ -48,10 +47,28 @@ const LoginScreen = ({ route, navigation }) => {
     }
   };
 
-  const handleRegister = () => {
-    console.log("Kayıt oluşturuluyor - Rol:", role);
-    // Kayıt oluşturma işlemleri burada yapılacak
-  };
+const handleRegister = () => {
+  switch (role) {
+    case 'admin':
+      navigation.navigate('AdminCreateAccountScreen'); // Yönetici için AdminStack'e yönlendirme
+      break;
+    case 'owner':
+      navigation.navigate('OwnerCreateAccountScreen'); // Ev sahibi için özelleştirilmiş kayıt ekranı
+      break;
+    case 'worker':
+      navigation.navigate('WorkerCreateAccountScreen'); // Çalışan için özelleştirilmiş kayıt ekranı
+      break;
+    case 'security':
+      navigation.navigate('SecurityCreateAccountScreen'); // Güvenlik görevlisi için özelleştirilmiş kayıt ekranı
+      break;
+    case 'tenant':
+      navigation.navigate('TenantCreateAccountScreen'); // Kiracı için özelleştirilmiş kayıt ekranı
+      break;
+    default:
+      navigation.navigate('CreateAccountScreen'); // Diğer roller veya varsayılan için genel kayıt ekranı
+      break;
+  }
+};
 
   return (
     <KeyboardAvoidingView 
@@ -93,7 +110,7 @@ const LoginScreen = ({ route, navigation }) => {
             <Text style={[styles.forgotPassword, { textAlign: 'center' }]}>Şifrenizi mi unuttunuz?</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity onPress={() => navigation.navigate('CreateAccountScreen')}>
+          <TouchableOpacity onPress={handleRegister}>
             <Text style={[styles.createAccount, { textAlign: 'center' }]}>Hesap Oluştur</Text>
           </TouchableOpacity>
         </View>
