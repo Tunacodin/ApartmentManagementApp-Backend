@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 
-const PersonalInfoScreen = ({ navigation }) => {
+const AdminInfoScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
 
@@ -29,4 +29,4 @@ const styles = StyleSheet.create({
   buttonText: { color: '#FFF', fontSize: 18 },
 });
 
-export default PersonalInfoScreen;
+export default AdminInfoScreen;

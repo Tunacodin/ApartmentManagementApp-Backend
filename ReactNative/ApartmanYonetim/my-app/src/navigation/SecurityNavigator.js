@@ -1,7 +1,7 @@
 // src/navigation/SecurityNavigator.js
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import LoginScreen from '../screens/Auth/LoginScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
 import SecurityShiftScreen from '../screens/security/create/SecurityShiftScreen';
 import SecurityVerificationScreen from '../screens/security/create/SecurityVerificationScreen';
 

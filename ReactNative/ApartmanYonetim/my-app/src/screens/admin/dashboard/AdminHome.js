@@ -9,4 +9,18 @@ const AdminHomeScreen = () => {
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5', // Example background color
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333', // Example text color
+  },
+});
+
 export default AdminHomeScreen;

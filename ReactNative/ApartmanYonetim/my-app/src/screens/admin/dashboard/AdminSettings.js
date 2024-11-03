@@ -9,4 +9,18 @@ const AdminSettingsScreen = () => {
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0', // Background color for the container
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333', // Text color for the title
+  },
+});
+
 export default AdminSettingsScreen;

@@ -7,7 +7,7 @@ const LoginScreen = ({ route, navigation }) => {
   const { role } = route.params || {};
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loginMessage, setLoginMessage] = useState(''); 
+  const [loginMessage, setLoginMessage] = useState('');
 
   const getRoleIcon = () => {
     switch (role) {
@@ -27,54 +27,57 @@ const LoginScreen = ({ route, navigation }) => {
   };
 
   const handleLogin = () => {
-    console.log(`Giriş yapılıyor - Rol: ${role}`, email, password);
-    
     if (!email || !password) {
       setLoginMessage("Lütfen e-posta ve şifre girin.");
       return;
     }
-    
-    if (role === 'admin') {
-      setLoginMessage("Yönetici olarak giriş yapıldı.");
-    } else if (role === 'owner') {
-      setLoginMessage("Ev sahibi olarak giriş yapıldı.");
-    } else if (role === 'worker') {
-      setLoginMessage("Çalışan olarak giriş yapıldı.");
-    } else if (role === 'security') {
-      setLoginMessage("Güvenlik görevlisi olarak giriş yapıldı.");
-    } else if (role === 'tenant') {
-      setLoginMessage("Kiracı olarak giriş yapıldı.");
+
+    switch (role) {
+      case 'admin':
+        navigation.navigate('AdminNavigator');
+        break;
+      case 'owner':
+        navigation.navigate('OwnerNavigator');
+        break;
+      case 'worker':
+        navigation.navigate('WorkerNavigator');
+        break;
+      case 'security':
+        navigation.navigate('SecurityNavigator');
+        break;
+      case 'tenant':
+        navigation.navigate('TenantNavigator');
+        break;
+      default:
+        setLoginMessage("Geçersiz rol.");
     }
   };
 
-const handleRegister = () => {
+ const handleRegister = () => {
   switch (role) {
     case 'admin':
-      navigation.navigate('AdminCreateAccountScreen'); // Yönetici için AdminStack'e yönlendirme
+      navigation.navigate('AdminNavigator'); // Yönetici için hesap oluşturma ve dashboard'a yönlendirme
       break;
     case 'owner':
-      navigation.navigate('OwnerCreateAccountScreen'); // Ev sahibi için özelleştirilmiş kayıt ekranı
+      navigation.navigate('OwnerNavigator'); // Ev sahibi için hesap oluşturma ve dashboard'a yönlendirme
       break;
     case 'worker':
-      navigation.navigate('WorkerCreateAccountScreen'); // Çalışan için özelleştirilmiş kayıt ekranı
+      navigation.navigate('WorkerNavigator'); // Çalışan için hesap oluşturma ve dashboard'a yönlendirme
       break;
     case 'security':
-      navigation.navigate('SecurityCreateAccountScreen'); // Güvenlik görevlisi için özelleştirilmiş kayıt ekranı
+      navigation.navigate('SecurityNavigator'); // Güvenlik görevlisi için hesap oluşturma ve dashboard'a yönlendirme
       break;
     case 'tenant':
-      navigation.navigate('TenantCreateAccountScreen'); // Kiracı için özelleştirilmiş kayıt ekranı
+      navigation.navigate('TenantNavigator'); // Kiracı için hesap oluşturma ve dashboard'a yönlendirme
       break;
     default:
-      navigation.navigate('CreateAccountScreen'); // Diğer roller veya varsayılan için genel kayıt ekranı
-      break;
+      setLoginMessage("Geçersiz rol.");
   }
 };
 
+
   return (
-    <KeyboardAvoidingView 
-      style={{ flex: 1 }} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <LinearGradient colors={['#4B59CD', '#A0C4FF']} style={styles.background}>
         <View style={styles.container}>
           <Icon name={getRoleIcon()} size={60} color="#4B59CD" style={styles.roleIcon} />
@@ -106,7 +109,7 @@ const handleRegister = () => {
             <Text style={styles.buttonText}>Giriş Yap</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity onPress={() => {/* Şifre sıfırlama işlemi */}}>
+          <TouchableOpacity onPress={() => { /* Şifre sıfırlama işlemi burada olabilir */ }}>
             <Text style={[styles.forgotPassword, { textAlign: 'center' }]}>Şifrenizi mi unuttunuz?</Text>
           </TouchableOpacity>
           
@@ -166,9 +169,7 @@ const styles = StyleSheet.create({
     elevation: 1,
     padding: 10,
     marginBottom: 15,
-    borderWidth: 1,
     borderRadius: 5,
-  
   },
   button: {
     width: '100%',

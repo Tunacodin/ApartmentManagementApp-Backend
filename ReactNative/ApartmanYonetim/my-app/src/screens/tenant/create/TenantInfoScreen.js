@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, Button, StyleSheet } from 'react-native';
 
-const TenantPersonalInfoScreen = ({ navigation }) => {
+const TenantInfoScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
 
@@ -15,4 +15,4 @@ const TenantPersonalInfoScreen = ({ navigation }) => {
   );
 };
 
-export default TenantPersonalInfoScreen;
+export default TenantInfoScreen;

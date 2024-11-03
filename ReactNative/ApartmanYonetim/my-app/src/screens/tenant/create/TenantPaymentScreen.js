@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, Button, StyleSheet } from 'react-native';
 
-const TenantPaymentInfoScreen = () => {
+const TenantPaymentScreen = () => {
   const [iban, setIban] = useState('');
   const [bankName, setBankName] = useState('');
 
@@ -15,4 +15,4 @@ const TenantPaymentInfoScreen = () => {
   );
 };
 
-export default TenantPaymentInfoScreen;
+export default TenantPaymentScreen;

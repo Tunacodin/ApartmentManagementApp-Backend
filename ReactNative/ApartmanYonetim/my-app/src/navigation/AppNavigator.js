@@ -1,39 +1,26 @@
-import React, { useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+// src/navigation/AppNavigator.js
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import SplashScreen from '../screens/auth/SplashScreen';
-import RoleScreen from '../screens/Auth/RoleScreen';
+import RoleScreen from '../screens/auth/RoleScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
 import AdminNavigator from './AdminNavigator';
-import AuthNavigator from './AuthNavigator';
-import OwnerNavigator from "./OwnerNavigator";
-import WorkerNavigator from "./WorkerNavigator";
-import TenantNavigator from "./TenantNavigator";
+import OwnerNavigator from './OwnerNavigator';
+import WorkerNavigator from './WorkerNavigator';
 import SecurityNavigator from './SecurityNavigator';
+import TenantNavigator from './TenantNavigator';
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-  const [isSplashVisible, setSplashVisible] = useState(true);
-
-  const handleAnimationFinish = () => setSplashVisible(false);
-
   return (
-    <NavigationContainer>
-      {isSplashVisible ? (
-        <SplashScreen onAnimationFinish={handleAnimationFinish} />
-      ) : (
-        <Stack.Navigator initialRouteName="RoleScreen" screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="RoleScreen" component={RoleScreen} />
-          <Stack.Screen name="AuthNavigator" component={AuthNavigator} />
-          <Stack.Screen name="AdminNavigator" component={AdminNavigator} />
-          <Stack.Screen name="OwnerNavigator" component={OwnerNavigator} />
-            <Stack.Screen name="WorkerNavigator" component={WorkerNavigator} />
-            <Stack.Screen name="TenantNavigator" component={TenantNavigator} />
-             <Stack.Screen name="SecurityNavigator" component={SecurityNavigator} />
-            
-          
-        </Stack.Navigator>
-      )}
-    </NavigationContainer>
+    <Stack.Navigator initialRouteName="RoleScreen" screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="RoleScreen" component={RoleScreen} />
+      <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Screen name="AdminNavigator" component={AdminNavigator} />
+      <Stack.Screen name="OwnerNavigator" component={OwnerNavigator} />
+      <Stack.Screen name="WorkerNavigator" component={WorkerNavigator} />
+      <Stack.Screen name="SecurityNavigator" component={SecurityNavigator} />
+      <Stack.Screen name="TenantNavigator" component={TenantNavigator} />
+    </Stack.Navigator>
   );
 }

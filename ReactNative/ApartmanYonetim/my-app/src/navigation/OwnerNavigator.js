@@ -8,6 +8,7 @@ import OwnerPaymentDetailsScreen from '../screens/owner/create/OwnerPaymentDetai
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import OwnerPropertyInfoScreen from '../screens/owner/create/OwnerPropertyScreen';
 import OwnerInfoScreen from '../screens/owner/create/OwnerInfoScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
 
 
 

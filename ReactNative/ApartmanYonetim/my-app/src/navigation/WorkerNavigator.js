@@ -1,13 +1,14 @@
 // src/navigation/WorkerNavigator.js
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import PersonalInfoScreen from '../screens/worker/create/WorkerPersonalInfoScreen';
-import JobInfoScreen from '../screens/Worker/Create/JobInfoScreen';
-import VerificationScreen from '../screens/Worker/Create/VerificationScreen';
-import WorkerHomeScreen from '../screens/Worker/Dashboard/WorkerHomeScreen';
-import WorkerTasksScreen from '../screens/Worker/Dashboard/WorkerTasksScreen';
-import WorkerSettingsScreen from '../screens/Worker/Dashboard/WorkerSettingsScreen';
-import LoginScreen from '../screens/Auth/LoginScreen';
+import WorkerHomeScreen from '../screens/worker/dashboard/WorkerHome';
+import WorkerSettingsScreen from '../screens/worker/dashboard/WorkerSettings';
+import WorkerTasksScreen from '../screens/worker/dashboard/WorkerTasks';
+import WorkerInfoScreen from '../screens/worker/create/WorkerInfoScreen';
+import WorkerJobInfoScreen from '../screens/worker/create/WorkerJobInfoScreen';
+import WorkerVerificationScreen from '../screens/worker/create/WorkerVerificationScreen';
+
+import LoginScreen from '../screens/auth/LoginScreen';
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
@@ -27,9 +28,9 @@ function WorkerDashboard() {
 export default function WorkerNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="PersonalInfoScreen" component={PersonalInfoScreen} />
-      <Stack.Screen name="JobInfoScreen" component={JobInfoScreen} />
-      <Stack.Screen name="VerificationScreen" component={VerificationScreen} />
+      <Stack.Screen name="WorkerInfoScreen" component={WorkerInfoScreen} />
+      <Stack.Screen name="WorkerJobInfoScreen" component={WorkerJobInfoScreen} />
+      <Stack.Screen name="WorkerVerificationScreen" component={WorkerVerificationScreen} />
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="WorkerDashboard" component={WorkerDashboard} />
     </Stack.Navigator>
