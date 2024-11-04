@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated, StyleSheet, Image } from 'react-native';
+import { View, Animated, StyleSheet, Image } from 'react-native';
 
 const SplashScreen = ({ onAnimationFinish }) => {
   const opacity = useRef(new Animated.Value(0)).current;  // Opaklık için animasyon değeri
@@ -26,8 +26,12 @@ const SplashScreen = ({ onAnimationFinish }) => {
         duration: 500,
         useNativeDriver: true,
       }),
-    ]).start(() => onAnimationFinish && onAnimationFinish()); // Animasyon bitince çağır
-  }, [opacity, scale]);
+    ]).start(() => {
+      if (onAnimationFinish) {
+        setTimeout(onAnimationFinish, 500); // Son bir bekleme süresi ekleyin
+      }
+    });
+  }, [opacity, scale, onAnimationFinish]);
 
   return (
     <View style={styles.container}>
@@ -40,9 +44,8 @@ const SplashScreen = ({ onAnimationFinish }) => {
           },
         ]}
       >
-        <Image source={require('../../assets/home.png')} style={styles.houseImage} /> 
+        <Image source={require('../../assets/home.png')} style={styles.houseImage} />
       </Animated.View>
-      
     </View>
   );
 };
@@ -67,10 +70,6 @@ const styles = StyleSheet.create({
   houseImage: {
     width: 60,
     height: 60,
-  },
-  loadingText: {
-    fontSize: 18,
-    color: '#4B59CD',
   },
 });
 
