@@ -1,67 +1,161 @@
-// src/screens/WelcomeScreen.js
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import FontFamily from '../../constants/FontFamily';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity, Animated } from 'react-native';
+import LottieView from 'lottie-react-native';
+import colors from '../../styles/colors';
+import animate1 from '../../assets/json/homeAnim.json';
+import animate2 from '../../assets/json/animHome2.json';
+import animate3 from '../../assets/json/animPayment.json';
+import animate4 from '../../assets/json/animBill.json';
+const { width, height } = Dimensions.get('window');
 
-export default function HelloScreen({ navigation, route }) {
-  const message = route.params?.message;
+const HelloScreen = ({ navigation }) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const buttonOpacity = useRef(new Animated.Value(0)).current;
+
+  const pages = [
+  {
+    id: '1',
+    title: 'Apartman Yönetimi',
+    description: 'Apartmanlarınız için gelişmiş bir yönetim sistemi sunar.',
+    animation: animate1,
+  },
+  {
+    id: '2',
+    title: 'Kiracı Takibi',
+    description: 'Kiracılarınızın taleplerini kolayca takip edin.',
+    animation: animate2,
+  },
+  {
+    id: '3',
+    title: 'Gelir ve Giderler',
+    description: 'Tüm gelir ve giderlerinizi organize bir şekilde yönetin.',
+    animation: animate3,
+  },
+  {
+    id: '4',
+    title: 'Faturanı Kolaylıkla Öde!',
+    description: 'Elektrik , Su , Doğalgaz , İnternet ve Aidat ödemelerinizi Evin üzerinden gerçekleştirebilirsiniz.',
+    animation: animate4, 
+    },
+   {
+    id: '5',
+    title: 'Başlayalım!',
+    description: 'Artık apartmanınızı kolayca yönetmeye başlayabilirsiniz.',
+    animation: null, 
+  },
+];
+
+  const handleScroll = (event) => {
+    const pageIndex = Math.round(event.nativeEvent.contentOffset.x / width);
+    if (pageIndex !== currentPage) {
+      setCurrentPage(pageIndex);
+
+      if (pageIndex === pages.length - 1) {
+        Animated.timing(buttonOpacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+      } else {
+        Animated.timing(buttonOpacity, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      }
+    }
+  };
+
+  const renderPage = ({ item }) => (
+  <View style={[styles.page, { backgroundColor: colors.white }]}>
+    {item.animation && (
+      <LottieView
+        source={item.animation}
+        autoPlay
+        loop
+        style={styles.animation}
+      />
+    )}
+    <Text style={styles.title}>{item.title}</Text>
+    <Text style={styles.description}>{item.description}</Text>
+  </View>
+);
+
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Our App!</Text>
-      <Text style={styles.message}>
-        {message || 'Discover new features and make the most out of your experience with us!'}
-      </Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.goBack()}
+      <FlatList
+        data={pages}
+        renderItem={renderPage}
+        keyExtractor={(item) => item.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={handleScroll}
+        style={{ flex: 1 }}
+      />
+      <Animated.View
+        style={[
+          styles.buttonContainer,
+          { opacity: buttonOpacity, transform: [{ scale: buttonOpacity }] },
+        ]}
       >
-        <Text style={styles.buttonText}>Get Started</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.replace('RoleScreen')}
+        >
+          <Text style={styles.buttonText}>Başla</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fef9c3',
+    backgroundColor: colors.white,
+  },
+  page: {
+    width,
+    height,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 16,
-    textAlign: 'center',
- 
+  animation: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
   },
-  message: {
-    fontSize: 18,
-    color: '#4b5563',
-    marginBottom: 32,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
     textAlign: 'center',
-    lineHeight: 26,
-    fontFamily: FontFamily.prompt.regular,
+    color: colors.black,
+  },
+  description: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: colors.textSecondary,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
   },
   button: {
-    backgroundColor: '#4f46e5',
-    paddingVertical: 14,
-    paddingHorizontal: 30,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    backgroundColor: colors.black,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
   },
   buttonText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    fontFamily: FontFamily.playwrite.regular,
+    fontWeight: 'bold',
   },
 });
+
+export default HelloScreen;

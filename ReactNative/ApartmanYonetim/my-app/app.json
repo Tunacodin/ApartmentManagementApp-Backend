@@ -1,8 +1,13 @@
 {
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "YourAppName",
+    "slug": "your-app-slug",
     "version": "1.0.0",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "newArchEnabled": true,
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

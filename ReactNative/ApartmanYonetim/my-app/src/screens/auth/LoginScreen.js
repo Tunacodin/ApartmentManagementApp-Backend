@@ -86,8 +86,7 @@ const LoginScreen = ({ route, navigation }) => {
             {role === 'admin' ? 'Yönetici Girişi' : role === 'owner' ? 'Ev Sahibi Girişi' : role === 'worker' ? 'Çalışan Girişi' : role === 'security' ? 'Güvenlik Görevlisi Girişi' : role === 'tenant' ? 'Kiracı Girişi' : 'Giriş Yap'}
           </Text>
           
-          {loginMessage ? <Text style={[styles.loginMessage, { textAlign: 'center' }]}>{loginMessage}</Text> : null}
-
+    
           <TextInput
             style={styles.input}
             placeholder="Kullanıcı Adı"

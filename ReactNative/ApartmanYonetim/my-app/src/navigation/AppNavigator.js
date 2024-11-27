@@ -9,8 +9,8 @@ import WorkerNavigator from './WorkerNavigator';
 import SecurityNavigator from './SecurityNavigator';
 import TenantNavigator from './TenantNavigator';
 import Splash from '../screens/auth/Splash';
-
 import HelloScreen from '../screens/auth/HelloScreen';
+
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
@@ -18,6 +18,7 @@ export default function AppNavigator() {
     <Stack.Navigator initialRouteName='Splash' screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Splash" component={Splash} />
       <Stack.Screen name="HelloScreen" component={HelloScreen} />
+      
       <Stack.Screen name="RoleScreen" component={RoleScreen} />
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="AdminNavigator" component={AdminNavigator} />

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { LinearGradient } from 'expo-linear-gradient';
+import colors from '../../styles/colors';
 
 const roles = [
   { id: '1', label: 'Yönetici', value: 'admin', icon: 'user-shield' },
@@ -18,13 +18,13 @@ const RoleScreen = ({ navigation }) => {
 
   const renderRoleItem = ({ item }) => (
     <TouchableOpacity style={styles.roleButton} onPress={() => selectRole(item.value)}>
-      <Icon name={item.icon} size={30} color="#4B59CD" />
+      <Icon name={item.icon} size={30} color="#000" />
       <Text style={styles.roleText}>{item.label}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <LinearGradient colors={['#AAF', '#EFF']} style={styles.background}>
+    <View style={styles.background}>
       <View style={styles.overlay}>
         <Text style={styles.title}>Rol Seçimi</Text>
         <FlatList
@@ -38,7 +38,7 @@ const RoleScreen = ({ navigation }) => {
           
         />
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -47,6 +47,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor:colors.white,
   },
   overlay: {
     width: '90%',
