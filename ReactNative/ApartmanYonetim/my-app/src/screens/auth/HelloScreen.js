@@ -2,10 +2,13 @@ import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity, Animated } from 'react-native';
 import LottieView from 'lottie-react-native';
 import colors from '../../styles/colors';
-import animate1 from '../../assets/json/homeAnim.json';
-import animate2 from '../../assets/json/animHome2.json';
-import animate3 from '../../assets/json/animPayment.json';
-import animate4 from '../../assets/json/animBill.json';
+import animate1 from '../../assets/json/A1.json';
+import animate2 from '../../assets/json/A2.json';
+import animate3 from '../../assets/json/A3.json';
+import animate4 from '../../assets/json/A4.json';
+
+
+
 const { width, height } = Dimensions.get('window');
 
 const HelloScreen = ({ navigation }) => {
@@ -115,18 +118,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
+    
   },
   page: {
     width,
     height,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 40,
+    overflow:'hidden',
   },
   animation: {
-    width: 200,
-    height: 200,
-    marginBottom: 20,
+    width: 350,
+    height:350,
+    marginBottom: 40,
+   
   },
   title: {
     fontSize: 24,
