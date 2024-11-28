@@ -7,8 +7,6 @@ import animate2 from '../../assets/json/A2.json';
 import animate3 from '../../assets/json/A3.json';
 import animate4 from '../../assets/json/A4.json';
 
-
-
 const { width, height } = Dimensions.get('window');
 
 const HelloScreen = ({ navigation }) => {
@@ -16,37 +14,37 @@ const HelloScreen = ({ navigation }) => {
   const buttonOpacity = useRef(new Animated.Value(0)).current;
 
   const pages = [
-  {
-    id: '1',
-    title: 'Apartman Yönetimi',
-    description: 'Apartmanlarınız için gelişmiş bir yönetim sistemi sunar.',
-    animation: animate1,
-  },
-  {
-    id: '2',
-    title: 'Kiracı Takibi',
-    description: 'Kiracılarınızın taleplerini kolayca takip edin.',
-    animation: animate2,
-  },
-  {
-    id: '3',
-    title: 'Gelir ve Giderler',
-    description: 'Tüm gelir ve giderlerinizi organize bir şekilde yönetin.',
-    animation: animate3,
-  },
-  {
-    id: '4',
-    title: 'Faturanı Kolaylıkla Öde!',
-    description: 'Elektrik , Su , Doğalgaz , İnternet ve Aidat ödemelerinizi Evin üzerinden gerçekleştirebilirsiniz.',
-    animation: animate4, 
+    {
+      id: '1',
+      title: 'Apartman Yönetimi',
+      description: 'Apartmanlarınız için gelişmiş bir yönetim sistemi sunar.',
+      animation: animate1,
     },
-   {
-    id: '5',
-    title: 'Başlayalım!',
-    description: 'Artık apartmanınızı kolayca yönetmeye başlayabilirsiniz.',
-    animation: null, 
-  },
-];
+    {
+      id: '2',
+      title: 'Kiracı Takibi',
+      description: 'Kiracılarınızın taleplerini kolayca takip edin.',
+      animation: animate2,
+    },
+    {
+      id: '3',
+      title: 'Gelir ve Giderler',
+      description: 'Tüm gelir ve giderlerinizi organize bir şekilde yönetin.',
+      animation: animate3,
+    },
+    {
+      id: '4',
+      title: 'Faturanı Kolaylıkla Öde!',
+      description: 'Elektrik , Su , Doğalgaz , İnternet ve Aidat ödemelerinizi Evin üzerinden gerçekleştirebilirsiniz.',
+      animation: animate4,
+    },
+    {
+      id: '5',
+      title: 'Başlayalım!',
+      description: 'Artık apartmanınızı kolayca yönetmeye başlayabilirsiniz.',
+      animation: null,
+    },
+  ];
 
   const handleScroll = (event) => {
     const pageIndex = Math.round(event.nativeEvent.contentOffset.x / width);
@@ -70,23 +68,27 @@ const HelloScreen = ({ navigation }) => {
   };
 
   const renderPage = ({ item }) => (
-  <View style={[styles.page, { backgroundColor: colors.white }]}>
-    {item.animation && (
-      <LottieView
-        source={item.animation}
-        autoPlay
-        loop
-        style={styles.animation}
-      />
-    )}
-    <Text style={styles.title}>{item.title}</Text>
-    <Text style={styles.description}>{item.description}</Text>
-  </View>
-);
 
+    <View style={[styles.page, { backgroundColor: colors.white }]}>
+  
+      {item.animation && (
+        <LottieView
+          source={item.animation}
+          autoPlay
+          loop
+          style={styles.animation}
+        />
+      )}
+    
+   
+      <Text style={styles.title}>{item.title}</Text>
+      <Text style={styles.description}>{item.description}</Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
+      <View></View>
       <FlatList
         data={pages}
         renderItem={renderPage}
@@ -118,7 +120,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
-    
   },
   page: {
     width,
@@ -126,13 +127,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
-    overflow:'hidden',
+    overflow: 'hidden',
   },
   animation: {
     width: 350,
-    height:350,
+    height: 350,
     marginBottom: 40,
-   
+  },
+  brandText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: colors.black,
+    opacity: 0.3, // Şeffaflık seviyesi
+    textAlign: 'center',
   },
   title: {
     fontSize: 24,
@@ -148,7 +155,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 80,
     alignSelf: 'center',
   },
   button: {

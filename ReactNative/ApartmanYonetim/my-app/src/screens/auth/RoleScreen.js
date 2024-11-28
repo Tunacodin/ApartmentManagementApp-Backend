@@ -1,12 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import colors from '../../styles/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 const roles = [
   { id: '1', label: 'Yönetici', value: 'admin', icon: 'user-shield' },
   { id: '2', label: 'Ev Sahibi', value: 'owner', icon: 'home' },
-  { id: '3', label: 'Çalışan', value: 'worker', icon: 'briefcase' },
+  { id: '3', label: 'Personel', value: 'worker', icon: 'briefcase' },
   { id: '4', label: 'Güvenlik Görevlisi', value: 'security', icon: 'shield-alt' },
   { id: '5', label: 'Kiracı', value: 'tenant', icon: 'user' },
 ];
@@ -18,15 +21,20 @@ const RoleScreen = ({ navigation }) => {
 
   const renderRoleItem = ({ item }) => (
     <TouchableOpacity style={styles.roleButton} onPress={() => selectRole(item.value)}>
-      <Icon name={item.icon} size={30} color="#000" />
-      <Text style={styles.roleText}>{item.label}</Text>
+      <LinearGradient
+        colors={[colors.black, colors.darkGray]}
+        style={styles.gradientCircle}
+      >
+        <Icon name={item.icon} size={30} color={colors.white} />
+        <Text style={styles.roleText}>{item.label}</Text>
+      </LinearGradient>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.background}>
       <View style={styles.overlay}>
-        <Text style={styles.title}>Rol Seçimi</Text>
+        <Text style={styles.title}>Evin'i kim olarak kullanıyorsun?</Text>
         <FlatList
           data={roles}
           renderItem={renderRoleItem}
@@ -34,8 +42,6 @@ const RoleScreen = ({ navigation }) => {
           numColumns={2}
           contentContainerStyle={styles.flatListContainer}
           scrollEnabled={false}
-          horizontal={false}
-          
         />
       </View>
     </View>
@@ -47,41 +53,50 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor:colors.white,
+    backgroundColor: colors.white,
   },
   overlay: {
-    width: '90%',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 10,
-    padding: 20,
+    width: '100%',
     alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
+    color: colors.black,
   },
   flatListContainer: {
-    justifyContent: 'center',
     alignItems: 'center',
-    
   },
   roleButton: {
-    borderColor: '#4B59CD',
-    borderWidth: 2,
-    justifyContent: 'center',
+    margin: 5,
+    width: (width / 2) - 30, // Ekran genişliğini 2 sütuna göre ayarla
     alignItems: 'center',
-    margin: 10,
-    borderRadius: 10,
+  },
+  gradientCircle: {
     width: 150,
     height: 150,
+    borderRadius: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
   },
   roleText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
+    color: colors.white,
     textAlign: 'center',
+    marginTop: 10,
   },
 });
 
