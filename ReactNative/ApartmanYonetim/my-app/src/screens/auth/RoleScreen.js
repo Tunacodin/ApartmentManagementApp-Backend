@@ -22,7 +22,7 @@ const RoleScreen = ({ navigation }) => {
   const renderRoleItem = ({ item }) => (
     <TouchableOpacity style={styles.roleButton} onPress={() => selectRole(item.value)}>
       <LinearGradient
-        colors={[colors.black, colors.darkGray]}
+        colors={[colors.darkGray, colors.darkGray]}
         style={styles.gradientCircle}
       >
         <Icon name={item.icon} size={30} color={colors.white} />
@@ -62,11 +62,11 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20,
-    color: colors.black,
+    marginBottom: 30,
+    color: colors.darkGray,
   },
   flatListContainer: {
     alignItems: 'center',
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   gradientCircle: {
     width: 150,
     height: 150,
-    borderRadius: 100,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.black,

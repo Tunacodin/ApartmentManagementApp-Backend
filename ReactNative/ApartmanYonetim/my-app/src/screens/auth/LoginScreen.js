@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import colors from '../../styles/colors';
 
+
 const LoginScreen = ({ route, navigation }) => {
   const { role } = route.params || {};
   const [email, setEmail] = useState('');
@@ -31,6 +32,11 @@ const LoginScreen = ({ route, navigation }) => {
   const handleLogin = () => {
     if (!email || !password) {
       setLoginMessage('Lütfen e-posta ve şifre girin.');
+      return;
+    }
+
+    if (role === 'admin') {
+      navigation.navigate('AdminDashboard');
       return;
     }
 
