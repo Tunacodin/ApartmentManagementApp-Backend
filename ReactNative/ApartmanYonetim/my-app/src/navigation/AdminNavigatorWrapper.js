@@ -1,0 +1,43 @@
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { createStackNavigator } from '@react-navigation/stack';
+import PersonalInfoScreen from '../screens/admin/create/AdminInfoScreen';
+import AuthorizationInfoScreen from '../screens/admin/create/AuthorizationInfoScreen';
+import ApartmentInfoScreen from '../screens/admin/create/ApartmentInfoScreen';
+import FinancialInfoScreen from '../screens/admin/create/FinancialInfoScreen';
+
+const Stack = createStackNavigator();
+
+const screens = [
+  { name: 'PersonalInfoScreen', component: PersonalInfoScreen },
+  { name: 'AuthorizationInfoScreen', component: AuthorizationInfoScreen },
+  { name: 'ApartmentInfoScreen', component: ApartmentInfoScreen },
+  { name: 'FinancialInfoScreen', component: FinancialInfoScreen },
+];
+
+export default function AdminNavigationWrapper({ currentStep }) {
+  const CurrentScreen = screens[currentStep]?.component;
+
+  return (
+    <View style={styles.container}>
+      {CurrentScreen ? (
+        <CurrentScreen />
+      ) : (
+        <View style={styles.errorContainer}>
+          <Text>Geçerli bir ekran bulunamadı.</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

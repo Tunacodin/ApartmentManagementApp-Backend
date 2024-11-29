@@ -1,19 +1,55 @@
-import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
-import PersonalInfoScreen from '../screens/admin/create/AdminInfoScreen';
-import AuthorizationInfoScreen from '../screens/admin/create/AuthorizationInfoScreen';
-import ApartmentInfoScreen from '../screens/admin/create/ApartmentInfoScreen';
-import FinancialInfoScreen from '../screens/admin/create/FinancialInfoScreen';
+import React, { useState } from 'react';
+import { View, StyleSheet, Dimensions } from 'react-native';
+import NavigationWithProgress from '../components/NavigationWithProgress';
+import colors from '../styles/colors';
+import AdminNavigationWrapper from '../navigation/AdminNavigatorWrapper';
 
-const Stack = createStackNavigator();
+const { width } = Dimensions.get('window');
 
 export default function AdminNavigator() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const totalSteps = 4;
+
+  const handleNext = () => {
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1);
+    }
+  };
+
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="PersonalInfoScreen" component={PersonalInfoScreen} />
-      <Stack.Screen name="AuthorizationInfoScreen" component={AuthorizationInfoScreen} />
-      <Stack.Screen name="ApartmentInfoScreen" component={ApartmentInfoScreen} />
-      <Stack.Screen name="FinancialInfoScreen" component={FinancialInfoScreen} />
-    </Stack.Navigator>
+    <>
+      <AdminNavigationWrapper currentStep={currentStep}>
+        <View style={styles.container}>
+          <View style={styles.page}>
+            {/* Burada ekran içeriği değişecektir */}
+          </View>
+        </View>
+      </AdminNavigationWrapper>
+      <NavigationWithProgress
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+        />
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  page: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: width,
+  },
+});

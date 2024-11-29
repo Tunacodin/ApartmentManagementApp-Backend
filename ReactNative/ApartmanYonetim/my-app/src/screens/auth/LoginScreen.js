@@ -3,7 +3,7 @@ import { View, TextInput, TouchableOpacity, StyleSheet, Text, KeyboardAvoidingVi
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import colors from '../../styles/colors';
-
+import { v4 as uuidv4 } from 'uuid';
 
 const LoginScreen = ({ route, navigation }) => {
   const { role } = route.params || {};
@@ -29,21 +29,47 @@ const LoginScreen = ({ route, navigation }) => {
     }
   };
 
+  const validateEmail = (email) => {
+     const emailRegex = /^[^\s@]+@[^\s@]+\.(com|net|org|edu|gov|info|io)$/i; // Sıkı doğrulama
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password) => {
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+[\]{};':"\\|,.<>\/?~`-])[A-Za-z\d!@#$%^&*()_+[\]{};':"\\|,.<>\/?~`-]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
   const handleLogin = () => {
+    console.log("Giriş işlemi başlatıldı.");
+
     if (!email || !password) {
       setLoginMessage('Lütfen e-posta ve şifre girin.');
+      console.log("E-posta veya şifre boş.");
       return;
     }
 
+    if (!validateEmail(email)) {
+      setLoginMessage('Geçersiz e-posta formatı.');
+      console.log("Geçersiz e-posta formatı.");
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      setLoginMessage('Şifre en az 8 karakter, bir büyük harf, bir rakam ve bir özel karakter içermelidir.');
+      console.log("Geçersiz şifre formatı.");
+      return;
+    }
+
+    const userId = uuidv4();
+    console.log(`Kullanıcı ID: ${userId}`);
+
+    console.log("Giriş başarılı, yönlendiriliyor...");
     if (role === 'admin') {
       navigation.navigate('AdminDashboard');
       return;
     }
 
     switch (role) {
-      case 'admin':
-        navigation.navigate('AdminNavigator');
-        break;
       case 'owner':
         navigation.navigate('OwnerNavigator');
         break;
@@ -58,16 +84,22 @@ const LoginScreen = ({ route, navigation }) => {
         break;
       default:
         setLoginMessage('Geçersiz rol.');
+        console.log("Geçersiz rol.");
     }
   };
 
   const handleRegister = () => {
-    navigation.navigate('RegisterScreen');
+    navigation.navigate('AdminNavigator');
   };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  const handleForgot = () => {
+    navigation.navigate('ForgotPassword');
+    console.log("tıklandı");
+  }
 
   return (
     <KeyboardAvoidingView
@@ -116,7 +148,7 @@ const LoginScreen = ({ route, navigation }) => {
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>Giriş Yap</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}}>
+          <TouchableOpacity onPress={handleForgot}>
             <Text style={styles.forgotPassword}>Şifrenizi mi unuttunuz?</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleRegister}>

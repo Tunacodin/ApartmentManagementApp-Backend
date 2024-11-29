@@ -11,6 +11,7 @@ import TenantNavigator from './TenantNavigator';
 import AdminDashboard from '../screens/admin/dashboard/AdminDashboard'; // Admin Dashboard
 import Splash from '../screens/auth/Splash';
 import HelloScreen from '../screens/auth/HelloScreen';
+import ForgotPasswordScreen from '../screens/common/ForgotPasswordScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +26,8 @@ export default function AppNavigator() {
       <Stack.Screen name="RoleScreen" component={RoleScreen} />
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
 
+      {/*Şifremi Unuttum */}
+    <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen}/>
       {/* Kayıt işlemleri için navigatörler */}
       <Stack.Screen name="AdminNavigator" component={AdminNavigator} />
       <Stack.Screen name="OwnerNavigator" component={OwnerNavigator} />
