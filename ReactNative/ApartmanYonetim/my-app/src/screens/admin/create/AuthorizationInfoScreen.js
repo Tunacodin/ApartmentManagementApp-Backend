@@ -1,56 +1,42 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { forwardRef, useImperativeHandle, useState } from 'react';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
 
-const AuthorizationInfoScreen = ({ navigation }) => {
-  const [department, setDepartment] = useState('');
+const AuthorizationInfoScreen = forwardRef((props, ref) => {
+  const [authorizationCode, setAuthorizationCode] = useState('');
 
-  const handleNext = () => {
-    navigation.navigate('ApartmentInfoScreen', { department });
-  };
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 16,
-      backgroundColor: '#f5f5f5', // Background color
+  useImperativeHandle(ref, () => ({
+    validate() {
+      if (!authorizationCode.trim()) {
+        alert('Yetkilendirme kodu boş bırakılamaz!');
+        return false;
+      }
+      return true;
     },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      marginBottom: 20,
-    },
-    input: {
-      width: '100%',
-      height: 40,
-      borderColor: '#ccc',
-      borderWidth: 1,
-      borderRadius: 5,
-      paddingHorizontal: 10,
-      marginBottom: 20,
-    },
-    button: {
-      backgroundColor: '#007BFF',
-      paddingVertical: 10,
-      paddingHorizontal: 20,
-      borderRadius: 5,
-    },
-    buttonText: {
-      color: '#fff',
-      fontSize: 16,
-    },
-  });
+  }));
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Yetkilendirme Bilgileri</Text>
-      <TextInput style={styles.input} placeholder="Departman" value={department} onChangeText={setDepartment} />
-      <TouchableOpacity style={styles.button} onPress={handleNext}>
-        <Text style={styles.buttonText}>İleri</Text>
-      </TouchableOpacity>
+      <TextInput
+        style={styles.input}
+        placeholder="Yetkilendirme Kodu"
+        value={authorizationCode}
+        onChangeText={setAuthorizationCode}
+      />
     </View>
   );
-};
+});
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20, justifyContent: 'center' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+  },
+});
 
 export default AuthorizationInfoScreen;

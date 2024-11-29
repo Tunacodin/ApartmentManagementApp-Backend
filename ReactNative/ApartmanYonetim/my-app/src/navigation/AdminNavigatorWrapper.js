@@ -1,22 +1,19 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { createStackNavigator } from '@react-navigation/stack';
-import PersonalInfoScreen from '../screens/admin/create/AdminInfoScreen';
+import AdminInfoScreen from '../screens/admin/create/AdminInfoScreen';
 import AuthorizationInfoScreen from '../screens/admin/create/AuthorizationInfoScreen';
 import ApartmentInfoScreen from '../screens/admin/create/ApartmentInfoScreen';
 import FinancialInfoScreen from '../screens/admin/create/FinancialInfoScreen';
 
-const Stack = createStackNavigator();
-
 const screens = [
-  { name: 'PersonalInfoScreen', component: PersonalInfoScreen },
+  { name: 'AdminInfoScreen', component: AdminInfoScreen },
   { name: 'AuthorizationInfoScreen', component: AuthorizationInfoScreen },
   { name: 'ApartmentInfoScreen', component: ApartmentInfoScreen },
   { name: 'FinancialInfoScreen', component: FinancialInfoScreen },
 ];
 
 export default function AdminNavigationWrapper({ currentStep }) {
-  const CurrentScreen = screens[currentStep]?.component;
+  const CurrentScreen = (currentStep >= 0 && currentStep < screens.length) ? screens[currentStep].component : null;
 
   return (
     <View style={styles.container}>
@@ -34,6 +31,7 @@ export default function AdminNavigationWrapper({ currentStep }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
   },
   errorContainer: {
     flex: 1,

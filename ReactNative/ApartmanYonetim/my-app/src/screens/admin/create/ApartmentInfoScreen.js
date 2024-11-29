@@ -1,55 +1,49 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { forwardRef, useImperativeHandle, useState } from 'react';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
 
-const ApartmentInfoScreen = ({ navigation }) => {
+const ApartmentInfoScreen = forwardRef((props, ref) => {
   const [apartmentName, setApartmentName] = useState('');
+  const [address, setAddress] = useState('');
 
-  const handleNext = () => {
-    navigation.navigate('FinancialInfoScreen', { apartmentName });
-  };
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 16,
-      backgroundColor: '#f5f5f5', // Background color for the screen
+  useImperativeHandle(ref, () => ({
+    validate() {
+      if (!apartmentName.trim() || !address.trim()) {
+        alert('Apartman adı ve adres boş bırakılamaz!');
+        return false;
+      }
+      return true;
     },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      marginBottom: 20,
-    },
-    input: {
-      width: '100%',
-      padding: 10,
-      borderWidth: 1,
-      borderColor: '#ccc',
-      borderRadius: 5,
-      marginBottom: 20,
-    },
-    button: {
-      backgroundColor: '#007BFF',
-      padding: 10,
-      borderRadius: 5,
-    },
-    buttonText: {
-      color: '#fff',
-      fontSize: 16,
-      textAlign: 'center',
-    },
-  });
+  }));
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Apartman Bilgileri</Text>
-      <TextInput style={styles.input} placeholder="Apartman Adı" value={apartmentName} onChangeText={setApartmentName} />
-      <TouchableOpacity style={styles.button} onPress={handleNext}>
-        <Text style={styles.buttonText}>İleri</Text>
-      </TouchableOpacity>
+      <TextInput
+        style={styles.input}
+        placeholder="Apartman Adı"
+        value={apartmentName}
+        onChangeText={setApartmentName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Adres"
+        value={address}
+        onChangeText={setAddress}
+      />
     </View>
   );
-};
+});
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20, justifyContent: 'center' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+  },
+});
 
 export default ApartmentInfoScreen;
