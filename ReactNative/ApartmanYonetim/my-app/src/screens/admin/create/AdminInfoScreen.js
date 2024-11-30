@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import LottieView from "lottie-react-native";
 import { TextInput as PaperInput } from "react-native-paper";
+import { MaterialIcons } from "react-native-vector-icons";
 import colors from "../../../styles/colors";
 import animate from "../../../assets/json/animInformation.json";
 
@@ -27,11 +28,10 @@ const AdminInfoScreen = () => {
 
   const handleCodeChange = (value, index, type) => {
     const code = type === "email" ? [...emailCode] : [...phoneCode];
-    code[index] = value.slice(-1); // Sadece son karakteri al
+    code[index] = value.slice(-1);
     type === "email" ? setEmailCode(code) : setPhoneCode(code);
 
     if (value && index < 3) {
-      // Eğer rakam girilmişse bir sonraki alana geç
       const refs = type === "email" ? emailRefs : phoneRefs;
       refs[index + 1]?.focus();
     }
@@ -58,29 +58,45 @@ const AdminInfoScreen = () => {
           </View>
 
           {/* Ad Soyad Input */}
-          <PaperInput
-            mode="outlined"
-            label="Ad Soyad"
-            placeholder="Ad Soyadınızı girin"
-            value={fullName}
-            onChangeText={setFullName}
-            style={styles.input}
-            outlineColor={colors.darkGray}
-            activeOutlineColor={colors.primary}
-          />
-
-          {/* E-posta Input */}
-          <View style={styles.row}>
+          <View style={styles.inputContainer}>
+            <MaterialIcons
+              name="person"
+              size={24}
+              color={colors.primary}
+              style={styles.icon}
+            />
             <PaperInput
               mode="outlined"
-              label="E-posta"
-              placeholder="E-posta adresinizi girin"
-              value={email}
-              onChangeText={setEmail}
-              style={[styles.input, { flex: 3 }]}
+              label="Ad Soyad"
+              placeholder="Ad Soyadınızı girin"
+              value={fullName}
+              onChangeText={setFullName}
+              style={styles.input}
               outlineColor={colors.darkGray}
               activeOutlineColor={colors.primary}
             />
+          </View>
+
+          {/* E-posta Input */}
+          <View style={styles.row}>
+            <View style={styles.inputContainer}>
+              <MaterialIcons
+                name="email"
+                size={24}
+                color={colors.primary}
+                style={styles.icon}
+              />
+              <PaperInput
+                mode="outlined"
+                label="E-posta"
+                placeholder="E-posta adresinizi girin"
+                value={email}
+                onChangeText={setEmail}
+                style={[styles.input, { flex: 3 }]}
+                outlineColor={colors.darkGray}
+                activeOutlineColor={colors.primary}
+              />
+            </View>
             <TouchableOpacity
               style={styles.button}
               onPress={() => setShowEmailCodeInput(true)}
@@ -111,17 +127,25 @@ const AdminInfoScreen = () => {
 
           {/* Telefon Numarası Input */}
           <View style={styles.row}>
-            <PaperInput
-              mode="outlined"
-              label="Telefon Numarası"
-              placeholder="Telefon numaranızı girin"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              style={[styles.input, { flex: 3 }]}
-              outlineColor={colors.darkGray}
-              activeOutlineColor={colors.primary}
-            />
+            <View style={styles.inputContainer}>
+              <MaterialIcons
+                name="phone"
+                size={24}
+                color={colors.primary}
+                style={styles.icon}
+              />
+              <PaperInput
+                mode="outlined"
+                label="Telefon Numarası"
+                placeholder="Telefon numaranızı girin"
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+                style={[styles.input, { flex: 3 }]}
+                outlineColor={colors.darkGray}
+                activeOutlineColor={colors.primary}
+              />
+            </View>
             <TouchableOpacity
               style={styles.button}
               onPress={() => setShowPhoneCodeInput(true)}
@@ -172,8 +196,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 30,
     marginBottom: 20,
-    borderBottomWidth: 1,
-    borderColor: colors.primary,
+   
   },
   title: {
     fontSize: 26,
@@ -181,16 +204,19 @@ const styles = StyleSheet.create({
     color: colors.black,
     textAlign: "center",
   },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    width: "100%",
+  },
+  icon: {
+    marginRight: 10,
+  },
   input: {
-    marginBottom: 15,
+    flex: 1,
     backgroundColor: colors.white,
     borderRadius: 10,
-  },
-  formContainer: {
-    borderRadius: 10,
-    padding: 20,
-    width: "100%",
-    marginTop: 10,
   },
   row: {
     flexDirection: "row",
@@ -211,12 +237,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.white,
     textAlign: "center",
+    fontWeight: "bold",
   },
   codeContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
     gap: 10,
   },
   codeInput: {

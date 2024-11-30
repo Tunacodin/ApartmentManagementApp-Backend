@@ -7,7 +7,7 @@ import FinancialInfoScreen from '../screens/admin/create/FinancialInfoScreen';
 
 const screens = [
   { name: 'AdminInfoScreen', component: AdminInfoScreen },
-  { name: 'AuthorizationInfoScreen', component: AuthorizationInfoScreen },
+
   { name: 'ApartmentInfoScreen', component: ApartmentInfoScreen },
   { name: 'FinancialInfoScreen', component: FinancialInfoScreen },
 ];

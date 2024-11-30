@@ -1,16 +1,27 @@
-import React, { forwardRef, useImperativeHandle, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Button } from 'react-native';
+import React, { forwardRef, useImperativeHandle, useState } from "react";
+import { View, StyleSheet, Text } from "react-native";
+import { TextInput as PaperInput } from "react-native-paper";
+import { MaterialIcons } from "react-native-vector-icons";
+import colors from "../../../styles/colors";
 
 const FinancialInfoScreen = forwardRef((props, ref) => {
-  const [monthlyFee, setMonthlyFee] = useState('');
-  const [budget, setBudget] = useState('');
-  const [paymentDate, setPaymentDate] = useState('');
-  const [description, setDescription] = useState('');
+  const [iban, setIban] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [accountHolder, setAccountHolder] = useState("");
+  const [additionalNotes, setAdditionalNotes] = useState("");
 
   useImperativeHandle(ref, () => ({
     validate() {
-      if (isNaN(monthlyFee) || isNaN(budget) || !monthlyFee || !budget) {
-        alert('Aylık aidat ve bütçe geçerli sayılar olmalıdır!');
+      if (!iban.trim() || iban.length < 16 || iban.length > 34) {
+        alert("IBAN numarası geçerli bir uzunlukta olmalıdır!");
+        return false;
+      }
+      if (!bankName.trim()) {
+        alert("Banka adı boş bırakılamaz!");
+        return false;
+      }
+      if (!accountHolder.trim()) {
+        alert("Hesap sahibinin adı boş bırakılamaz!");
         return false;
       }
       return true;
@@ -19,47 +30,129 @@ const FinancialInfoScreen = forwardRef((props, ref) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Finansal Bilgiler</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Aylık Aidat"
-        value={monthlyFee}
-        onChangeText={setMonthlyFee}
-        keyboardType="numeric"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Bütçe"
-        value={budget}
-        onChangeText={setBudget}
-        keyboardType="numeric"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Ödeme Tarihi (GG/AA/YYYY)"
-        value={paymentDate}
-        onChangeText={setPaymentDate}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Açıklama"
-        value={description}
-        onChangeText={setDescription}
-      />
-      <Button title="Devam Et" onPress={() => { /* Devam etme işlemi */ }} />
+      {/* Başlık */}
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>Yönetici Finansal Bilgileri</Text>
+      </View>
+
+      {/* IBAN Input */}
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="account-balance"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="IBAN"
+          placeholder="IBAN numaranızı girin"
+          value={iban}
+          onChangeText={setIban}
+          keyboardType="default"
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
+
+      {/* Banka Adı Input */}
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="account-balance-wallet"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Banka Adı"
+          placeholder="Banka adını girin"
+          value={bankName}
+          onChangeText={setBankName}
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
+
+      {/* Hesap Sahibi Input */}
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="person"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Hesap Sahibi"
+          placeholder="Hesap sahibinin adını girin"
+          value={accountHolder}
+          onChangeText={setAccountHolder}
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
+
+      {/* Ek Notlar Input */}
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="note"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Ek Notlar"
+          placeholder="Ek bilgi veya notlar girin (isteğe bağlı)"
+          value={additionalNotes}
+          onChangeText={setAdditionalNotes}
+          multiline
+          style={[styles.input, { height: 80 }]}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
     </View>
   );
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.white,
+  },
+  titleContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    marginBottom: 20,
+ 
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: colors.black,
+    textAlign: "center",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 15,
+    width: "100%",
+  },
+  icon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: colors.white,
+    borderRadius: 10,
   },
 });
 
