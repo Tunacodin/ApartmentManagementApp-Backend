@@ -1,9 +1,11 @@
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Button } from 'react-native';
 
 const FinancialInfoScreen = forwardRef((props, ref) => {
   const [monthlyFee, setMonthlyFee] = useState('');
   const [budget, setBudget] = useState('');
+  const [paymentDate, setPaymentDate] = useState('');
+  const [description, setDescription] = useState('');
 
   useImperativeHandle(ref, () => ({
     validate() {
@@ -32,6 +34,19 @@ const FinancialInfoScreen = forwardRef((props, ref) => {
         onChangeText={setBudget}
         keyboardType="numeric"
       />
+      <TextInput
+        style={styles.input}
+        placeholder="Ödeme Tarihi (GG/AA/YYYY)"
+        value={paymentDate}
+        onChangeText={setPaymentDate}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Açıklama"
+        value={description}
+        onChangeText={setDescription}
+      />
+      <Button title="Devam Et" onPress={() => { /* Devam etme işlemi */ }} />
     </View>
   );
 });

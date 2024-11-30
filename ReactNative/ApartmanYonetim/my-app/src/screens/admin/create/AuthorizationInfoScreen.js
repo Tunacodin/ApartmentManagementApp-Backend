@@ -1,13 +1,19 @@
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Button } from 'react-native';
+import colors from '../../../styles/colors';
 
 const AuthorizationInfoScreen = forwardRef((props, ref) => {
   const [authorizationCode, setAuthorizationCode] = useState('');
+  const [email, setEmail] = useState('');
 
   useImperativeHandle(ref, () => ({
     validate() {
       if (!authorizationCode.trim()) {
         alert('Yetkilendirme kodu boş bırakılamaz!');
+        return false;
+      }
+      if (!email.includes('@')) {
+        alert('Geçerli bir e-posta adresi girin!');
         return false;
       }
       return true;
@@ -23,19 +29,28 @@ const AuthorizationInfoScreen = forwardRef((props, ref) => {
         value={authorizationCode}
         onChangeText={setAuthorizationCode}
       />
+      <TextInput
+        style={styles.input}
+        placeholder="E-posta Adresi"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+      />
+      <Button title="Devam Et" onPress={() => { /* Devam etme işlemi */ }} />
     </View>
   );
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: colors.lightGray },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: colors.primary },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: colors.darkGray,
     borderRadius: 5,
     padding: 10,
     marginBottom: 15,
+    backgroundColor: colors.white,
   },
 });
 

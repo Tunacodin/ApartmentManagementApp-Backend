@@ -17,7 +17,7 @@ const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName="RoleScreen" screenOptions={{ headerShown: false }}>
       {/* İlk açılış ekranları */}
       <Stack.Screen name="Splash" component={Splash} />
       <Stack.Screen name="HelloScreen" component={HelloScreen} />

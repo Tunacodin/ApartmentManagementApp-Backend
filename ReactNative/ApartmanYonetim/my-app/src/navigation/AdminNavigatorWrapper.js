@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import AdminInfoScreen from '../screens/admin/create/AdminInfoScreen';
 import AuthorizationInfoScreen from '../screens/admin/create/AuthorizationInfoScreen';
 import ApartmentInfoScreen from '../screens/admin/create/ApartmentInfoScreen';
@@ -13,6 +13,9 @@ const screens = [
 ];
 
 export default function AdminNavigationWrapper({ currentStep }) {
+  console.log('Current Step:', currentStep);
+  console.log('Screens:', screens);
+
   const CurrentScreen = (currentStep >= 0 && currentStep < screens.length) ? screens[currentStep].component : null;
 
   return (

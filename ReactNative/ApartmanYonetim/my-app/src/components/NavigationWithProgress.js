@@ -20,14 +20,17 @@ export default function NavigationWithProgress({
   ).current;
 
   useEffect(() => {
-    // Aktif adımın büyüme animasyonu
+    if (currentStep < 0 || currentStep >= totalSteps) {
+      console.warn('Invalid currentStep:', currentStep);
+      return;
+    }
+
     Animated.spring(scaleAnim[currentStep], {
       toValue: 1.2,
       friction: 4,
       useNativeDriver: true,
     }).start();
 
-    // Önceki adımların geri dönüşü
     scaleAnim.forEach((anim, index) => {
       if (index !== currentStep) {
         Animated.spring(anim, {
@@ -38,7 +41,6 @@ export default function NavigationWithProgress({
       }
     });
 
-    // Tamamlanan adımlarda dolma animasyonu
     progressAnim.forEach((anim, index) => {
       if (index <= currentStep) {
         Animated.timing(anim, {
@@ -54,11 +56,15 @@ export default function NavigationWithProgress({
         }).start();
       }
     });
+
+    return () => {
+      // scaleAnim.forEach((anim) => anim && anim.stopAnimation());
+      // progressAnim.forEach((anim) => anim && anim.stopAnimation());
+    };
   }, [currentStep]);
 
   return (
     <View style={styles.container}>
-      {/* Sol Ok Butonu */}
       <Ionicons
         name="chevron-back-outline"
         size={28}
@@ -67,16 +73,13 @@ export default function NavigationWithProgress({
         style={[styles.arrow, currentStep === 0 && styles.disabledArrow]}
       />
 
-      {/* Progress Indicator */}
       <View style={styles.indicatorContainer}>
         {Array.from({ length: totalSteps }).map((_, index) => (
           <View key={index} style={styles.stepContainer}>
             <Animated.View
               style={[
                 styles.circle,
-                {
-                  transform: [{ scale: scaleAnim[index] }],
-                },
+                { transform: [{ scale: scaleAnim[index] }] },
                 index < currentStep && styles.completedCircle,
                 index === currentStep && styles.activeCircle,
               ]}
@@ -88,7 +91,7 @@ export default function NavigationWithProgress({
                     { opacity: progressAnim[index] },
                   ]}
                 >
-                  <Ionicons name="checkmark" size={18} color={colors.white} />
+                  <Ionicons name="checkmark" size={14} color={colors.white} />
                 </Animated.View>
               ) : (
                 <Text
@@ -114,11 +117,12 @@ export default function NavigationWithProgress({
         ))}
       </View>
 
-      {/* Sağ Ok Butonu */}
       <Ionicons
         name="chevron-forward-outline"
         size={28}
-        color={currentStep === totalSteps - 1 ? colors.lightGray : colors.primary}
+        color={
+          currentStep === totalSteps - 1 ? colors.lightGray : colors.primary
+        }
         onPress={onNext}
         style={[
           styles.arrow,
@@ -133,15 +137,16 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingVertical: 15,
     paddingHorizontal: 20,
     backgroundColor: colors.white,
     width: '100%',
-    zIndex:1,
+    zIndex:0,
   },
   arrow: {
     padding: 10,
+    marginHorizontal: 5,
   },
   disabledArrow: {
     opacity: 0.5,
@@ -189,7 +194,6 @@ const styles = StyleSheet.create({
   line: {
     width: 30,
     height: 2,
-    marginLeft:.0,
     backgroundColor: colors.lightGray,
     zIndex:-1,
   },
