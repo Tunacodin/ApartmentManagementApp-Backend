@@ -4,11 +4,10 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  FlatList,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  FlatList,
 } from "react-native";
 import { TextInput as PaperInput } from "react-native-paper";
 import { MaterialIcons } from "react-native-vector-icons";
@@ -103,116 +102,119 @@ const ApartmentInfoScreen = forwardRef((props, ref) => {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Animasyon */}
-        <LottieView source={animate} autoPlay loop style={styles.animation} />
+      {/* FlatList */}
+      <FlatList
+        data={apartments}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ListHeaderComponent={
+          <View>
+            {/* Animasyon */}
+            <LottieView
+              source={animate}
+              autoPlay
+              loop
+              style={styles.animation}
+            />
 
-        {/* Başlık */}
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>Apartman Bilgileri</Text>
-        </View>
-
-        {/* Form ve Liste */}
-        <FlatList
-          data={apartments}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          ListHeaderComponent={
-            <View>
-              {/* Apartman Adı Input */}
-              <View style={styles.inputContainer}>
-                <MaterialIcons
-                  name="apartment"
-                  size={24}
-                  color={colors.primary}
-                  style={styles.icon}
-                />
-                <PaperInput
-                  mode="outlined"
-                  label="Apartman Adı"
-                  placeholder="Apartman adını girin"
-                  value={apartmentName}
-                  onChangeText={setApartmentName}
-                  style={styles.input}
-                  outlineColor={colors.darkGray}
-                  activeOutlineColor={colors.primary}
-                />
-              </View>
-
-              {/* Adres Input */}
-              <View style={styles.inputContainer}>
-                <MaterialIcons
-                  name="location-on"
-                  size={24}
-                  color={colors.primary}
-                  style={styles.icon}
-                />
-                <PaperInput
-                  mode="outlined"
-                  label="Adres"
-                  placeholder="Apartman adresini girin"
-                  value={address}
-                  onChangeText={setAddress}
-                  style={styles.input}
-                  outlineColor={colors.darkGray}
-                  activeOutlineColor={colors.primary}
-                />
-              </View>
-
-              {/* Daire Sayısı Input */}
-              <View style={styles.inputContainer}>
-                <MaterialIcons
-                  name="format-list-numbered"
-                  size={24}
-                  color={colors.primary}
-                  style={styles.icon}
-                />
-                <PaperInput
-                  mode="outlined"
-                  label="Daire Sayısı"
-                  placeholder="Daire sayısını girin"
-                  value={numberOfFlats}
-                  onChangeText={setNumberOfFlats}
-                  keyboardType="number-pad"
-                  style={styles.input}
-                  outlineColor={colors.darkGray}
-                  activeOutlineColor={colors.primary}
-                />
-              </View>
-
-              {/* Yönetici Telefon Numarası Input */}
-              <View style={styles.inputContainer}>
-                <MaterialIcons
-                  name="phone"
-                  size={24}
-                  color={colors.primary}
-                  style={styles.icon}
-                />
-                <PaperInput
-                  mode="outlined"
-                  label="Yönetici Telefon"
-                  placeholder="Yönetici telefon numarasını girin"
-                  value={managerPhone}
-                  onChangeText={setManagerPhone}
-                  keyboardType="phone-pad"
-                  style={styles.input}
-                  outlineColor={colors.darkGray}
-                  activeOutlineColor={colors.primary}
-                />
-              </View>
-
-              {/* Kaydet Butonu */}
-              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                <Text style={styles.saveButtonText}>Kaydet</Text>
-              </TouchableOpacity>
-
-              {/* Apartmanlar Listesi Başlığı */}
-              <Text style={styles.listTitle}>Apartmanlar</Text>
+            {/* Başlık */}
+            <View style={styles.titleContainer}>
+              <Text style={styles.title}>Apartman Bilgileri</Text>
             </View>
-          }
-          contentContainerStyle={styles.listContent}
-        />
-      </ScrollView>
+
+            {/* Apartman Adı Input */}
+            <View style={styles.inputContainer}>
+              <MaterialIcons
+                name="apartment"
+                size={24}
+                color={colors.primary}
+                style={styles.icon}
+              />
+              <PaperInput
+                mode="outlined"
+                label="Apartman Adı"
+                placeholder="Apartman adını girin"
+                value={apartmentName}
+                onChangeText={setApartmentName}
+                style={styles.input}
+                outlineColor={colors.darkGray}
+                activeOutlineColor={colors.primary}
+              />
+            </View>
+
+            {/* Adres Input */}
+            <View style={styles.inputContainer}>
+              <MaterialIcons
+                name="location-on"
+                size={24}
+                color={colors.primary}
+                style={styles.icon}
+              />
+              <PaperInput
+                mode="outlined"
+                label="Adres"
+                placeholder="Apartman adresini girin"
+                value={address}
+                onChangeText={setAddress}
+                style={styles.input}
+                outlineColor={colors.darkGray}
+                activeOutlineColor={colors.primary}
+              />
+            </View>
+
+            {/* Daire Sayısı Input */}
+            <View style={styles.inputContainer}>
+              <MaterialIcons
+                name="format-list-numbered"
+                size={24}
+                color={colors.primary}
+                style={styles.icon}
+              />
+              <PaperInput
+                mode="outlined"
+                label="Daire Sayısı"
+                placeholder="Daire sayısını girin"
+                value={numberOfFlats}
+                onChangeText={setNumberOfFlats}
+                keyboardType="number-pad"
+                style={styles.input}
+                outlineColor={colors.darkGray}
+                activeOutlineColor={colors.primary}
+              />
+            </View>
+
+            {/* Yönetici Telefon Numarası Input */}
+            <View style={styles.inputContainer}>
+              <MaterialIcons
+                name="phone"
+                size={24}
+                color={colors.primary}
+                style={styles.icon}
+              />
+              <PaperInput
+                mode="outlined"
+                label="Yönetici Telefon"
+                placeholder="Yönetici telefon numarasını girin"
+                value={managerPhone}
+                onChangeText={setManagerPhone}
+                keyboardType="phone-pad"
+                style={styles.input}
+                outlineColor={colors.darkGray}
+                activeOutlineColor={colors.primary}
+              />
+            </View>
+
+            {/* Kaydet Butonu */}
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>Kaydet</Text>
+            </TouchableOpacity>
+
+            {/* Apartmanlar Listesi Başlığı */}
+            <Text style={styles.listTitle}>Apartmanlar</Text>
+          </View>
+        }
+        contentContainerStyle={styles.listContent}
+      />
     </KeyboardAvoidingView>
   );
 });
@@ -222,21 +224,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
   },
-  scrollContent: {
-    padding: 20,
-  },
   animation: {
-    width: 150,
-    height: 150,
+    width: 200,
+    height: 200,
     alignSelf: "center",
-   
-    marginTop: 170,
+    marginTop: 90,
   },
   titleContainer: {
     paddingVertical: 10,
     paddingHorizontal: 30,
     marginBottom: 10,
-    
   },
   title: {
     fontSize: 26,
@@ -295,7 +292,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   listContent: {
-    paddingBottom: 20,
+    padding: 20,
   },
 });
 

@@ -2,7 +2,9 @@ import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import { TextInput as PaperInput } from "react-native-paper";
 import { MaterialIcons } from "react-native-vector-icons";
+import LottieView from "lottie-react-native"; // LottieView import edildi
 import colors from "../../../styles/colors";
+import animate from "../../../assets/json/animFinance.json"; // Animasyon dosyası import edildi
 
 const FinancialInfoScreen = forwardRef((props, ref) => {
   const [iban, setIban] = useState("");
@@ -30,6 +32,9 @@ const FinancialInfoScreen = forwardRef((props, ref) => {
 
   return (
     <View style={styles.container}>
+      {/* Animasyon */}
+      <LottieView source={animate} autoPlay loop style={styles.animation} />
+
       {/* Başlık */}
       <View style={styles.titleContainer}>
         <Text style={styles.title}>Yönetici Finansal Bilgileri</Text>
@@ -128,11 +133,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.white,
   },
+  animation: {
+    width: 200,
+    height: 200,
+    alignSelf: "center",
+    marginBottom: 20,
+  },
   titleContainer: {
     paddingVertical: 10,
     paddingHorizontal: 30,
     marginBottom: 20,
- 
+  
   },
   title: {
     fontSize: 26,
