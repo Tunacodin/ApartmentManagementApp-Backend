@@ -25,12 +25,14 @@ export default function AdminNavigator() {
   return (
     <View style={{flex:1}}>
       <AdminNavigationWrapper currentStep={currentStep} />
-      <NavigationWithProgress 
-        currentStep={currentStep} 
-        totalSteps={4}
-        onNext={handleNext}
-        onPrevious={handlePrevious}
-      />
+      {currentStep < 3 && (
+        <NavigationWithProgress 
+          currentStep={currentStep} 
+          totalSteps={4}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+        />
+      )}
     </View>
   );
 }

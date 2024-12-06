@@ -4,12 +4,15 @@ import AdminInfoScreen from '../screens/admin/create/AdminInfoScreen';
 import AuthorizationInfoScreen from '../screens/admin/create/AuthorizationInfoScreen';
 import ApartmentInfoScreen from '../screens/admin/create/ApartmentInfoScreen';
 import FinancialInfoScreen from '../screens/admin/create/FinancialInfoScreen';
+import ComplateScreen from '../screens/admin/create/ComplateScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
 
 const screens = [
   { name: 'AdminInfoScreen', component: AdminInfoScreen },
-
   { name: 'ApartmentInfoScreen', component: ApartmentInfoScreen },
   { name: 'FinancialInfoScreen', component: FinancialInfoScreen },
+  { name: 'ComplateScreen', component: ComplateScreen },
+  { name: 'Login', component: LoginScreen },
 ];
 
 export default function AdminNavigationWrapper({ currentStep }) {
