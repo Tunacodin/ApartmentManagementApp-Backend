@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\DataAccess\\DataAccess.csproj": {}
+    "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\DataAccess\\DataAccess.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\DataAccess\\DataAccess.csproj": {
+    "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\DataAccess\\DataAccess.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\DataAccess\\DataAccess.csproj",
+        "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\DataAccess\\DataAccess.csproj",
         "projectName": "DataAccess",
-        "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\DataAccess\\DataAccess.csproj",
+        "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\DataAccess\\DataAccess.csproj",
         "packagesPath": "C:\\Users\\Tuna\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\DataAccess\\obj\\",
+        "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\DataAccess\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Tuna\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -29,8 +29,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Entities\\Entities.csproj": {
-                "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Entities\\Entities.csproj"
+              "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Entities\\Entities.csproj": {
+                "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Entities\\Entities.csproj"
               }
             }
           }
@@ -70,14 +70,14 @@
         }
       }
     },
-    "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Entities\\Entities.csproj": {
+    "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Entities\\Entities.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Entities\\Entities.csproj",
+        "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Entities\\Entities.csproj",
         "projectName": "Entities",
-        "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Entities\\Entities.csproj",
+        "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Entities\\Entities.csproj",
         "packagesPath": "C:\\Users\\Tuna\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Entities\\obj\\",
+        "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Entities\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Tuna\\AppData\\Roaming\\NuGet\\NuGet.Config",

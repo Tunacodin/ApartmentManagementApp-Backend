@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Entities\\Entities.csproj",
+      "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Entities\\Entities.csproj",
       "projectName": "Entities",
-      "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Entities\\Entities.csproj",
+      "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Entities\\Entities.csproj",
       "packagesPath": "C:\\Users\\Tuna\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Entities\\obj\\",
+      "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Entities\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Tuna\\AppData\\Roaming\\NuGet\\NuGet.Config",

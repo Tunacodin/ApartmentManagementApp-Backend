@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Business\\Business.csproj",
+      "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Business\\Business.csproj",
       "projectName": "Business",
-      "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Business\\Business.csproj",
+      "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Business\\Business.csproj",
       "packagesPath": "C:\\Users\\Tuna\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\Business\\obj\\",
+      "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\Business\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Tuna\\AppData\\Roaming\\NuGet\\NuGet.Config",

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\ConsoleUI\\ConsoleUI.csproj": {}
+    "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\ConsoleUI\\ConsoleUI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\ConsoleUI\\ConsoleUI.csproj": {
+    "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\ConsoleUI\\ConsoleUI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\ConsoleUI\\ConsoleUI.csproj",
+        "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\ConsoleUI\\ConsoleUI.csproj",
         "projectName": "ConsoleUI",
-        "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\ConsoleUI\\ConsoleUI.csproj",
+        "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\ConsoleUI\\ConsoleUI.csproj",
         "packagesPath": "C:\\Users\\Tuna\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentAppBackend\\ConsoleUI\\obj\\",
+        "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentAppBackend\\ConsoleUI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Tuna\\AppData\\Roaming\\NuGet\\NuGet.Config",
