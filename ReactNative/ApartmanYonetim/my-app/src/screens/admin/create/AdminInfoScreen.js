@@ -7,12 +7,16 @@ import {
   TextInput,
   Keyboard,
   TouchableWithoutFeedback,
+  Alert,
 } from "react-native";
 import LottieView from "lottie-react-native";
 import { TextInput as PaperInput } from "react-native-paper";
 import { MaterialIcons } from "react-native-vector-icons";
 import colors from "../../../styles/colors";
 import animate from "../../../assets/json/animInformation.json";
+import axios from 'axios';
+
+const API_URL = "https://172.16.1.155:5001";
 
 const AdminInfoScreen = () => {
   const [fullName, setFullName] = useState("");
@@ -22,6 +26,9 @@ const AdminInfoScreen = () => {
   const [phoneCode, setPhoneCode] = useState(["", "", "", ""]);
   const [showEmailCodeInput, setShowEmailCodeInput] = useState(false);
   const [showPhoneCodeInput, setShowPhoneCodeInput] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
 
   const emailRefs = [];
   const phoneRefs = [];
@@ -41,6 +48,108 @@ const AdminInfoScreen = () => {
     if (event.nativeEvent.key === "Backspace" && index > 0) {
       const refs = type === "email" ? emailRefs : phoneRefs;
       refs[index - 1]?.focus();
+    }
+  };
+
+  const validateForm = () => {
+    // if (!fullName.trim()) {
+    //   Alert.alert('Hata', 'Lütfen ad soyad giriniz');
+    //   return false;
+    // }
+    // if (!email.trim() || !email.includes('@')) {
+    //   Alert.alert('Hata', 'Geçerli bir e-posta adresi giriniz');
+    //   return false;
+    // }
+    // if (!phone.trim() || phone.length < 10) {
+    //   Alert.alert('Hata', 'Geçerli bir telefon numarası giriniz');
+    //   return false;
+    // }
+    // if (!isEmailVerified || !isPhoneVerified) {
+    //   Alert.alert('Hata', 'Lütfen e-posta ve telefon doğrulamasını tamamlayın');
+    //   return false;
+    // }
+    return true;
+  };
+
+  const handleSendVerificationCode = async (type) => {
+    try {
+      setIsLoading(true);
+      const response = await axios.post(`${API_URL}/api/sendVerificationCode`, {
+        type,
+        email: type === 'email' ? email : undefined,
+        phone: type === 'phone' ? phone : undefined
+      });
+      
+      if (response.data.success) {
+        type === 'email' ? setShowEmailCodeInput(true) : setShowPhoneCodeInput(true);
+        Alert.alert('Başarılı', `Doğrulama kodu ${type === 'email' ? 'e-postanıza' : 'telefonunuza'} gönderildi`);
+      }
+    } catch (error) {
+      Alert.alert('Hata', error.response?.data?.message || 'Bir hata oluştu');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (type) => {
+    const code = type === 'email' ? emailCode.join('') : phoneCode.join('');
+    if (code.length !== 4) {
+      Alert.alert('Hata', 'Lütfen 4 haneli kodu giriniz');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await axios.post(`${API_URL}/api/verifyCode`, {
+        type,
+        code,
+        email: type === 'email' ? email : undefined,
+        phone: type === 'phone' ? phone : undefined
+      });
+
+      if (response.data.success) {
+        type === 'email' ? setIsEmailVerified(true) : setIsPhoneVerified(true);
+        Alert.alert('Başarılı', 'Doğrulama başarılı');
+      }
+    } catch (error) {
+      Alert.alert('Hata', error.response?.data?.message || 'Doğrulama başarısız');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setIsLoading(true);
+      const response = await axios.post(`${API_URL}/api/Admin`, {
+        fullName,
+        email,
+        phone,
+        emailCode: emailCode.join(''),
+        phoneCode: phoneCode.join('')
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+
+      console.log('API Response:', response.data);
+
+      if (response.status === 200) {
+        Alert.alert('Başarılı', 'Yönetici bilgileri kaydedildi');
+      }
+    } catch (error) {
+      console.error('API Error:', error);
+      if (error.response) {
+        console.log('Error Response:', error.response.data);
+        console.log('Error Status:', error.response.status);
+      }
+      Alert.alert('Hata', error.response?.data?.message || 'Bir hata oluştu');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -99,14 +208,14 @@ const AdminInfoScreen = () => {
             </View>
             <TouchableOpacity
               style={styles.button}
-              onPress={() => setShowEmailCodeInput(true)}
+              onPress={() => handleSendVerificationCode('email')}
             >
               <Text style={styles.buttonText}>Onay Kodu</Text>
             </TouchableOpacity>
           </View>
 
           {/* E-posta Onay Kodu Input */}
-          {showEmailCodeInput && (
+          {showEmailCodeInput && !isEmailVerified && (
             <View style={styles.codeContainer}>
               {emailCode.map((digit, index) => (
                 <TextInput
@@ -148,14 +257,14 @@ const AdminInfoScreen = () => {
             </View>
             <TouchableOpacity
               style={styles.button}
-              onPress={() => setShowPhoneCodeInput(true)}
+              onPress={() => handleSendVerificationCode('phone')}
             >
               <Text style={styles.buttonText}>Onay Kodu</Text>
             </TouchableOpacity>
           </View>
 
           {/* Telefon Onay Kodu Input */}
-          {showPhoneCodeInput && (
+          {showPhoneCodeInput && !isPhoneVerified && (
             <View style={styles.codeContainer}>
               {phoneCode.map((digit, index) => (
                 <TextInput
@@ -173,6 +282,38 @@ const AdminInfoScreen = () => {
               ))}
             </View>
           )}
+
+          {/* Doğrulama Butonları */}
+          {showEmailCodeInput && !isEmailVerified && (
+            <TouchableOpacity 
+              style={[styles.verifyButton, isLoading && styles.disabledButton]}
+              onPress={() => handleVerifyCode('email')}
+              disabled={isLoading}
+            >
+              <Text style={styles.verifyButtonText}>E-posta Doğrula</Text>
+            </TouchableOpacity>
+          )}
+
+          {showPhoneCodeInput && !isPhoneVerified && (
+            <TouchableOpacity 
+              style={[styles.verifyButton, isLoading && styles.disabledButton]}
+              onPress={() => handleVerifyCode('phone')}
+              disabled={isLoading}
+            >
+              <Text style={styles.verifyButtonText}>Telefon Doğrula</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Gönder Butonu */}
+          <TouchableOpacity 
+            style={[styles.submitButton, isLoading && styles.disabledButton]}
+            onPress={handleSubmit}
+            disabled={isLoading}
+          >
+            <Text style={styles.submitButtonText}>
+              {isLoading ? 'Gönderiliyor...' : 'Gönder'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableWithoutFeedback>
@@ -256,6 +397,35 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: colors.black,
     backgroundColor: colors.white,
+  },
+  verifyButton: {
+    backgroundColor: colors.success,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    width: '100%',
+  },
+  submitButton: {
+    backgroundColor: colors.primary,
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 20,
+    width: '100%',
+  },
+  verifyButtonText: {
+    color: colors.white,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  submitButtonText: {
+    color: colors.white,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 });
 

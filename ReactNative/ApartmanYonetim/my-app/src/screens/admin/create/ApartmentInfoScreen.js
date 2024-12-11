@@ -276,6 +276,11 @@ const ApartmentInfoScreen = () => {
           setApartments([...apartments, apartmentInfo]);
         }
 
+        console.log('Eklenen apartmanın konumu:');
+        console.log('Enlem:', selectedLocation.latitude);
+        console.log('Boylam:', selectedLocation.longitude);
+        console.log('Adres:', apartmentInfo.display_name);
+
         setLocations([...locations, selectedLocation]);
         setQuery("");
         setSelectedLocation(null);
