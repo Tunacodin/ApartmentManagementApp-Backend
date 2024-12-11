@@ -109,7 +109,7 @@ const HelloScreen = ({ navigation }) => {
           style={styles.button}
           onPress={() => navigation.replace('RoleScreen')}
         >
-          <Text style={styles.buttonText}>Başla</Text>
+          <Text style={styles.buttonText}>Rol Seçimi Yap</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
