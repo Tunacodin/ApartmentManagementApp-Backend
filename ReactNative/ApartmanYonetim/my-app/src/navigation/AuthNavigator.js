@@ -1,15 +1,25 @@
-// import React from 'react';
-// import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from "react";
+import { createStackNavigator } from "@react-navigation/stack";
+import EmailVerificationScreen from "../screens/EmailVerificationScreen";
+import SMSVerificationScreen from "../screens/SMSVerificationScreen";
 
-// import RoleScreen from '../screens/auth/RoleScreen';
-// import LoginScreen from '../screens/auth/LoginScreen';
-// const Stack = createNativeStackNavigator();
+const AuthStack = createStackNavigator();
 
-// export default function AuthNavigator() {
-//   return (
-//     <Stack.Navigator initialRouteName="RoleScreen" screenOptions={{ headerShown: false }}>
-//       <Stack.Screen name="RoleScreen" component={RoleScreen} />
-//      <Stack.Screen name="LoginScreen" component={LoginScreen} />
-//     </Stack.Navigator>
-//   );
-// }
+const AuthNavigator = () => {
+  return (
+    <AuthStack.Navigator>
+      <AuthStack.Screen
+        name="EmailVerification"
+        component={EmailVerificationScreen}
+        options={{ headerShown: false }}
+      />
+      <AuthStack.Screen
+        name="SMSVerification"
+        component={SMSVerificationScreen}
+        options={{ headerShown: false }}
+      />
+    </AuthStack.Navigator>
+  );
+};
+
+export default AuthNavigator;
