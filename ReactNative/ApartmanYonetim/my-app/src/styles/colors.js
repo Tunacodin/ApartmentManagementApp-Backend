@@ -1,4 +1,4 @@
-export default {
+export default colors = {
   primary: '#6C63FF',         // Ana renk (canlı bir mor tonu)
   secondary: '#A29BFE',       // İkincil renk (pastel mor tonu)
   background: '#eee',      // Arka plan (koyu gri)
