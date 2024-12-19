@@ -3,6 +3,8 @@ using Entities.Concrete;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Net.Mail;
+using System.Net;
 
 namespace Business.Concrete
 {
@@ -25,10 +27,24 @@ namespace Business.Concrete
 
         public void Delete(User user)
         {
-            if (user == null || user.UserId <= 0)
+            if (user == null) // <= yerine Guid.Empty kontrolü
                 throw new ArgumentException("Invalid user.");
 
             _userDal.Delete(user);
+        }
+
+        public string GeneratePasswordResetToken(string email)
+        {
+
+            var user = _userDal.Get(u => u.Email == email);
+            
+            if (user == null)
+            {
+                throw new Exception("User not found.");
+            }
+
+            // Basit bir token için:
+            return Guid.NewGuid().ToString();
         }
 
         public User Get(Expression<Func<User, bool>> filter)
@@ -41,12 +57,45 @@ namespace Business.Concrete
             return _userDal.GetAll(filter);
         }
 
+        public void SendPasswordResetEmail(string email, string resetToken)
+        {
+            // SMTP yapılandırması
+            var smtpClient = new SmtpClient("smtp.example.com")
+            {
+                Port = 587,
+                Credentials = new NetworkCredential("your_email@example.com", "your_password"),
+                EnableSsl = true,
+            };
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress("your_email@example.com"),
+                Subject = "Password Reset",
+                Body = $"Your password reset token is: {resetToken}",
+                IsBodyHtml = true,
+            };
+
+            mailMessage.To.Add(email);
+
+            smtpClient.Send(mailMessage);
+        }
+
         public void Update(User user)
         {
-            if (user == null || user.UserId <= 0)
+            if (user == null ) // <= yerine Guid.Empty kontrolü
                 throw new ArgumentException("Invalid user.");
 
             _userDal.Update(user);
+        }
+
+        public User ValidateCredentials(string email, string password)
+        {
+            var user = _userDal.Get(u => u.Email == email);
+            if (user != null && user.Password == password) // Şifreyi hash ile karşılaştırmak önerilir.
+            {
+                return user;
+            }
+            return null;
         }
     }
 }

@@ -1,18 +1,8 @@
 [
   {
     "ContainingType": "WebAPI.Controllers.UserController",
-    "Method": "GetAll",
-    "RelativePath": "api/User",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.UserController",
-    "Method": "Add",
-    "RelativePath": "api/User",
+    "Method": "Create",
+    "RelativePath": "api/User/create",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -27,15 +17,15 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.UserController",
-    "Method": "GetById",
-    "RelativePath": "api/User/{userId}",
-    "HttpMethod": "GET",
+    "Method": "ForgotPassword",
+    "RelativePath": "api/User/forgotpassword",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "userId",
-        "Type": "System.Int32",
+        "Name": "forgotPasswordDto",
+        "Type": "Core.DTOs.ForgotPasswordDto",
         "IsRequired": true
       }
     ],
@@ -43,36 +33,15 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.UserController",
-    "Method": "Update",
-    "RelativePath": "api/User/{userId}",
-    "HttpMethod": "PUT",
+    "Method": "Login",
+    "RelativePath": "api/User/login",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "userId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "user",
-        "Type": "Entities.Concrete.User",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.UserController",
-    "Method": "Delete",
-    "RelativePath": "api/User/{userId}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "userId",
-        "Type": "System.Int32",
+        "Name": "userLogin",
+        "Type": "Core.DTOs.UserLoginDto",
         "IsRequired": true
       }
     ],

@@ -1,7 +1,7 @@
 ﻿using Business.Abstract;
 using Entities.Concrete;
 using Microsoft.AspNetCore.Mvc;
-
+using Core.DTOs;
 namespace WebAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -15,33 +15,9 @@ namespace WebAPI.Controllers
             _userService = userService;
         }
 
-        // Get all users
-        [HttpGet]
-        public IActionResult GetAll()
-        {
-            var users = _userService.GetAll();
-            if (users != null && users.Any())
-            {
-                return Ok(users); // 200 OK
-            }
-            return NotFound("No users found."); // 404 Not Found
-        }
-
-        // Get user by UserId
-        [HttpGet("{userId}")]
-        public IActionResult GetById(int userId)
-        {
-            var user = _userService.Get(u => u.UserId == userId);
-            if (user != null)
-            {
-                return Ok(user); // 200 OK
-            }
-            return NotFound($"User with UserId {userId} not found."); // 404 Not Found
-        }
-
-        // Add new user
-        [HttpPost]
-        public IActionResult Add([FromBody] User user)
+        // Create a new user (Registration)
+        [HttpPost("create")]
+        public IActionResult Create([FromBody] User user)
         {
             if (user == null)
             {
@@ -49,34 +25,48 @@ namespace WebAPI.Controllers
             }
 
             _userService.Add(user);
-            return Created("", "User added successfully."); // 201 Created
+            return Created("", "User registered successfully."); // 201 Created
         }
 
-        // Update user
-        [HttpPut("{userId}")]
-        public IActionResult Update(int userId, [FromBody] User user)
+        // Login
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] UserLoginDto userLogin)
         {
-            if (user == null || user.UserId != userId)
+            if (userLogin == null)
             {
-                return BadRequest("Invalid user data."); // 400 Bad Request
+                return BadRequest("Login data is null."); // 400 Bad Request
             }
 
-            _userService.Update(user);
-            return Ok("User updated successfully."); // 200 OK
+            var user = _userService.ValidateCredentials(userLogin.Email, userLogin.Password);
+            if (user != null)
+            {
+                return Ok(new { message = "Login successful.", user }); // 200 OK
+            }
+
+            return Unauthorized("Invalid email or password."); // 401 Unauthorized
         }
 
-        // Delete user
-        [HttpDelete("{userId}")]
-        public IActionResult Delete(int userId)
+        // Forgot Password
+        [HttpPost("forgotpassword")]
+        public IActionResult ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
         {
-            var user = _userService.Get(u => u.UserId == userId);
+            if (forgotPasswordDto == null || string.IsNullOrEmpty(forgotPasswordDto.Email))
+            {
+                return BadRequest("Invalid data."); // 400 Bad Request
+            }
+
+            var user = _userService.Get(u => u.Email == forgotPasswordDto.Email);
             if (user == null)
             {
-                return NotFound($"User with UserId {userId} not found."); // 404 Not Found
+                return NotFound("User not found."); // 404 Not Found
             }
 
-            _userService.Delete(user);
-            return Ok("User deleted successfully."); // 200 OK
+            // Generate reset token (logic can be added here)
+            var resetToken = _userService.GeneratePasswordResetToken(user.Email);
+            // Send email with reset token (mock or actual implementation)
+            _userService.SendPasswordResetEmail(user.Email, resetToken);
+
+            return Ok("Password reset instructions sent to your email."); // 200 OK
         }
     }
 }

@@ -12,5 +12,13 @@ namespace Business.Abstract
         void Delete(User user);
         User Get(Expression<Func<User, bool>> filter);
         List<User> GetAll(Expression<Func<User, bool>> filter = null);
+
+        User ValidateCredentials(string email, string password);
+
+        string GeneratePasswordResetToken(string email);
+
+        void SendPasswordResetEmail(string email, string resetToken);
+
+
     }
 }

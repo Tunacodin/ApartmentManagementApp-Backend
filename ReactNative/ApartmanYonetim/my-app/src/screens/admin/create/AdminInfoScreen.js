@@ -76,6 +76,31 @@ const AdminInfoScreen = () => {
     handleCodeInApp: true,
   };
 
+   const { userInfo, updatePartialInfo } = useContext(UserContext);
+  const [form, setForm] = useState({
+    name: userInfo.name || "",
+    lastname: userInfo.lastname || "",
+    email: userInfo.email || "",
+    phoneNumber: userInfo.phoneNumber || "",
+  });
+
+  const handleNext = () => {
+    if (!form.name || !form.lastname || !form.email || !form.phoneNumber) {
+      Alert.alert("Hata", "Lütfen tüm alanları doldurunuz.");
+      return;
+    }
+
+    updatePartialInfo({
+      name: form.name,
+      lastname: form.lastname,
+      email: form.email,
+      phoneNumber: form.phoneNumber,
+      role: "admin",
+    });
+
+    navigation.navigate("ApartmentInfoScreen");
+  };
+
   const sendVerificationCode = async (type) => {
     try {
       setIsLoading(true);
