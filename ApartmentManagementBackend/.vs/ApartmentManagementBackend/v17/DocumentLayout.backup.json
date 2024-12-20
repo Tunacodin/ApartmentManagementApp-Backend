@@ -1,0 +1,415 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{0F96211D-61D4-40C9-8391-423016137191}|WebAPI\\WebAPI.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\webapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0F96211D-61D4-40C9-8391-423016137191}|WebAPI\\WebAPI.csproj|solutionrelative:webapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0F96211D-61D4-40C9-8391-423016137191}|WebAPI\\WebAPI.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\webapi\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0F96211D-61D4-40C9-8391-423016137191}|WebAPI\\WebAPI.csproj|solutionrelative:webapi\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\business\\abstract\\iadminservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|solutionrelative:business\\abstract\\iadminservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\business\\concrete\\adminmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|solutionrelative:business\\concrete\\adminmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7F70023C-1A13-4A4E-BBB4-3E3CAA1776D5}|Entities\\Entities.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\entities\\concrete\\admin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7F70023C-1A13-4A4E-BBB4-3E3CAA1776D5}|Entities\\Entities.csproj|solutionrelative:entities\\concrete\\admin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\dataaccess\\concrete\\entityframework\\eftenantdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|solutionrelative:dataaccess\\concrete\\entityframework\\eftenantdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0F96211D-61D4-40C9-8391-423016137191}|WebAPI\\WebAPI.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\webapi\\controllers\\tenantcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0F96211D-61D4-40C9-8391-423016137191}|WebAPI\\WebAPI.csproj|solutionrelative:webapi\\controllers\\tenantcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\business\\concrete\\tenantmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|solutionrelative:business\\concrete\\tenantmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\business\\abstract\\itenantservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|solutionrelative:business\\abstract\\itenantservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\dataaccess\\abstract\\itenantdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|solutionrelative:dataaccess\\abstract\\itenantdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7F70023C-1A13-4A4E-BBB4-3E3CAA1776D5}|Entities\\Entities.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\entities\\concrete\\tenant.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7F70023C-1A13-4A4E-BBB4-3E3CAA1776D5}|Entities\\Entities.csproj|solutionrelative:entities\\concrete\\tenant.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\dataaccess\\abstract\\ibuildingdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|solutionrelative:dataaccess\\abstract\\ibuildingdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0F96211D-61D4-40C9-8391-423016137191}|WebAPI\\WebAPI.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\webapi\\controllers\\cardinfocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0F96211D-61D4-40C9-8391-423016137191}|WebAPI\\WebAPI.csproj|solutionrelative:webapi\\controllers\\cardinfocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0F96211D-61D4-40C9-8391-423016137191}|WebAPI\\WebAPI.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\webapi\\controllers\\buildingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0F96211D-61D4-40C9-8391-423016137191}|WebAPI\\WebAPI.csproj|solutionrelative:webapi\\controllers\\buildingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\dataaccess\\concrete\\entityframework\\efbuildingdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|solutionrelative:dataaccess\\concrete\\entityframework\\efbuildingdal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\business\\concrete\\cardinfomanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|solutionrelative:business\\concrete\\cardinfomanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\business\\abstract\\icardinfoservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ECE66787-FBF2-409F-9E51-26A8A8325D1A}|Business\\Business.csproj|solutionrelative:business\\abstract\\icardinfoservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\dataaccess\\abstract\\icardinfodal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|solutionrelative:dataaccess\\abstract\\icardinfodal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\dataaccess\\concrete\\entityframework\\efcardinfodal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|solutionrelative:dataaccess\\concrete\\entityframework\\efcardinfodal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7F70023C-1A13-4A4E-BBB4-3E3CAA1776D5}|Entities\\Entities.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\entities\\concrete\\cardinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7F70023C-1A13-4A4E-BBB4-3E3CAA1776D5}|Entities\\Entities.csproj|solutionrelative:entities\\concrete\\cardinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7F70023C-1A13-4A4E-BBB4-3E3CAA1776D5}|Entities\\Entities.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\entities\\concrete\\building.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7F70023C-1A13-4A4E-BBB4-3E3CAA1776D5}|Entities\\Entities.csproj|solutionrelative:entities\\concrete\\building.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8FC1376F-B569-4232-B43D-D3A4A29741F1}|Core\\Core.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\core\\entities\\ientity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8FC1376F-B569-4232-B43D-D3A4A29741F1}|Core\\Core.csproj|solutionrelative:core\\entities\\ientity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|c:\\users\\tuna\\source\\repos\\apartmentmanagementapp\\apartmentmanagementbackend\\dataaccess\\dataaccess.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{E7152860-9035-4A0B-88A8-5490415F3C8F}|DataAccess\\DataAccess.csproj|solutionrelative:dataaccess\\dataaccess.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 11,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "IAdminService.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Abstract\\IAdminService.cs",
+              "RelativeDocumentMoniker": "Business\\Abstract\\IAdminService.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Abstract\\IAdminService.cs*",
+              "RelativeToolTip": "Business\\Abstract\\IAdminService.cs*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-20T00:29:01.134Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "AdminManager.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Concrete\\AdminManager.cs",
+              "RelativeDocumentMoniker": "Business\\Concrete\\AdminManager.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Concrete\\AdminManager.cs*",
+              "RelativeToolTip": "Business\\Concrete\\AdminManager.cs*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-20T00:28:36.168Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Admin.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Concrete\\Admin.cs",
+              "RelativeDocumentMoniker": "Entities\\Concrete\\Admin.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Concrete\\Admin.cs*",
+              "RelativeToolTip": "Entities\\Concrete\\Admin.cs*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-20T00:27:50.308Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AdminController.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\Controllers\\AdminController.cs",
+              "RelativeDocumentMoniker": "WebAPI\\Controllers\\AdminController.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\Controllers\\AdminController.cs*",
+              "RelativeToolTip": "WebAPI\\Controllers\\AdminController.cs*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAGMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-20T00:27:14.007Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "TenantManager.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Concrete\\TenantManager.cs",
+              "RelativeDocumentMoniker": "Business\\Concrete\\TenantManager.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Concrete\\TenantManager.cs",
+              "RelativeToolTip": "Business\\Concrete\\TenantManager.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-20T00:16:41.919Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ITenantService.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Abstract\\ITenantService.cs",
+              "RelativeDocumentMoniker": "Business\\Abstract\\ITenantService.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Abstract\\ITenantService.cs",
+              "RelativeToolTip": "Business\\Abstract\\ITenantService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-20T00:16:21.31Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ITenantDal.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Abstract\\ITenantDal.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Abstract\\ITenantDal.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Abstract\\ITenantDal.cs",
+              "RelativeToolTip": "DataAccess\\Abstract\\ITenantDal.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-20T00:15:07.457Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "TenantController.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\Controllers\\TenantController.cs",
+              "RelativeDocumentMoniker": "WebAPI\\Controllers\\TenantController.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\Controllers\\TenantController.cs",
+              "RelativeToolTip": "WebAPI\\Controllers\\TenantController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-20T00:14:11.813Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "EfTenantDal.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Concrete\\EntityFramework\\EfTenantDal.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Concrete\\EntityFramework\\EfTenantDal.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Concrete\\EntityFramework\\EfTenantDal.cs",
+              "RelativeToolTip": "DataAccess\\Concrete\\EntityFramework\\EfTenantDal.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-20T00:11:31.498Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Tenant.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Concrete\\Tenant.cs",
+              "RelativeDocumentMoniker": "Entities\\Concrete\\Tenant.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Concrete\\Tenant.cs",
+              "RelativeToolTip": "Entities\\Concrete\\Tenant.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-20T00:10:02.486Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\Program.cs",
+              "RelativeDocumentMoniker": "WebAPI\\Program.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\Program.cs*",
+              "RelativeToolTip": "WebAPI\\Program.cs*",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T23:54:33.924Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "CardInfoController.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\Controllers\\CardInfoController.cs",
+              "RelativeDocumentMoniker": "WebAPI\\Controllers\\CardInfoController.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\Controllers\\CardInfoController.cs",
+              "RelativeToolTip": "WebAPI\\Controllers\\CardInfoController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEsAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T23:53:52.972Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "BuildingController.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\Controllers\\BuildingController.cs",
+              "RelativeDocumentMoniker": "WebAPI\\Controllers\\BuildingController.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\Controllers\\BuildingController.cs",
+              "RelativeToolTip": "WebAPI\\Controllers\\BuildingController.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAAAEUAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T23:53:12.746Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "CardInfoManager.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Concrete\\CardInfoManager.cs",
+              "RelativeDocumentMoniker": "Business\\Concrete\\CardInfoManager.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Concrete\\CardInfoManager.cs",
+              "RelativeToolTip": "Business\\Concrete\\CardInfoManager.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAAAAkAAAAzAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T23:50:15.769Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "ICardInfoService.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Abstract\\ICardInfoService.cs",
+              "RelativeDocumentMoniker": "Business\\Abstract\\ICardInfoService.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Abstract\\ICardInfoService.cs",
+              "RelativeToolTip": "Business\\Abstract\\ICardInfoService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T23:50:01.886Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "ICardInfoDal.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Abstract\\ICardInfoDal.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Abstract\\ICardInfoDal.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Abstract\\ICardInfoDal.cs",
+              "RelativeToolTip": "DataAccess\\Abstract\\ICardInfoDal.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T23:49:32.838Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "EfCardInfoDal.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Concrete\\EntityFramework\\EfCardInfoDal.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Concrete\\EntityFramework\\EfCardInfoDal.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Concrete\\EntityFramework\\EfCardInfoDal.cs",
+              "RelativeToolTip": "DataAccess\\Concrete\\EntityFramework\\EfCardInfoDal.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T23:49:07.058Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "Building.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Concrete\\Building.cs",
+              "RelativeDocumentMoniker": "Entities\\Concrete\\Building.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Concrete\\Building.cs",
+              "RelativeToolTip": "Entities\\Concrete\\Building.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T23:46:49.889Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "CardInfo.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Concrete\\CardInfo.cs",
+              "RelativeDocumentMoniker": "Entities\\Concrete\\CardInfo.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Concrete\\CardInfo.cs",
+              "RelativeToolTip": "Entities\\Concrete\\CardInfo.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAsAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T23:46:31.795Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "IEntity.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Entities\\IEntity.cs",
+              "RelativeDocumentMoniker": "Core\\Entities\\IEntity.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Entities\\IEntity.cs",
+              "RelativeToolTip": "Core\\Entities\\IEntity.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T23:46:22.457Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "EfBuildingDal.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Concrete\\EntityFramework\\EfBuildingDal.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Concrete\\EntityFramework\\EfBuildingDal.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Concrete\\EntityFramework\\EfBuildingDal.cs",
+              "RelativeToolTip": "DataAccess\\Concrete\\EntityFramework\\EfBuildingDal.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T22:20:47.109Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "IBuildingDal.cs",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Abstract\\IBuildingDal.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Abstract\\IBuildingDal.cs",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\Abstract\\IBuildingDal.cs",
+              "RelativeToolTip": "DataAccess\\Abstract\\IBuildingDal.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-19T22:18:19.087Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "DataAccess.csproj",
+              "DocumentMoniker": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj",
+              "RelativeDocumentMoniker": "DataAccess\\DataAccess.csproj",
+              "ToolTip": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj",
+              "RelativeToolTip": "DataAccess\\DataAccess.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2024-12-12T08:15:12.355Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
