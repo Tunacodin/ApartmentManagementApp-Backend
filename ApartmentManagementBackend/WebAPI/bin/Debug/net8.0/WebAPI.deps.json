@@ -9,8 +9,11 @@
       "WebAPI/1.0.0": {
         "dependencies": {
           "Business": "1.0.0",
+<<<<<<< HEAD
           "Core": "1.0.0",
           "DataAccess": "1.0.0",
+=======
+>>>>>>> 9a55c46067ce9234d15b5e580f997994cf7eee08
           "Swashbuckle.AspNetCore": "6.4.0"
         },
         "runtime": {
@@ -678,7 +681,10 @@
       },
       "Business/1.0.0": {
         "dependencies": {
+<<<<<<< HEAD
           "Core": "1.0.0",
+=======
+>>>>>>> 9a55c46067ce9234d15b5e580f997994cf7eee08
           "DataAccess": "1.0.0",
           "Entities": "1.0.0"
         },
