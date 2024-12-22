@@ -1,160 +1,230 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Text, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Text,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import colors from '../../styles/colors';
-import { v4 as uuidv4 } from 'uuid';
+import { BlurView } from 'expo-blur';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LoginScreen = ({ route, navigation }) => {
-  const { role } = route.params || {};
+const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loginMessage, setLoginMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const getRoleIcon = () => {
-    switch (role) {
-      case 'admin':
-        return 'user-shield';
-      case 'owner':
-        return 'home';
-      case 'worker':
-        return 'briefcase';
-      case 'security':
-        return 'shield-alt';
-      case 'tenant':
-        return 'user';
-      default:
-        return null;
+  const API_URL = "http://172.16.1.155:5001/api/User/login";
+
+  const validateForm = () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Uyarı', 'Lütfen tüm alanları doldurun.');
+      return false;
     }
+    return true;
   };
 
-  const validateEmail = (email) => {
-     const emailRegex = /^[^\s@]+@[^\s@]+\.(com|net|org|edu|gov|info|io)$/i; // Sıkı doğrulama
-    return emailRegex.test(email);
-  };
+  const handleLogin = async () => {
+    if (!validateForm()) return;
 
-  const validatePassword = (password) => {
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+[\]{};':"\\|,.<>\/?~`-])[A-Za-z\d!@#$%^&*()_+[\]{};':"\\|,.<>\/?~`-]{8,}$/;
-    return passwordRegex.test(password);
-  };
+    setIsLoading(true);
+    console.log('Login attempt started:', {
+      email: email.trim(),
+      timestamp: new Date().toISOString(),
+      apiUrl: API_URL
+    });
 
-  const handleLogin = () => {
-    console.log("Giriş işlemi başlatıldı.");
+    try {
+      const loginDto = {
+        email: email.trim(),
+        password: password
+      };
 
-    if (!email || !password) {
-      setLoginMessage('Lütfen e-posta ve şifre girin.');
-      console.log("E-posta veya şifre boş.");
-      return;
+      console.log('Sending request to server:', {
+        url: API_URL,
+        method: 'POST',
+        body: loginDto
+      });
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(loginDto),
+      });
+
+      console.log('Server response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url,
+        timestamp: new Date().toISOString()
+      });
+
+      if (response.status === 404) {
+        throw new Error('API endpoint bulunamadı. URL: ' + API_URL);
+      }
+
+      const rawResponse = await response.text();
+      console.log('Raw response:', rawResponse);
+
+      let data;
+      try {
+        data = rawResponse ? JSON.parse(rawResponse) : null;
+        console.log('Parsed response data:', data);
+      } catch (parseError) {
+        console.error('JSON Parse Error:', {
+          error: parseError,
+          rawResponse,
+          timestamp: new Date().toISOString()
+        });
+        throw new Error('Sunucu yanıtı işlenemedi');
+      }
+
+      if (response.status === 200 && data) {
+        console.log('Login successful:', {
+          userId: data.userId,
+          email: data.email,
+          role: data.role
+        });
+
+        await AsyncStorage.multiSet([
+          ['userId', data.userId.toString()],
+          ['userEmail', data.email],
+          ['userRole', data.role]
+        ]);
+
+        Alert.alert(
+          'Başarılı', 
+          data.message || 'Giriş başarılı!',
+          [
+            {
+              text: 'Tamam',
+              onPress: () => {
+                if (data.role === 'admin') {
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'AdminDashboard' }],
+                  });
+                } else {
+                  Alert.alert('Hata', 'Yetkisiz giriş denemesi');
+                }
+              },
+            },
+          ]
+        );
+      } else if (response.status === 401) {
+        Alert.alert('Hata', 'Geçersiz e-posta veya şifre');
+      } else if (response.status === 400) {
+        Alert.alert('Hata', data || 'E-posta ve şifre gereklidir');
+      } else {
+        Alert.alert('Hata', data?.message || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Login error:', {
+        message: error.message,
+        url: API_URL,
+        timestamp: new Date().toISOString()
+      });
+
+      if (error.message.includes('404')) {
+        Alert.alert(
+          'Sistem Hatası',
+          'API endpoint bulunamadı. Lütfen sistem yöneticisi ile iletişime geçin.'
+        );
+      } else if (error.message.includes('Network request failed')) {
+        Alert.alert(
+          'Bağlantı Hatası',
+          'Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.'
+        );
+      } else {
+        Alert.alert(
+          'Hata',
+          'Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.'
+        );
+      }
+    } finally {
+      setIsLoading(false);
     }
-
-    if (!validateEmail(email)) {
-      setLoginMessage('Geçersiz e-posta formatı.');
-      console.log("Geçersiz e-posta formatı.");
-      return;
-    }
-
-    if (!validatePassword(password)) {
-      setLoginMessage('Şifre en az 8 karakter, bir büyük harf, bir rakam ve bir özel karakter içermelidir.');
-      console.log("Geçersiz şifre formatı.");
-      return;
-    }
-
-    const userId = uuidv4();
-    console.log(`Kullanıcı ID: ${userId}`);
-
-    console.log("Giriş başarılı, yönlendiriliyor...");
-    if (role === 'admin') {
-      navigation.navigate('AdminDashboard');
-      return;
-    }
-
-    switch (role) {
-      case 'owner':
-        navigation.navigate('OwnerNavigator');
-        break;
-      case 'worker':
-        navigation.navigate('WorkerNavigator');
-        break;
-      case 'security':
-        navigation.navigate('SecurityNavigator');
-        break;
-      case 'tenant':
-        navigation.navigate('TenantNavigator');
-        break;
-      default:
-        setLoginMessage('Geçersiz rol.');
-        console.log("Geçersiz rol.");
-    }
-  };
-
-  const handleRegister = () => {
-    navigation.navigate('AdminNavigator');
   };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleForgot = () => {
-    navigation.navigate('ForgotPassword');
-    console.log("tıklandı");
-  }
-
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <LinearGradient colors={[colors.secondary, colors.white]} style={styles.background}>
-        <View style={styles.container}>
-          <Icon name={getRoleIcon()} size={60} color={colors.darkGray} style={styles.roleIcon} />
-          <Text style={styles.title}>
-            {role === 'admin'
-              ? 'Yönetici Girişi'
-              : role === 'owner'
-              ? 'Ev Sahibi Girişi'
-              : role === 'worker'
-              ? 'Çalışan Girişi'
-              : role === 'security'
-              ? 'Güvenlik Görevlisi Girişi'
-              : role === 'tenant'
-              ? 'Kiracı Girişi'
-              : 'Giriş Yap'}
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Kullanıcı Adı"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholderTextColor={colors.darkGray}
-          />
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Şifre"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              placeholderTextColor={colors.darkGray}
-            />
-            <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
-              <Icon name={showPassword ? 'eye' : 'eye-slash'} size={20} color={colors.darkGray} />
+      <LinearGradient
+        colors={['#E0EAFC', '#CFDEF3']}
+        start={{ x: 0.1, y: 0.1 }}
+        end={{ x: 0.9, y: 0.9 }}
+        style={styles.background}
+      >
+        <BlurView
+          intensity={60}
+          tint="light"
+          style={[styles.blurContainer, { backgroundColor: 'rgba(255, 255, 255, 0.25)' }]}
+        >
+          <View style={styles.container}>
+            <View style={styles.iconWrapper}>
+              <Icon name="user-shield" size={80} color={colors.darkGray} />
+            </View>
+
+            <Text style={styles.title}>Yönetici Girişi</Text>
+
+            <View style={styles.inputContainer}>
+              <Icon name="user" size={20} color={colors.darkGray} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="E-posta"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                placeholderTextColor={colors.darkGray}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Icon name="lock" size={20} color={colors.darkGray} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Şifre"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                placeholderTextColor={colors.darkGray}
+              />
+              <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
+                <Icon name={showPassword ? 'eye' : 'eye-slash'} size={20} color={colors.darkGray} />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, isLoading && styles.buttonDisabled]}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color={colors.white} size="small" />
+              ) : (
+                <Text style={styles.buttonText}>Giriş Yap</Text>
+              )}
             </TouchableOpacity>
           </View>
-          {loginMessage ? <Text style={styles.loginMessage}>{loginMessage}</Text> : null}
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Giriş Yap</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleForgot}>
-            <Text style={styles.forgotPassword}>Şifrenizi mi unuttunuz?</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleRegister}>
-            <Text style={styles.createAccount}>Hesap Oluştur</Text>
-          </TouchableOpacity>
-        </View>
+        </BlurView>
       </LinearGradient>
     </KeyboardAvoidingView>
   );
@@ -166,79 +236,66 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  container: {
+  blurContainer: {
     width: '90%',
-    backgroundColor: colors.white,
     borderRadius: 20,
+    overflow: 'hidden',
+  },
+  container: {
     padding: 30,
     alignItems: 'center',
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
   },
-  roleIcon: {
-    marginBottom: 15,
+  iconWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: colors.black,
-    marginBottom: 20,
+    marginBottom: 30,
     textAlign: 'center',
   },
-  loginMessage: {
-    fontSize: 16,
-    color: colors.darkGray,
+  inputContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
     marginBottom: 15,
-    textAlign: 'center',
+    paddingHorizontal: 15,
+    height: 55,
+  },
+  inputIcon: {
+    marginRight: 10,
   },
   input: {
-    width: '100%',
-    height: 50,
-    paddingHorizontal: 20,
-    borderColor: colors.lightGray,
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 15,
+    flex: 1,
+    height: '100%',
     color: colors.black,
-    backgroundColor: colors.white,
+    fontSize: 16,
+  },
+  eyeIcon: {
+    padding: 10,
   },
   button: {
     width: '100%',
-    height: 50,
-    backgroundColor: colors.darkGray,
+    height: 55,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
-    marginBottom: 10,
+    borderRadius: 12,
+    marginTop: 10,
+    marginBottom: 20,
   },
   buttonText: {
     color: colors.white,
     fontSize: 18,
     fontWeight: 'bold',
   },
-  forgotPassword: {
-    color: colors.lightGray,
-    fontSize: 14,
-    textDecorationLine: 'underline',
-    marginTop: 10,
-  },
-  createAccount: {
-    color: colors.lightGray,
-    fontSize: 14,
-    textDecorationLine: 'underline',
-    marginTop: 10,
-  },
-  passwordContainer: {
-    width: '100%',
-    position: 'relative',
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 20,
-    top: 15,
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });
 

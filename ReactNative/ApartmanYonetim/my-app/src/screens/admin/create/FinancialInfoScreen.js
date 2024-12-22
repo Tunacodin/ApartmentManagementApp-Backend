@@ -1,126 +1,204 @@
 import React, { forwardRef, useImperativeHandle, useState } from "react";
-import { View, StyleSheet, Text } from "react-native";
-import { TextInput as PaperInput } from "react-native-paper";
+import { View, StyleSheet, Text, Alert } from "react-native";
+import { TextInput as PaperInput, Button as PaperButton } from "react-native-paper";
 import { MaterialIcons } from "react-native-vector-icons";
-import LottieView from "lottie-react-native"; // LottieView import edildi
+import LottieView from "lottie-react-native";
 import colors from "../../../styles/colors";
-import animate from "../../../assets/json/animFinance.json"; // Animasyon dosyası import edildi
+import animate from "../../../assets/json/animFinance.json";
+import axios from "axios";
+
+const API_URL = "http://172.16.1.155:5001/api/CardInfo";
+
+const api = axios.create({
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
 
 const FinancialInfoScreen = forwardRef((props, ref) => {
-  const [iban, setIban] = useState("");
+  const [cardHolder, setCardHolder] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [expirationDate, setExpirationDate] = useState("");
+  const [cvv, setCvv] = useState("");
   const [bankName, setBankName] = useState("");
-  const [accountHolder, setAccountHolder] = useState("");
-  const [additionalNotes, setAdditionalNotes] = useState("");
+  const [cardType, setCardType] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  useImperativeHandle(ref, () => ({
-    validate() {
-      if (!iban.trim() || iban.length < 16 || iban.length > 34) {
-        alert("IBAN numarası geçerli bir uzunlukta olmalıdır!");
-        return false;
+  const validateForm = () => {
+    if (!cardHolder.trim()) {
+      Alert.alert("Hata", "Kart sahibi adı boş bırakılamaz!");
+      return false;
+    }
+    if (!cardNumber.trim() || cardNumber.length !== 16) {
+      Alert.alert("Hata", "Geçerli bir kart numarası giriniz!");
+      return false;
+    }
+    if (!expirationDate.trim() || !expirationDate.match(/^(0[1-9]|1[0-2])\/([0-9]{2})$/)) {
+      Alert.alert("Hata", "Geçerli bir son kullanma tarihi giriniz (AA/YY)!");
+      return false;
+    }
+    if (!cvv.trim() || cvv.length !== 3) {
+      Alert.alert("Hata", "Geçerli bir CVV numarası giriniz!");
+      return false;
+    }
+    if (!bankName.trim()) {
+      Alert.alert("Hata", "Banka adı boş bırakılamaz!");
+      return false;
+    }
+    if (!cardType.trim()) {
+      Alert.alert("Hata", "Kart tipi boş bırakılamaz!");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setIsLoading(true);
+      const cardData = {
+        cardHolder,
+        cardNumber,
+        expirationDate,
+        cvv,
+        bankName,
+        cardType,
+        createdAt: new Date().toISOString()
+      };
+
+      const response = await api.post(API_URL, cardData);
+
+      if (response.status === 200) {
+        setIsSubmitted(true);
+        Alert.alert(
+          "Başarılı",
+          "Kart bilgileri kaydedildi",
+          [
+            {
+              text: "Tamam",
+              onPress: () => {
+                setCardHolder("");
+                setCardNumber("");
+                setExpirationDate("");
+                setCvv("");
+                setBankName("");
+                setCardType("");
+              }
+            }
+          ]
+        );
       }
-      if (!bankName.trim()) {
-        alert("Banka adı boş bırakılamaz!");
-        return false;
-      }
-      if (!accountHolder.trim()) {
-        alert("Hesap sahibinin adı boş bırakılamaz!");
-        return false;
-      }
-      return true;
-    },
-  }));
+    } catch (error) {
+      console.error("API Hatası:", error);
+      Alert.alert("Hata", "Kart bilgileri kaydedilemedi");
+      setIsSubmitted(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* Animasyon */}
       <LottieView source={animate} autoPlay loop style={styles.animation} />
 
-      {/* Başlık */}
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>Yönetici Finansal Bilgileri</Text>
+        <Text style={styles.title}>Kart Bilgileri</Text>
       </View>
 
-      {/* IBAN Input */}
       <View style={styles.inputContainer}>
-        <MaterialIcons
-          name="account-balance"
-          size={24}
-          color={colors.primary}
-          style={styles.icon}
-        />
+        <MaterialIcons name="person" size={24} color={colors.primary} style={styles.icon} />
         <PaperInput
           mode="outlined"
-          label="IBAN"
-          placeholder="IBAN numaranızı girin"
-          value={iban}
-          onChangeText={setIban}
-          keyboardType="default"
+          label="Kart Sahibi"
+          value={cardHolder}
+          onChangeText={setCardHolder}
           style={styles.input}
-          outlineColor={colors.darkGray}
-          activeOutlineColor={colors.primary}
         />
       </View>
 
-      {/* Banka Adı Input */}
       <View style={styles.inputContainer}>
-        <MaterialIcons
-          name="account-balance-wallet"
-          size={24}
-          color={colors.primary}
-          style={styles.icon}
+        <MaterialIcons name="credit-card" size={24} color={colors.primary} style={styles.icon} />
+        <PaperInput
+          mode="outlined"
+          label="Kart Numarası"
+          value={cardNumber}
+          onChangeText={setCardNumber}
+          keyboardType="numeric"
+          maxLength={16}
+          style={styles.input}
         />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <MaterialIcons name="date-range" size={24} color={colors.primary} style={styles.icon} />
+        <PaperInput
+          mode="outlined"
+          label="Son Kullanma Tarihi (AA/YY)"
+          value={expirationDate}
+          onChangeText={setExpirationDate}
+          placeholder="MM/YY"
+          maxLength={5}
+          style={styles.input}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <MaterialIcons name="security" size={24} color={colors.primary} style={styles.icon} />
+        <PaperInput
+          mode="outlined"
+          label="CVV"
+          value={cvv}
+          onChangeText={setCvv}
+          keyboardType="numeric"
+          maxLength={3}
+          secureTextEntry
+          style={styles.input}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <MaterialIcons name="account-balance" size={24} color={colors.primary} style={styles.icon} />
         <PaperInput
           mode="outlined"
           label="Banka Adı"
-          placeholder="Banka adını girin"
           value={bankName}
           onChangeText={setBankName}
           style={styles.input}
-          outlineColor={colors.darkGray}
-          activeOutlineColor={colors.primary}
         />
       </View>
 
-      {/* Hesap Sahibi Input */}
       <View style={styles.inputContainer}>
-        <MaterialIcons
-          name="person"
-          size={24}
-          color={colors.primary}
-          style={styles.icon}
-        />
+        <MaterialIcons name="credit-card" size={24} color={colors.primary} style={styles.icon} />
         <PaperInput
           mode="outlined"
-          label="Hesap Sahibi"
-          placeholder="Hesap sahibinin adını girin"
-          value={accountHolder}
-          onChangeText={setAccountHolder}
+          label="Kart Tipi"
+          value={cardType}
+          onChangeText={setCardType}
           style={styles.input}
-          outlineColor={colors.darkGray}
-          activeOutlineColor={colors.primary}
         />
       </View>
 
-      {/* Ek Notlar Input */}
-      <View style={styles.inputContainer}>
-        <MaterialIcons
-          name="note"
-          size={24}
-          color={colors.primary}
-          style={styles.icon}
-        />
-        <PaperInput
-          mode="outlined"
-          label="Ek Notlar"
-          placeholder="Ek bilgi veya notlar girin (isteğe bağlı)"
-          value={additionalNotes}
-          onChangeText={setAdditionalNotes}
-          multiline
-          style={[styles.input, { height: 80 }]}
-          outlineColor={colors.darkGray}
-          activeOutlineColor={colors.primary}
-        />
-      </View>
+      {isSubmitted ? (
+        <View style={styles.successIconContainer}>
+          <MaterialIcons name="check-circle" size={50} color={colors.success} />
+        </View>
+      ) : (
+        <PaperButton
+          mode="contained"
+          onPress={handleSubmit}
+          disabled={isLoading}
+          loading={isLoading}
+          style={styles.submitButton}
+          contentStyle={styles.submitButtonContent}
+          labelStyle={styles.submitButtonLabel}
+        >
+          {isLoading ? "Kaydediliyor..." : "Kaydet"}
+        </PaperButton>
+      )}
     </View>
   );
 });
@@ -164,6 +242,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
     borderRadius: 10,
+  },
+  submitButton: {
+    marginTop: 20,
+    borderRadius: 8,
+    height: 50,
+    width: '100%',
+  },
+  submitButtonContent: {
+    height: 50,
+  },
+  submitButtonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  successIconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
   },
 });
 

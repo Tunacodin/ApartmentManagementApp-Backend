@@ -4,513 +4,300 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  FlatList,
-  TextInput,
   Alert,
-  SectionList,
   SafeAreaView,
   Platform,
   KeyboardAvoidingView,
   ScrollView,
+  FlatList,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
 import axios from "axios";
 import colors from "../../../styles/colors";
+import { TextInput as PaperInput, Button as PaperButton } from "react-native-paper";
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import LottieView from "lottie-react-native";
 import animate from "../../../assets/json/animApartment.json";
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+
+const API_URL = "http://172.16.1.155:5001/api/Building";
+
+const api = axios.create({
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  validateStatus: function (status) {
+    return status >= 200 && status < 300;
+  }
+});
+
+api.interceptors.request.use(request => {
+  console.log('Starting Request:', request.url);
+  return request;
+});
+
+api.interceptors.response.use(
+  response => {
+    console.log('Response:', response.data);
+    return response;
+  },
+  error => {
+    console.log('Error:', error);
+    return Promise.reject(error);
+  }
+);
 
 const ApartmentInfoScreen = () => {
-  const [query, setQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [mapRegion, setMapRegion] = useState({
-    latitude: 39.9334,
-    longitude: 32.8597,
-    latitudeDelta: 20,
-    longitudeDelta: 20,
-  });
-  const [locations, setLocations] = useState([]);
-  const [apartments, setApartments] = useState([]);
-  const mapRef = useRef(null);
-  const [houseNumber, setHouseNumber] = useState("");
-  const [buildingName, setBuildingName] = useState("");
+  const [apartmentName, setApartmentName] = useState("");
+  const [numberOfFloors, setNumberOfFloors] = useState("");
+  const [totalApartments, setTotalApartments] = useState("");
   const [city, setCity] = useState("");
-  const [county, setCounty] = useState("");
-  const [suburb, setSuburb] = useState("");
-  const [road, setRoad] = useState("");
-  const [isAddingApartment, setIsAddingApartment] = useState(false);
-  const [editingApartment, setEditingApartment] = useState(null);
+  const [district, setDistrict] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [street, setStreet] = useState("");
+  const [buildingNumber, setBuildingNumber] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [apartments, setApartments] = useState([]);
 
-  useEffect(() => {
-    if (selectedLocation) {
-      setMapRegion({
-        ...mapRegion,
-        latitude: selectedLocation.latitude,
-        longitude: selectedLocation.longitude,
-      });
-    }
-  }, [selectedLocation]);
+  const validateForm = () => {
+    return (
+      apartmentName.trim() &&
+      !isNaN(numberOfFloors) && numberOfFloors > 0 &&
+      !isNaN(totalApartments) && totalApartments > 0 &&
+      city.trim() && district.trim() &&
+      neighborhood.trim() && street.trim() && buildingNumber.trim() &&
+      /^\d{5}$/.test(postalCode)
+    );
+  };
 
-  const fetchAddressSuggestions = async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      Alert.alert("Hata", "Lütfen tüm alanları eksiksiz doldurun.");
       return;
     }
 
     try {
-      const response = await axios.get(
-        "https://nominatim.openstreetmap.org/search",
-        {
-          params: {
-            q: query,
-            format: "json",
-            addressdetails: 1,
-            limit: 5,
-            countrycodes: "tr",
-            "accept-language": "tr",
-          },
-        }
-      );
-      setSearchResults(response.data);
-    } catch (error) {
-      console.error("Adres öneri hatası:", error);
-    }
-  };
-
-  const handleAddressSelect = (item) => {
-    const { lat, lon, address } = item;
-    const newLocation = { latitude: parseFloat(lat), longitude: parseFloat(lon) };
-    
-    const cityCounty = address.county || address.city_district || address.town || address.municipality;
-    
-    console.log("Gelen adres bilgileri:", address); // Debug için
-
-    if (mapRef.current) {
-      mapRef.current.animateToRegion(
-        {
-          latitude: parseFloat(lat),
-          longitude: parseFloat(lon),
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        1000
-      );
-    }
-
-    setSelectedLocation(newLocation);
-    setSearchResults([]);
-    setQuery(item.display_name);
-
-    setCity(address.city || '');
-    setCounty(cityCounty || '');
-    setSuburb(address.suburb || address.neighbourhood || address.quarter || '');
-    setRoad(address.road || '');
-
-    setMapRegion({
-      latitude: parseFloat(lat),
-      longitude: parseFloat(lon),
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    });
-  };
-
-  const handleMarkerDragEnd = (event) => {
-    const { latitude, longitude } = event.nativeEvent.coordinate;
-    setSelectedLocation({ latitude, longitude });
-  };
-
-  const handleMapPress = (event) => {
-    const { latitude, longitude } = event.nativeEvent.coordinate;
-    setSelectedLocation({ latitude, longitude });
-
-    if (mapRef.current) {
-      mapRef.current.animateToRegion(
-        {
-          latitude,
-          longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        1000
-      );
-    }
-  };
-
-  const handleConfirm = () => {
-    if (!selectedLocation || !query.trim()) {
-      Alert.alert("Hata", "Adres seçimi veya konum işareti eksik!");
-      return;
-    }
-
-    axios.get(
-      "https://nominatim.openstreetmap.org/reverse",
-      {
-        params: {
-          lat: selectedLocation.latitude,
-          lon: selectedLocation.longitude,
-          format: "json",
-          addressdetails: 1,
-        },
-      }
-    ).then(response => {
-      const address = response.data.address;
-      const cityCounty = address.county || address.city_district || address.town || address.municipality;
-      
-      console.log("Reverse geocoding adres bilgileri:", address); // Debug için
-
-      const promptFields = async () => {
-        return new Promise((resolve) => {
-          let remainingFields = 0;
-          let tempInfo = {
-            city: address.city || '',
-            county: cityCounty || '',
-            suburb: address.suburb || address.neighbourhood || address.quarter || '',
-            road: address.road || '',
-            house_number: houseNumber || '',
-            building_name: buildingName || ''
-          };
-
-          if (!tempInfo.city) remainingFields++;
-          if (!tempInfo.county) remainingFields++;
-          if (!tempInfo.suburb) remainingFields++;
-          if (!tempInfo.road) remainingFields++;
-          if (!tempInfo.house_number) remainingFields++;
-          if (!tempInfo.building_name) remainingFields++;
-
-          if (remainingFields === 0) {
-            resolve(tempInfo);
-            return;
-          }
-
-          const checkComplete = () => {
-            remainingFields--;
-            if (remainingFields === 0) {
-              resolve(tempInfo);
-            }
-          };
-
-          if (!tempInfo.city) {
-            Alert.prompt("İl", "Lütfen il bilgisini girin:", text => {
-              tempInfo.city = text;
-              checkComplete();
-            });
-          }
-          if (!tempInfo.county) {
-            Alert.prompt("İlçe", "Lütfen ilçe bilgisini girin:", text => {
-              tempInfo.county = text;
-              checkComplete();
-            });
-          }
-          if (!tempInfo.suburb) {
-            Alert.prompt("Mahalle", "Lütfen mahalle bilgisini girin:", text => {
-              tempInfo.suburb = text;
-              checkComplete();
-            });
-          }
-          if (!tempInfo.road) {
-            Alert.prompt("Cadde", "Lütfen cadde bilgisini girin:", text => {
-              tempInfo.road = text;
-              checkComplete();
-            });
-          }
-          if (!tempInfo.house_number) {
-            Alert.prompt("Bina Numarası", "Lütfen bina numarasını girin:", text => {
-              tempInfo.house_number = text;
-              checkComplete();
-            });
-          }
-          if (!tempInfo.building_name) {
-            Alert.prompt("Bina Adı", "Lütfen bina adını girin:", text => {
-              tempInfo.building_name = text;
-              checkComplete();
-            });
-          }
-        });
+      setIsLoading(true);
+      const apartmentData = {
+        apartmentName,
+        numberOfFloors: parseInt(numberOfFloors),
+        totalApartments: parseInt(totalApartments),
+        city,
+        district,
+        neighborhood,
+        street,
+        buildingNumber,
+        postalCode
       };
 
-      promptFields().then(completedInfo => {
-        const isDuplicate = apartments.some(apt => 
-          (apt.building_name.toLowerCase() === completedInfo.building_name.toLowerCase()) ||
-          (
-            apt.road === completedInfo.road &&
-            apt.house_number === completedInfo.house_number &&
-            apt.suburb === completedInfo.suburb &&
-            apt.county === completedInfo.county &&
-            apt.city === completedInfo.city
-          )
-        );
+      const response = await api.post(API_URL, apartmentData);
 
-        if (isDuplicate && !editingApartment) {
-          Alert.alert(
-            "Uyarı",
-            "Bu adres veya bina adı zaten kayıtlı!",
-            [
-              {
-                text: "Tamam",
-                onPress: () => {
-                  setQuery("");
-                  setSelectedLocation(null);
-                  setHouseNumber("");
-                  setBuildingName("");
-                  setIsAddingApartment(false);
-                }
-              }
-            ]
-          );
-          return;
-        }
-
-        const apartmentInfo = {
-          display_name: `${completedInfo.road}, ${completedInfo.suburb}, ${completedInfo.county}/${completedInfo.city}`,
-          ...completedInfo,
-          latitude: selectedLocation.latitude,
-          longitude: selectedLocation.longitude,
-        };
-
-        if (editingApartment) {
-          const updatedApartments = apartments.filter(a => a !== editingApartment);
-          setApartments([...updatedApartments, apartmentInfo]);
-          setEditingApartment(null);
-        } else {
-          setApartments([...apartments, apartmentInfo]);
-        }
-
-        console.log('Eklenen apartmanın konumu:');
-        console.log('Enlem:', selectedLocation.latitude);
-        console.log('Boylam:', selectedLocation.longitude);
-        console.log('Adres:', apartmentInfo.display_name);
-
-        setLocations([...locations, selectedLocation]);
-        setQuery("");
-        setSelectedLocation(null);
-        setHouseNumber("");
-        setBuildingName("");
+      if (response.status === 200) {
+        setApartments([...apartments, apartmentData]);
+        setApartmentName("");
+        setNumberOfFloors("");
+        setTotalApartments("");
         setCity("");
-        setCounty("");
-        setSuburb("");
-        setRoad("");
-        setIsAddingApartment(false);
-        Alert.alert("Başarılı", editingApartment ? "Apartman bilgileri güncellendi!" : "Yeni apartman eklendi!");
-      });
-    }).catch(error => {
-      console.error("Adres alma hatası:", error);
-      Alert.alert("Hata", "Adres bilgisi alınamadı.");
-    });
-  };
+        setDistrict("");
+        setNeighborhood("");
+        setStreet("");
+        setBuildingNumber("");
+        setPostalCode("");
+        setShowForm(false);
+        setIsSubmitted(false);
 
-  const handleDeleteApartment = (apartment) => {
-    Alert.alert(
-      "Apartman Sil",
-      "Bu apartmanı silmek istediğinizden emin misiniz?",
-      [
-        {
-          text: "İptal",
-          style: "cancel"
-        },
-        {
-          text: "Sil",
-          style: "destructive",
-          onPress: () => {
-            const newApartments = apartments.filter(a => a !== apartment);
-            setApartments(newApartments);
-          }
-        }
-      ]
-    );
-  };
-
-  const handleUpdateApartment = (apartment) => {
-    setIsAddingApartment(true);
-    setEditingApartment(apartment);
-    
-    setSelectedLocation({
-      latitude: apartment.latitude,
-      longitude: apartment.longitude
-    });
-    setQuery(apartment.display_name);
-    setCity(apartment.city);
-    setCounty(apartment.county);
-    setSuburb(apartment.suburb);
-    setRoad(apartment.road);
-    setHouseNumber(apartment.house_number);
-    setBuildingName(apartment.building_name);
-    
-    if (mapRef.current) {
-      mapRef.current.animateToRegion(
-        {
-          latitude: apartment.latitude,
-          longitude: apartment.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        1000
-      );
-    }
-  };
-
-  const sections = [];
-
-  sections.push({
-    title: 'APARTMANLAR',
-    data: apartments.length > 0 ? apartments : [{ type: 'empty' }],
-    renderItem: ({ item }) => {
-      if (item.type === 'empty') {
-        return (
-          <View style={styles.emptyApartments}>
-            <Text style={styles.emptyText}>Henüz apartman eklenmedi</Text>
-          </View>
+        Alert.alert(
+          "Başarılı", 
+          "Apartman bilgileri kaydedildi"
         );
       }
-      return (
-        <View style={styles.apartmentItem}>
-          <View style={styles.apartmentContent}>
-            <View style={styles.apartmentInfo}>
-              <Text style={styles.buildingName}>{item.building_name}</Text>
-              <Text style={styles.addressDetails}>
-                {`${item.road}, No: ${item.house_number}`}
-              </Text>
-              <Text style={styles.addressDetails}>
-                {`${item.suburb}, ${item.county}/${item.city}`}
-              </Text>
-            </View>
-            <View style={styles.actionButtons}>
-              <TouchableOpacity 
-                style={styles.actionButton}
-                onPress={() => handleUpdateApartment(item)}
-              >
-                <MaterialIcons name="edit" size={24} color={colors.danger} />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.actionButton, styles.deleteButton]}
-                onPress={() => handleDeleteApartment(item)}
-              >
-                <MaterialIcons name="delete" size={24} color={colors.danger} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      );
+    } catch (error) {
+      console.error("API Hatası:", error);
+      Alert.alert("Hata", "Apartman bilgileri kaydedilemedi");
+    } finally {
+      setIsLoading(false);
     }
-  });
-
-  if (isAddingApartment) {
-    sections.push(
-      {
-        title: 'ADRES ARA',
-        data: [{ type: 'search' }],
-        renderItem: () => (
-          <View style={styles.searchSection}>
-            <TextInput
-              style={styles.input}
-              placeholder="Adres Ara"
-              value={query}
-              onChangeText={(text) => {
-                setQuery(text);
-                fetchAddressSuggestions(text);
-              }}
-            />
-            {searchResults.length > 0 && (
-              <FlatList
-                nestedScrollEnabled
-                data={searchResults}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.suggestionItem}
-                    onPress={() => handleAddressSelect(item)}
-                  >
-                    <Text>{item.display_name}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-            )}
-          </View>
-        )
-      },
-      {
-        title: '',
-        data: [{ type: 'map' }],
-        renderItem: () => (
-          <View style={styles.mapSection}>
-            <MapView
-              ref={mapRef}
-              style={styles.map}
-              region={mapRegion}
-              onRegionChangeComplete={(region) => setMapRegion(region)}
-              onPress={handleMapPress}
-            >
-              {selectedLocation && (
-                <Marker
-                  coordinate={selectedLocation}
-                  draggable
-                  onDragEnd={handleMarkerDragEnd}
-                />
-              )}
-            </MapView>
-            <TouchableOpacity 
-              style={styles.confirmButton} 
-              onPress={handleConfirm}
-            >
-              <Text style={styles.confirmButtonText}>
-                Konumu Onayla
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )
-      }
-    );
-  }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView 
+        style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 25}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-        <ScrollView 
-          style={styles.scrollView}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.container}>
-            <View style={styles.headerContainer}>
-              <LottieView source={animate} autoPlay loop style={styles.animation} />
-              <View style={styles.titleContainer}>
-                <Text style={styles.title}>Apartman Bilgileri</Text>
-              </View>
-            </View>
-            
-            <View style={styles.contentContainer}>
-              <SectionList
-                scrollEnabled={false}
-                sections={sections}
-                renderSectionHeader={({ section: { title } }) => {
-                  if (title === '') return null;
-                  
-                  return (
-                    <View style={styles.sectionHeaderContainer}>
-                      <Text style={styles.sectionHeaderText}>{title}</Text>
-                      {title === 'APARTMANLAR' && <View style={styles.sectionHeaderLine} />}
-                    </View>
-                  );
-                }}
-                stickySectionHeadersEnabled={false}
-                keyExtractor={(item, index) => index.toString()}
-                SectionSeparatorComponent={() => <View style={styles.sectionSeparator} />}
-                contentContainerStyle={styles.scrollContent}
-              />
-            </View>
+        <View style={styles.headerContainer}>
+          <LottieView source={animate} autoPlay loop style={styles.animation} />
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>Apartman Bilgileri</Text>
           </View>
-        </ScrollView>
+        </View>
 
-        {!isAddingApartment && (
-          <TouchableOpacity 
-            style={styles.addApartmentButton}
-            onPress={() => setIsAddingApartment(true)}
+        {showForm ? (
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <Ionicons name="add" size={30} color="white" />
+            <View style={styles.formContainer}>
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="apartment" size={24} color={colors.primary} style={styles.icon} />
+                <PaperInput
+                  mode="outlined"
+                  label="Apartman Adı"
+                  value={apartmentName}
+                  onChangeText={setApartmentName}
+                  style={styles.input}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="layers" size={24} color={colors.primary} style={styles.icon} />
+                <PaperInput
+                  mode="outlined"
+                  label="Kat Sayısı"
+                  value={numberOfFloors}
+                  onChangeText={setNumberOfFloors}
+                  keyboardType="numeric"
+                  style={styles.input}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="door-front" size={24} color={colors.primary} style={styles.icon} />
+                <PaperInput
+                  mode="outlined"
+                  label="Toplam Daire Sayısı"
+                  value={totalApartments}
+                  onChangeText={setTotalApartments}
+                  keyboardType="numeric"
+                  style={styles.input}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="location-city" size={24} color={colors.primary} style={styles.icon} />
+                <PaperInput
+                  mode="outlined"
+                  label="Şehir"
+                  value={city}
+                  onChangeText={setCity}
+                  style={styles.input}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="business" size={24} color={colors.primary} style={styles.icon} />
+                <PaperInput
+                  mode="outlined"
+                  label="İlçe"
+                  value={district}
+                  onChangeText={setDistrict}
+                  style={styles.input}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="home" size={24} color={colors.primary} style={styles.icon} />
+                <PaperInput
+                  mode="outlined"
+                  label="Mahalle"
+                  value={neighborhood}
+                  onChangeText={setNeighborhood}
+                  style={styles.input}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="add-road" size={24} color={colors.primary} style={styles.icon} />
+                <PaperInput
+                  mode="outlined"
+                  label="Sokak"
+                  value={street}
+                  onChangeText={setStreet}
+                  style={styles.input}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="house" size={24} color={colors.primary} style={styles.icon} />
+                <PaperInput
+                  mode="outlined"
+                  label="Bina No"
+                  value={buildingNumber}
+                  onChangeText={setBuildingNumber}
+                  style={styles.input}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="local-post-office" size={24} color={colors.primary} style={styles.icon} />
+                <PaperInput
+                  mode="outlined"
+                  label="Posta Kodu"
+                  value={postalCode}
+                  onChangeText={setPostalCode}
+                  keyboardType="numeric"
+                  style={styles.input}
+                />
+              </View>
+
+              {isSubmitted ? (
+                <View style={styles.successIconContainer}>
+                  <Ionicons 
+                    name="checkmark-circle" 
+                    size={50} 
+                    color={colors.success}
+                  />
+                </View>
+              ) : (
+                <PaperButton
+                  mode="contained"
+                  onPress={handleSubmit}
+                  disabled={!validateForm() || isLoading}
+                  loading={isLoading}
+                  style={styles.submitButton}
+                  contentStyle={styles.submitButtonContent}
+                  labelStyle={styles.submitButtonLabel}
+                >
+                  {isLoading ? "Kaydediliyor..." : "Kaydet"}
+                </PaperButton>
+              )}
+            </View>
+          </ScrollView>
+        ) : (
+          <View style={styles.listContainer}>
+            {apartments.length > 0 ? (
+              <FlatList
+                data={apartments}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <View style={styles.apartmentCard}>
+                    <MaterialIcons name="apartment" size={24} color={colors.primary} style={styles.cardIcon} />
+                    <Text style={styles.apartmentName}>{item.apartmentName}</Text>
+                  </View>
+                )}
+                contentContainerStyle={styles.apartmentsList}
+              />
+            ) : (
+              <View style={styles.emptyState}>
+                <MaterialIcons name="home" size={50} color={colors.lightGray} />
+                <Text style={styles.emptyText}>Henüz apartman bilgisi girilmedi</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {!showForm && (
+          <TouchableOpacity 
+            style={styles.addButton}
+            onPress={() => setShowForm(true)}
+          >
+            <MaterialIcons name="add" size={30} color={colors.white} />
           </TouchableOpacity>
         )}
       </KeyboardAvoidingView>
@@ -523,184 +310,70 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
   },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
   container: { 
     flex: 1,
     backgroundColor: colors.white,
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 80,
+  },
+  formContainer: {
+    flex: 1,
+    padding: 20,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+    width: "100%",
+  },
+  icon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+  customButton: {
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
+  },
+  customButtonInactive: {
+    backgroundColor: "transparent",
+  },
+  customButtonActive: {
+    backgroundColor: colors.white,
+  },
+  submittedButton: {
+    backgroundColor: colors.success,
+    borderColor: colors.success,
+  },
+  customButtonText: {
+    color: colors.primary,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
   headerContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
-  },
-  contentContainer: {
-    flex: 1,
-    paddingBottom: 80,
+    paddingTop: Platform.OS === 'ios' ? 20 : 30,
   },
   animation: { 
     width: 200, 
     height: 200,
-    position: 'relative',
-  },
-  scrollContent: {
-    paddingTop: 5,
-  },
-  searchSection: {
-    padding: 5,
-    backgroundColor: colors.white,
-    borderRadius: 12,
-   
-  },
-  mapSection: {
-    height: 400,
-    padding: 10,
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    overflow: 'hidden',
-    
-  },
-  input: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: 8,
-    marginBottom: 10,
-    backgroundColor: '#F8F9FA',
-  },
-  suggestionItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
-    backgroundColor: '#F8F9FA',
-    marginTop: 2,
-    borderRadius: 8,
-  },
-  map: {
-    flex: 1,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  confirmButton: {
-    backgroundColor: colors.primary,
-    padding: 15,
-    alignItems: "center",
-    borderRadius: 8,
-    margin: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  confirmButtonText: {
-    color: colors.white,
-    fontWeight: "bold",
-  },
-  sectionHeaderContainer: {
-    backgroundColor: colors.white,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  sectionHeaderText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.primary,
-    letterSpacing: 1,
-    flex: 1,
-  },
-  sectionHeaderLine: {
-    height: 3,
-    width: 30,
-    backgroundColor: colors.primary,
-    borderRadius: 2,
-    marginLeft: 10,
-  },
-  sectionSeparator: {
-    height: 20,
-  },
-  apartmentItem: {
-    padding: 15,
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    marginHorizontal: 10,
-    marginVertical: 5,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  buildingName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.primary,
-    marginBottom: 5,
-  },
-  addressDetails: {
-    fontSize: 14,
-    color: colors.darkGray,
-    marginBottom: 2,
-  },
-  emptyApartments: {
-    padding: 20,
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    margin: 10,
-   
-  },
-  emptyText: {
-    fontSize: 16,
-    color: colors.darkGray,
-    fontStyle: 'italic',
-  },
-  addApartmentButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: colors.primary,
-    borderRadius: 30,
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   titleContainer: {
     paddingVertical: 10,
     paddingHorizontal: 30,
-    marginBottom: 20,
   },
   title: {
     fontSize: 26,
@@ -708,27 +381,91 @@ const styles = StyleSheet.create({
     color: colors.black,
     textAlign: "center",
   },
-  apartmentContent: {
+  buttonContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
-  apartmentInfo: {
+  successIconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  submitButton: {
+    marginTop: 20,
+    borderRadius: 8,
+    height: 50,
+  },
+  submitButtonContent: {
+    height: 50,
+  },
+  submitButtonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  emptyState: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
   },
-  actionButtons: {
+  emptyText: {
+    fontSize: 16,
+    color: colors.darkGray,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  apartmentsList: {
+    padding: 20,
+    paddingBottom: 80,
+  },
+  apartmentCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 10,
+    padding: 15,
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
   },
-  actionButton: {
-    padding: 5,
-    borderRadius: 20,
-    backgroundColor: colors.textPrimary,
-    marginLeft: 18,
+  cardIcon: {
+    marginRight: 15,
   },
-  deleteButton: {
-    backgroundColor: '#ffebee', // Hafif kırmızı arka plan
+  apartmentName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.black,
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  listContainer: {
+    flex: 1,
+    marginTop: 10,
   },
 });
 
