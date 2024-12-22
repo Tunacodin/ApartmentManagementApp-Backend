@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Business.Abstract;
 using Entities.Concrete;
-using System.Collections.Generic;
+using System;
 
 namespace WebAPI.Controllers
 {
@@ -41,7 +41,7 @@ namespace WebAPI.Controllers
         }
 
         // Add a new building
-        [HttpPost("add")]
+        [HttpPost]
         public IActionResult Add([FromBody] Building building)
         {
             if (building == null)
@@ -49,25 +49,24 @@ namespace WebAPI.Controllers
                 return BadRequest("Building data is null.");
             }
 
-            // Validating required fields
-            if (string.IsNullOrWhiteSpace(building.BuildingName) ||
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(building.ApartmentName) ||
                 string.IsNullOrWhiteSpace(building.City) ||
                 string.IsNullOrWhiteSpace(building.District))
             {
-                return BadRequest("BuildingName, City, and District are required.");
+                return BadRequest("ApartmentName, City, and District are required.");
             }
 
             try
             {
                 _buildingService.Add(building);
-                return CreatedAtAction(nameof(Add), new { id = building.BuildingId }, building);
+                return CreatedAtAction(nameof(GetById), new { id = building.BuildingId }, building);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-    
 
         // Delete a building
         [HttpDelete("{id}")]
@@ -78,8 +77,16 @@ namespace WebAPI.Controllers
             {
                 return NotFound($"Building with ID {id} not found.");
             }
-            _buildingService.Delete(building);
-            return Ok("Building deleted successfully.");
+
+            try
+            {
+                _buildingService.Delete(building);
+                return Ok("Building deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

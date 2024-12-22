@@ -1,6 +1,6 @@
 using Business.Abstract;
 using Business.Concrete;
-
+using DataAccess.Abstract;
 using DataAccess.Concrete.EntityFramework;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +14,14 @@ builder.Services.AddSwaggerGen();
 // Dependency Injection (DI) Konfigürasyonu
 builder.Services.AddScoped<IUserService, UserManager>();
 builder.Services.AddScoped<IUserDal, EfUserDal>();
+builder.Services.AddScoped<IAdminService, AdminManager>();
+builder.Services.AddScoped<ITenantService, TenantManager>();
+builder.Services.AddScoped<ITenantDal,EfTenantDal>(); 
+builder.Services.AddScoped<IBuildingService, BuildingManager>();    
+builder.Services.AddScoped<IBuildingDal,EfBuildingDal>();
+builder.Services.AddScoped<ICardInfoService, CardInfoManager>();
+builder.Services.AddScoped<ICardInfoDal,EfCardInfoDal>();
+
 
 var app = builder.Build();
 

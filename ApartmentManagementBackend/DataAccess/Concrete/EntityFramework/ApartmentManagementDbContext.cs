@@ -18,8 +18,21 @@ namespace DataAccess.Concrete.EntityFramework
 
         }
 
-        public DbSet<User> User { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Tenant> Tenants { get; set; }
 
-  
+        public DbSet<Building> Buildings { get; set; }
+
+        public DbSet<CardInfo> CardInfos { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<CardInfo>(entity =>
+            {
+                entity.HasKey(e => e.CardId); // Specify CardId as the primary key
+            });
+        }
+
+
     }
 }

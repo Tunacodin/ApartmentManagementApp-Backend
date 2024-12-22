@@ -22,12 +22,15 @@ namespace Business.Concrete
             }
 
             // İş mantığı: Kiracının aidat ve kira bilgisi pozitif olmalı
+
+
             if (tenant.MonthlyRent <= 0 || tenant.MonthlyDues <= 0)
             {
                 throw new ArgumentException("MonthlyRent and MonthlyDues must be greater than zero.");
             }
 
             _tenantDal.Add(tenant);
+
         }
 
         public void Update(Tenant tenant)

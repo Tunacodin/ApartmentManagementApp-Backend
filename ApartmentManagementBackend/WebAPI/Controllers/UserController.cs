@@ -1,4 +1,5 @@
 ﻿using Business.Abstract;
+using Core.DTOs;
 using Entities.Concrete;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,6 +15,32 @@ namespace WebAPI.Controllers
         {
             _userService = userService;
         }
+
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginDto loginDto)
+        {
+            if (loginDto == null || string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrWhiteSpace(loginDto.Password))
+            {
+                return BadRequest("Email and Password are required.");
+            }
+
+            var user = _userService.ValidateUser(loginDto.Email, loginDto.Password);
+
+            if (user == null)
+            {
+                return Unauthorized("Invalid email or password.");
+            }
+
+            return Ok(new
+            {
+                Message = "Login successful",
+                UserId = user.UserId,
+                
+                Email = user.Email,
+                Role = user.Role // Backend role bilgisi döner.
+            });
+        }
+
 
         // Get all users
         [HttpGet]

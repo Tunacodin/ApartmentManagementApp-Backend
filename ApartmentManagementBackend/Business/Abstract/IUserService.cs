@@ -12,5 +12,7 @@ namespace Business.Abstract
         void Delete(User user);
         User Get(Expression<Func<User, bool>> filter);
         List<User> GetAll(Expression<Func<User, bool>> filter = null);
+
+        User ValidateUser(string email, string password);
     }
 }

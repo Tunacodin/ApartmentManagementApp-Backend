@@ -48,5 +48,16 @@ namespace Business.Concrete
 
             _userDal.Update(user);
         }
+
+        public User ValidateUser(string email, string password)
+        {
+            var user = _userDal.Get(u => u.Email == email);
+            if (user != null && user.Password == password) // Şifre doğrulaması yapılır
+            {
+                return user;
+            }
+
+            return null; // Kullanıcı bulunamadıysa veya şifre hatalıysa
+        }
     }
 }

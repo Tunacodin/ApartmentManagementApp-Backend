@@ -8,10 +8,6 @@
     ".NETCoreApp,Version=v8.0": {
       "Business/1.0.0": {
         "dependencies": {
-<<<<<<< HEAD
-          "Core": "1.0.0",
-=======
->>>>>>> 9a55c46067ce9234d15b5e580f997994cf7eee08
           "DataAccess": "1.0.0",
           "Entities": "1.0.0"
         },
