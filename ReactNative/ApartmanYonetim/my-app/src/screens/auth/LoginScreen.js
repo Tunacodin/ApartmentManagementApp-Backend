@@ -16,11 +16,12 @@ import colors from '../../styles/colors';
 import { BlurView } from 'expo-blur';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const role = route.params?.role || 'admin';
 
   const API_URL = "http://172.16.1.155:5001/api/User/login";
 
@@ -182,7 +183,9 @@ const LoginScreen = ({ navigation }) => {
               <Icon name="user-shield" size={80} color={colors.darkGray} />
             </View>
 
-            <Text style={styles.title}>Yönetici Girişi</Text>
+            <Text style={styles.title}>
+              {role === 'admin' ? 'Yönetici Girişi' : 'Kiracı Girişi'}
+            </Text>
 
             <View style={styles.inputContainer}>
               <Icon name="user" size={20} color={colors.darkGray} style={styles.inputIcon} />
@@ -223,6 +226,30 @@ const LoginScreen = ({ navigation }) => {
                 <Text style={styles.buttonText}>Giriş Yap</Text>
               )}
             </TouchableOpacity>
+
+            <View style={styles.linkContainer}>
+              <TouchableOpacity
+                style={styles.link}
+                onPress={() => {
+                  if (role === 'admin') {
+                    navigation.navigate('AdminNavigator');
+                  } else if (role === 'tenant') {
+                    navigation.navigate('TenantNavigator');
+                  }
+                }}
+              >
+                <Text style={styles.linkText}>
+                  {role === 'admin' ? 'Yönetici Kaydı' : 'Kiracı Kaydı'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.link}
+                onPress={() => navigation.navigate('ForgotPassword', { role })}
+              >
+                <Text style={styles.linkText}>Şifremi Unuttum</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </BlurView>
       </LinearGradient>
@@ -296,6 +323,25 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.7,
+  },
+  linkContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 10,
+    paddingHorizontal: 10,
+  },
+  link: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  linkText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
 

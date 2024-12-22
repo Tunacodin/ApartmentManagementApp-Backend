@@ -28,7 +28,12 @@ const AdminSettingsScreen = ({ navigation }) => {
               // Login ekranına yönlendir ve navigation stack'i temizle
               navigation.reset({
                 index: 0,
-                routes: [{ name: 'LoginScreen' }],
+                routes: [
+                  { 
+                    name: 'LoginScreen',
+                    params: { role: 'admin' }  // Role parametresini ekle
+                  }
+                ],
               });
             } catch (error) {
               console.error('Logout error:', error);

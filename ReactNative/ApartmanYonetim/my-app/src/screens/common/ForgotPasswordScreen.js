@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import colors from '../../styles/colors';
 
-const ForgotPasswordScreen = ({ navigation }) => {
+const ForgotPasswordScreen = ({ route, navigation }) => {
+  const { role } = route.params;
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -36,7 +37,9 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Şifre Sıfırlama</Text>
+      <Text style={styles.title}>
+        {role === 'admin' ? 'Yönetici Şifre Sıfırlama' : 'Kiracı Şifre Sıfırlama'}
+      </Text>
 
       <TextInput
         style={styles.input}

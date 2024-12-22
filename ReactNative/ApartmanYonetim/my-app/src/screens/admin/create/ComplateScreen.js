@@ -13,7 +13,10 @@ const ComplateScreen = () => {
       CommonActions.reset({
         index: 0,
         routes: [
-          { name: 'LoginScreen' },
+          { 
+            name: 'LoginScreen',
+            params: { role: 'admin' }  // Role parametresini ekle
+          },
         ],
       })
     );

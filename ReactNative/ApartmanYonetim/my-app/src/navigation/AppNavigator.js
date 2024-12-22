@@ -18,7 +18,7 @@ const Stack = createNativeStackNavigator();
 export default function AppNavigator() {
   return (
     <Stack.Navigator
-      initialRouteName="HelloScreen"
+      initialRouteName="LoginScreen"
       screenOptions={{ headerShown: false }}
     >
       {/* İlk açılış ekranları */}
@@ -27,7 +27,7 @@ export default function AppNavigator() {
 
       {/* Rol seçim ve giriş ekranları */}
       <Stack.Screen name="RoleScreen" component={RoleScreen} />
-      <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Screen name="LoginScreen" component={LoginScreen} initialParams={{ role: 'admin' }} />
 
       {/*Şifremi Unuttum */}
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
