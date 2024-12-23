@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -71,8 +71,96 @@ const ApartmentInfoScreen = () => {
   const [apartmentUnits, setApartmentUnits] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [duesAmount, setDuesAmount] = useState("");
+  const [districts, setDistricts] = useState([]);
+  const [neighborhoods, setNeighborhoods] = useState([]);
+  const [filteredNeighborhoods, setFilteredNeighborhoods] = useState([]);
+  const [showNeighborhoodDropdown, setShowNeighborhoodDropdown] = useState(false);
+  const [cities, setCities] = useState([]);
+  const [filteredCities, setFilteredCities] = useState([]);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [filteredDistricts, setFilteredDistricts] = useState([]);
+  const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
 
   const APARTMENT_TYPES = ["1+0", "1+1", "2+1", "3+1", "4+1", "5+1"];
+
+  useEffect(() => {
+    fetchCities();
+  }, []);
+
+  const handleCityFilter = (text) => {
+    setCity(text);
+    console.log('Filtering cities with:', text);
+    
+    if (text.length > 0) {
+      const filtered = cities
+        .filter(city => 
+          city.name.toLowerCase().includes(text.toLowerCase()))
+        .map(city => city.name);
+      setFilteredCities(filtered);
+      setShowCityDropdown(true);
+      console.log('Filtered cities:', filtered);
+    } else {
+      setFilteredCities([]);
+      setShowCityDropdown(false);
+    }
+  };
+
+  const handleCityChange = (selectedCity) => {
+    console.log('Selected city:', selectedCity);
+    setCity(selectedCity);
+    setDistrict('');
+    setNeighborhood('');
+    
+    const cityData = cities.find(c => c.name === selectedCity);
+    if (cityData) {
+      setDistricts(cityData.districts);
+      setFilteredDistricts([]);
+      setShowDistrictDropdown(false);
+      console.log('Updated districts for selected city:', cityData.districts);
+    }
+    
+    setShowCityDropdown(false);
+  };
+
+  const handleDistrictFilter = (text) => {
+    setDistrict(text);
+    console.log('Filtering districts with:', text);
+    
+    if (text.length > 0 && districts.length > 0) {
+      const filtered = districts.filter(district => 
+        district.name.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredDistricts(filtered);
+      setShowDistrictDropdown(true);
+      console.log('Filtered districts:', filtered);
+    } else {
+      setFilteredDistricts([]);
+      setShowDistrictDropdown(false);
+    }
+  };
+
+  const handleNeighborhoodFilter = (text) => {
+    setNeighborhood(text);
+    console.log('Filtering neighborhoods with:', text);
+
+    if (text.length > 0 && neighborhoods.length > 0) {
+      const filtered = neighborhoods.filter(neighborhood =>
+        neighborhood.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredNeighborhoods(filtered);
+      setShowNeighborhoodDropdown(true);
+      console.log('Filtered neighborhoods:', filtered);
+    } else {
+      setFilteredNeighborhoods([]);
+      setShowNeighborhoodDropdown(false);
+    }
+  };
+
+  const handleNeighborhoodChange = (selectedNeighborhood) => {
+    console.log('Selected neighborhood:', selectedNeighborhood);
+    setNeighborhood(selectedNeighborhood);
+    setShowNeighborhoodDropdown(false);
+  };
 
   const validateForm = () => {
     return (
@@ -196,7 +284,55 @@ const handlePrevious = () => {
     );
   };
 
+  const fetchCities = async () => {
+    try {
+      console.log('Fetching cities...');
+      const response = await axios.get('https://turkiyeapi.dev/api/v1/provinces');
+      console.log('Cities API Response:', response.data);
+      
+      if (response.data.status === "OK") {
+        const cityData = response.data.data.map(city => ({
+          name: city.name,
+          districts: city.districts.map(district => ({
+            districtId: district.id,
+            name: district.name
+          }))
+        }));
+        setCities(cityData);
+        console.log('Processed city data:', cityData);
+      }
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+    }
+  };
 
+  const handleDistrictChange = async (selectedDistrict) => {
+    console.log('Selected district:', selectedDistrict);
+    setDistrict(selectedDistrict.name);
+    setNeighborhood('');
+    setFilteredNeighborhoods([]);
+    setShowNeighborhoodDropdown(false);
+    setShowDistrictDropdown(false);
+    
+    try {
+      console.log('Fetching neighborhoods for district ID:', selectedDistrict.districtId);
+      const response = await axios.get('https://turkiyeapi.dev/api/v1/neighborhoods');
+      console.log('Neighborhoods API Response:', response.data);
+      
+      if (response.data.status === "OK") {
+        const districtNeighborhoods = response.data.data
+          .filter(n => n.provinceId === selectedDistrict.provinceId && 
+                      n.districtId === selectedDistrict.districtId)
+          .map(n => n.name);
+        
+        setNeighborhoods(districtNeighborhoods);
+        console.log('Fetched neighborhoods:', districtNeighborhoods);
+      }
+    } catch (error) {
+      console.error('Error fetching neighborhoods:', error);
+      Alert.alert('Hata', 'Mahalle bilgileri alınırken bir hata oluştu.');
+    }
+  };
 
   const renderApartmentForm = () => (
     <View style={styles.formContainer}>
@@ -263,15 +399,32 @@ const handlePrevious = () => {
           color={colors.primary}
           style={styles.icon}
         />
-        <PaperInput
-          mode="outlined"
-          label="Şehir"
-          value={city}
-          onChangeText={setCity}
-          style={styles.input}
-          outlineColor={colors.darkGray}
-          activeOutlineColor={colors.primary}
-        />
+        <View style={styles.dropdownWrapper}>
+          <PaperInput
+            mode="outlined"
+            label="Şehir"
+            value={city}
+            onChangeText={handleCityFilter}
+            style={styles.input}
+            outlineColor={colors.darkGray}
+            activeOutlineColor={colors.primary}
+          />
+          {showCityDropdown && filteredCities.length > 0 && (
+            <View style={styles.dropdown}>
+              <ScrollView nestedScrollEnabled={true} style={styles.dropdownScroll}>
+                {filteredCities.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.dropdownItem}
+                    onPress={() => handleCityChange(item)}
+                  >
+                    <Text style={styles.dropdownText}>{item}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+        </View>
       </View>
 
       <View style={styles.inputContainer}>
@@ -281,15 +434,33 @@ const handlePrevious = () => {
           color={colors.primary}
           style={styles.icon}
         />
-        <PaperInput
-          mode="outlined"
-          label="İlçe"
-          value={district}
-          onChangeText={setDistrict}
-          style={styles.input}
-          outlineColor={colors.darkGray}
-          activeOutlineColor={colors.primary}
-        />
+        <View style={styles.dropdownWrapper}>
+          <PaperInput
+            mode="outlined"
+            label="İlçe"
+            value={district}
+            onChangeText={handleDistrictFilter}
+            style={styles.input}
+            outlineColor={colors.darkGray}
+            activeOutlineColor={colors.primary}
+            disabled={!city}
+          />
+          {showDistrictDropdown && filteredDistricts.length > 0 && (
+            <View style={styles.dropdown}>
+              <ScrollView nestedScrollEnabled={true} style={styles.dropdownScroll}>
+                {filteredDistricts.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.dropdownItem}
+                    onPress={() => handleDistrictChange(item)}
+                  >
+                    <Text style={styles.dropdownText}>{item.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+        </View>
       </View>
 
       <View style={styles.inputContainer}>
@@ -299,15 +470,33 @@ const handlePrevious = () => {
           color={colors.primary}
           style={styles.icon}
         />
-        <PaperInput
-          mode="outlined"
-          label="Mahalle"
-          value={neighborhood}
-          onChangeText={setNeighborhood}
-          style={styles.input}
-          outlineColor={colors.darkGray}
-          activeOutlineColor={colors.primary}
-        />
+        <View style={styles.dropdownWrapper}>
+          <PaperInput
+            mode="outlined"
+            label="Mahalle"
+            value={neighborhood}
+            onChangeText={handleNeighborhoodFilter}
+            style={styles.input}
+            outlineColor={colors.darkGray}
+            activeOutlineColor={colors.primary}
+            disabled={!district}
+          />
+          {showNeighborhoodDropdown && filteredNeighborhoods.length > 0 && (
+            <View style={styles.dropdown}>
+              <ScrollView nestedScrollEnabled={true} style={styles.dropdownScroll}>
+                {filteredNeighborhoods.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.dropdownItem}
+                    onPress={() => handleNeighborhoodChange(item)}
+                  >
+                    <Text style={styles.dropdownText}>{item}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+        </View>
       </View>
 
       <View style={styles.inputContainer}>
@@ -1017,6 +1206,35 @@ const styles = StyleSheet.create({
     color: colors.darkGray,
   marginTop: 6,
   },
+  dropdownWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
+  dropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: colors.white,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.darkGray,
+    zIndex: 1000,
+    elevation: 5,
+    maxHeight: 200,
+  },
+  dropdownScroll: {
+    maxHeight: 200,
+  },
+  dropdownItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: colors.black,
+  }
 });
 
 export default ApartmentInfoScreen;
