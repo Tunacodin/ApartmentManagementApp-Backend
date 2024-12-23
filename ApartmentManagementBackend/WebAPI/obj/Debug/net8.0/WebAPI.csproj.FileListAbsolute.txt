@@ -1,3 +1,11 @@
+C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.csproj.AssemblyReference.cache
+C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.AssemblyInfoInputs.cache
+C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.AssemblyInfo.cs
+C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.csproj.CoreCompileInputs.cache
+C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.sourcelink.json
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\appsettings.Development.json
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\appsettings.json
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\WebAPI.staticwebassets.endpoints.json
@@ -74,14 +82,6 @@ C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\Web
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\Core.pdb
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\DataAccess.pdb
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\Entities.pdb
-C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.csproj.AssemblyReference.cache
-C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.AssemblyInfoInputs.cache
-C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.AssemblyInfo.cs
-C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.csproj.CoreCompileInputs.cache
-C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.MvcApplicationPartsAssemblyInfo.cs
-C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.MvcApplicationPartsAssemblyInfo.cache
-C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.sourcelink.json
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\scopedcss\bundle\WebAPI.styles.css
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\staticwebassets.development.json

@@ -70,6 +70,7 @@ const ApartmentInfoScreen = () => {
   const [showApartmentDetails, setShowApartmentDetails] = useState(false);
   const [apartmentUnits, setApartmentUnits] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [duesAmount, setDuesAmount] = useState("");
 
   const APARTMENT_TYPES = ["1+0", "1+1", "2+1", "3+1", "4+1", "5+1"];
 
@@ -135,7 +136,7 @@ const ApartmentInfoScreen = () => {
       unitNumber: index + 1,
       floor: 0,
       rentAmount: '',
-      duesAmount: '',
+      depositAmount: '',
       type: '2+1',
       hasBalcony: false,
       notes: '',
@@ -160,120 +161,231 @@ const handlePrevious = () => {
   const isFormValid = () => {
     const currentUnit = apartmentUnits[currentIndex];
     
-    // Mevcut dairenin tüm alanlarının dolu olup olmadığını kontrol et
+    // Mevcut dairenin zorunlu alanlarının kontrolü
     return currentUnit && 
       currentUnit.rentAmount?.trim() && 
-      currentUnit.duesAmount?.trim() && 
-      currentUnit.type && 
-      currentUnit.floor >= 0 &&
-      currentUnit.notes?.trim();
+      currentUnit.depositAmount?.trim() && 
+      currentUnit.type;  // floor zaten 0 veya daha büyük olacak
   };
 
   const handleSave = () => {
     // Tüm dairelerin kontrolü
     const allUnitsValid = apartmentUnits.every(unit => 
-        unit.rentAmount?.trim() && 
-        unit.duesAmount?.trim() && 
-        unit.type && 
-        unit.floor > 0
+      unit.rentAmount?.trim() && 
+      unit.depositAmount?.trim() && 
+      unit.type
     );
 
     if (!allUnitsValid) {
-        Alert.alert("Uyarı", "Lütfen tüm dairelerin bilgilerini eksiksiz doldurun.");
-        return;
+      Alert.alert(
+        "Uyarı", 
+        "Lütfen tüm dairelerin kira ve depozito bilgilerini eksiksiz doldurun."
+      );
+      return;
     }
 
     // Başarılı kayıt
     console.log('Daire bilgileri kaydedildi:', apartmentUnits);
     Alert.alert(
-        "Başarılı",
-        "Daire bilgileri başarıyla kaydedildi.",
-        [{ 
-            text: "Tamam",
-            onPress: () => setShowApartmentDetails(false)
-        }]
+      "Başarılı",
+      "Daire bilgileri başarıyla kaydedildi.",
+      [{ 
+        text: "Tamam",
+        onPress: () => setShowApartmentDetails(false)
+      }]
     );
-};
+  };
 
 
 
   const renderApartmentForm = () => (
     <View style={styles.formContainer}>
-      <PaperInput
-        mode="outlined"
-        label="Apartman Adı"
-        value={apartmentName}
-        onChangeText={setApartmentName}
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="apartment"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Apartman Adı"
+          value={apartmentName}
+          onChangeText={setApartmentName}
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
 
-      <PaperInput
-        mode="outlined"
-        label="Kat Sayısı"
-        value={numberOfFloors}
-        onChangeText={setNumberOfFloors}
-        keyboardType="numeric"
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="layers"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Kat Sayısı"
+          value={numberOfFloors}
+          onChangeText={setNumberOfFloors}
+          keyboardType="numeric"
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
 
-      <PaperInput
-        mode="outlined"
-        label="Toplam Daire Sayısı"
-        value={totalApartments}
-        onChangeText={setTotalApartments}
-        keyboardType="numeric"
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="door-front"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Toplam Daire Sayısı"
+          value={totalApartments}
+          onChangeText={setTotalApartments}
+          keyboardType="numeric"
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
 
-      <PaperInput
-        mode="outlined"
-        label="Şehir"
-        value={city}
-        onChangeText={setCity}
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="location-city"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Şehir"
+          value={city}
+          onChangeText={setCity}
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
 
-      <PaperInput
-        mode="outlined"
-        label="İlçe"
-        value={district}
-        onChangeText={setDistrict}
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="location-on"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="İlçe"
+          value={district}
+          onChangeText={setDistrict}
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
 
-      <PaperInput
-        mode="outlined"
-        label="Mahalle"
-        value={neighborhood}
-        onChangeText={setNeighborhood}
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="home"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Mahalle"
+          value={neighborhood}
+          onChangeText={setNeighborhood}
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
 
-      <PaperInput
-        mode="outlined"
-        label="Sokak"
-        value={street}
-        onChangeText={setStreet}
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="add-road"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Sokak"
+          value={street}
+          onChangeText={setStreet}
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
 
-      <PaperInput
-        mode="outlined"
-        label="Bina No"
-        value={buildingNumber}
-        onChangeText={setBuildingNumber}
-        keyboardType="numeric"
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="home-work"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Bina No"
+          value={buildingNumber}
+          onChangeText={setBuildingNumber}
+          keyboardType="numeric"
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+        />
+      </View>
 
-      <PaperInput
-        mode="outlined"
-        label="Posta Kodu"
-        value={postalCode}
-        onChangeText={setPostalCode}
-        keyboardType="numeric"
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="local-post-office"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Posta Kodu"
+          value={postalCode}
+          onChangeText={setPostalCode}
+          keyboardType="numeric"
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+          right={<PaperInput.Affix text="₺" />}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <MaterialIcons
+          name="account-balance-wallet"
+          size={24}
+          color={colors.primary}
+          style={styles.icon}
+        />
+        <PaperInput
+          mode="outlined"
+          label="Aidat Miktarı (₺)"
+          value={duesAmount}
+          onChangeText={setDuesAmount}
+          keyboardType="numeric"
+          style={styles.input}
+          outlineColor={colors.darkGray}
+          activeOutlineColor={colors.primary}
+          right={<PaperInput.Affix text="₺" />}
+        />
+      </View>
 
       <View style={styles.utilitiesContainer}>
         <Text style={styles.utilitiesTitle}>Dahil Hizmetler</Text>
@@ -448,24 +560,26 @@ const handlePrevious = () => {
                 }}
                 keyboardType="numeric"
                 style={styles.unitInput}
+                left={<PaperInput.Icon icon="cash" />}
                 right={<PaperInput.Affix text="₺" />}
               />
 
-              {/* Aidat Miktarı */}
+              {/* Depozito Miktarı */}
               <PaperInput
                 mode="outlined"
-                label="Aidat Miktarı (₺)"
-                value={item.duesAmount}
+                label="Depozito Miktarı (₺)"
+                value={item.depositAmount}
                 onChangeText={(text) => {
                   const updatedUnits = apartmentUnits.map(unit =>
                     unit.unitNumber === item.unitNumber
-                      ? { ...unit, duesAmount: text }
+                      ? { ...unit, depositAmount: text }
                       : unit
                   );
                   setApartmentUnits(updatedUnits);
                 }}
                 keyboardType="numeric"
                 style={styles.unitInput}
+                left={<PaperInput.Icon icon="wallet" />}
                 right={<PaperInput.Affix text="₺" />}
               />
 
@@ -484,6 +598,7 @@ const handlePrevious = () => {
                 }}
                 numberOfLines={1}
                 style={styles.notesInput}
+                left={<PaperInput.Icon icon="note-text" />}
               />
             </View>
           )}
@@ -614,10 +729,21 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     padding: 20,
+    width: '100%',
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+    width: "100%",
+  },
+  icon: {
+    marginRight: 10,
   },
   input: {
-    marginBottom: 15,
+    flex: 1,
     backgroundColor: colors.white,
+    borderRadius: 10,
   },
   submitButton: {
     marginTop: 20,
@@ -723,7 +849,7 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "bold",
     color: colors.black,
-    backgroundColor: colors.textPrimary,
+   
     borderRadius: 5,
     padding: 5,
   },

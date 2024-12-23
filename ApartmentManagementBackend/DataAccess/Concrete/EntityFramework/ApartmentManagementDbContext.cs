@@ -25,6 +25,7 @@ namespace DataAccess.Concrete.EntityFramework
 
         public DbSet<CardInfo> CardInfos { get; set; }
 
+        public DbSet<BuildingDetail> BuildingDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<CardInfo>(entity =>

@@ -24,6 +24,7 @@ import {
   onAuthStateChanged,
   reload 
 } from "firebase/auth";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 const API_URL = "http://172.16.1.155:5001/api/User";
 
@@ -117,7 +118,7 @@ const AdminInfoScreen = () => {
       
       Alert.alert(
         "Başarılı", 
-        "E-posta adresinize doğrulama linki gönderildi. Lütfen e-postanızı kontrol edin ve linke tıklayarak hesabınızı doğrulayın."
+        "E-posta adresinize do��rulama linki gönderildi. Lütfen e-postanızı kontrol edin ve linke tıklayarak hesabınızı doğrulayın."
       );
 
     } catch (error) {
@@ -222,32 +223,57 @@ const AdminInfoScreen = () => {
           <View style={styles.formContainer}>
             <Text style={styles.title}>Yönetici Bilgileri</Text>
 
-            <PaperInput
-              mode="outlined"
-              label="Ad"
-              placeholder="Adınızı girin"
-              value={firstName}
-              onChangeText={setFirstName}
-              style={styles.input}
-            />
+            <View style={styles.inputContainer}>
+              <MaterialIcons
+                name="person"
+                size={24}
+                color={colors.primary}
+                style={styles.icon}
+              />
+              <PaperInput
+                mode="outlined"
+                label="Ad"
+                value={firstName}
+                onChangeText={setFirstName}
+                style={styles.input}
+                outlineColor={colors.darkGray}
+                activeOutlineColor={colors.primary}
+              />
+            </View>
 
-            <PaperInput
-              mode="outlined"
-              label="Soyad"
-              placeholder="Soyadınızı girin"
-              value={lastName}
-              onChangeText={setLastName}
-              style={styles.input}
-            />
+            <View style={styles.inputContainer}>
+              <MaterialIcons
+                name="person-outline"
+                size={24}
+                color={colors.primary}
+                style={styles.icon}
+              />
+              <PaperInput
+                mode="outlined"
+                label="Soyad"
+                value={lastName}
+                onChangeText={setLastName}
+                style={styles.input}
+                outlineColor={colors.darkGray}
+                activeOutlineColor={colors.primary}
+              />
+            </View>
 
-            <View style={styles.inputRowContainer}>
+            <View style={styles.inputContainer}>
+              <MaterialIcons
+                name="email"
+                size={24}
+                color={colors.primary}
+                style={styles.icon}
+              />
               <PaperInput
                 mode="outlined"
                 label="E-posta"
-                placeholder="E-posta adresinizi girin"
                 value={email}
                 onChangeText={setEmail}
-                style={[styles.textInput, { flex: 0.7 }]}
+                style={[styles.input, { flex: 0.7 }]}
+                outlineColor={colors.darkGray}
+                activeOutlineColor={colors.primary}
               />
               <TouchableOpacity
                 style={[styles.button, { flex: 0.15 }]}
@@ -263,24 +289,42 @@ const AdminInfoScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <PaperInput
-              mode="outlined"
-              label="Telefon Numarası"
-              placeholder="Telefon numaranızı girin"
-              value={phone}
-              onChangeText={setPhone}
-              style={styles.input}
-            />
+            <View style={styles.inputContainer}>
+              <MaterialIcons
+                name="phone"
+                size={24}
+                color={colors.primary}
+                style={styles.icon}
+              />
+              <PaperInput
+                mode="outlined"
+                label="Telefon Numarası"
+                value={phone}
+                onChangeText={setPhone}
+                style={styles.input}
+                outlineColor={colors.darkGray}
+                activeOutlineColor={colors.primary}
+              />
+            </View>
 
-            <PaperInput
-              mode="outlined"
-              label="Şifre"
-              placeholder="Şifrenizi girin"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              style={styles.input}
-            />
+            <View style={styles.inputContainer}>
+              <MaterialIcons
+                name="lock"
+                size={24}
+                color={colors.primary}
+                style={styles.icon}
+              />
+              <PaperInput
+                mode="outlined"
+                label="Şifre"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                style={styles.input}
+                outlineColor={colors.darkGray}
+                activeOutlineColor={colors.primary}
+              />
+            </View>
           </View>
 
           <View style={styles.submitButtonContainer}>
@@ -338,24 +382,26 @@ const styles = StyleSheet.create({
     color: colors.black,
     textAlign: "center",
   },
-  input: {
-    marginBottom: 15,
-    backgroundColor: colors.white,
-  },
-  inputRowContainer: {
+  inputContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 15,
+    width: "100%",
   },
-  textInput: {
+  icon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
     backgroundColor: colors.white,
+    borderRadius: 10,
   },
   button: {
-
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+    marginLeft: 5,
   },
   submitButton: {
     backgroundColor: colors.primary,

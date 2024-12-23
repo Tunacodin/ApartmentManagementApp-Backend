@@ -50,7 +50,7 @@ namespace WebAPI.Controllers
             }
 
             // Validate required fields
-            if (string.IsNullOrWhiteSpace(building.ApartmentName) ||
+            if (string.IsNullOrWhiteSpace(building.BuildingName) ||
                 string.IsNullOrWhiteSpace(building.City) ||
                 string.IsNullOrWhiteSpace(building.District))
             {

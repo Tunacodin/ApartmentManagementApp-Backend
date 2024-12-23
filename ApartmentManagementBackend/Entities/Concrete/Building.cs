@@ -5,7 +5,7 @@ namespace Entities.Concrete
     public class Building : IEntity
     {
         public int BuildingId { get; set; }          // Benzersiz kimlik
-        public string ApartmentName { get; set; }   // Apartman adı
+        public string BuildingName { get; set; }   // Apartman adı
         public int NumberOfFloors { get; set; }     // Kat sayısı
         public int TotalApartments { get; set; }    // Toplam daire sayısı
         public decimal OccupancyRate { get; set; }  // Doluluk oranı
