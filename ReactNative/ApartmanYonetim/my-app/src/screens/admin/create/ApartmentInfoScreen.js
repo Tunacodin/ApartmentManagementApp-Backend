@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -82,6 +82,8 @@ const ApartmentInfoScreen = () => {
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
 
   const APARTMENT_TYPES = ["1+0", "1+1", "2+1", "3+1", "4+1", "5+1"];
+
+  const scrollViewRef = useRef(null);
 
   useEffect(() => {
     fetchCities();
@@ -231,6 +233,14 @@ const ApartmentInfoScreen = () => {
     }));
     setApartmentUnits(units);
     setShowApartmentDetails(true);
+
+    // Ekranı yukarı kaydır
+    setTimeout(() => {
+      // 30 birim yukarı kaydırma animasyonu
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: 80, animated: true }); // Kaydırma işlemi
+      }
+    }, 0);
   };
 
 const handleNext = () => {
@@ -639,12 +649,13 @@ const handlePrevious = () => {
               {/* Daire bilgileri ve diğer bileşenler  */}
               <View style={{flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
                  <View style={styles.unitHeader}>
-                <Text style={styles.unitTitle}>
+                  <View style={{flexDirection: "row", alignItems: "center"}}>
+                   <Text style={styles.unitTitle}>
                     Daire {item.unitNumber} 
                   </Text>
-                  <Text style={styles.smallText}>/ {selectedApartment.totalApartments} </Text>
+                  <Text style={styles.smallText}>/ {selectedApartment.totalApartments} </Text></View>
                {/* Daire Tipi Dropdown */}
-              <View style={styles.dropdownContainer}>
+              <View style={styles.dropdownRow}>
                 <Text style={styles.dropdownLabel}>Daire Tipi</Text>
                 <PaperButton
                   mode="outlined"
@@ -665,7 +676,7 @@ const handlePrevious = () => {
                       }))
                     );
                   }}
-                  style={styles.dropdown}
+                  style={styles.dropdownButton}
                 >
                   {item.type || 'Seçiniz'}
                 </PaperButton>
@@ -814,6 +825,10 @@ const handlePrevious = () => {
     </View>
   );
 
+  const renderNoApartmentMessage = () => (
+    <Text style={styles.noApartmentText}>Henüz bir apartman eklemediniz</Text>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView 
@@ -823,6 +838,7 @@ const handlePrevious = () => {
         enabled
       >
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
@@ -839,6 +855,8 @@ const handlePrevious = () => {
             renderApartmentDetails()
           ) : showForm ? (
             renderApartmentForm()
+          ) : apartments.length === 0 ? (
+            renderNoApartmentMessage()
           ) : (
             <View style={styles.listContainer}>
               <FlatList
@@ -863,8 +881,7 @@ const handlePrevious = () => {
                   </View>
                 )}
                 scrollEnabled={false}
-                  />
-                  
+              />
             </View>
           )}
         </ScrollView>
@@ -1002,12 +1019,19 @@ const styles = StyleSheet.create({
   // Daire detayları için stiller
   detailsContainer: {
     flex: 1,
-   
-    backgroundColor: "lightblue",
+    backgroundColor: '#bbdefb',
     borderRadius: 10,
     marginVertical: 10,
     marginHorizontal: 20,
-    padding: 5,  
+    padding: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   detailsTitle: {
     fontSize: 20,
@@ -1017,18 +1041,19 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   unitCard: {
-    backgroundColor: colors.white,
+    
     borderRadius: 10,
     padding: 15,
     shadowColor: "#000",
     shadowOffset: { width: 5, height: 5 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 6,
-    width: 325,
+    width: 330,
     
   },
   unitHeader: {
+    flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -1038,15 +1063,13 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "bold",
     color: colors.black,
-   
-    borderRadius: 5,
-    padding: 5,
+  
   },
   counterContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 5, 
+    gap: 5,
     marginBottom: 10,
     
   },
@@ -1091,8 +1114,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    marginLeft: 45,
+   
+    
 
   },
   dropdownLabel: {
@@ -1101,10 +1124,10 @@ const styles = StyleSheet.create({
     
   },
   dropdown: {
-    width: '50%',
+  
     borderColor: colors.primary,
     borderRadius: 5,
-    padding: 0,
+  
   },
   unitInput: {
     marginBottom: 10,
@@ -1178,7 +1201,6 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     marginVertical: 20,
-  // Container arka plan rengi
     borderRadius: 10,
     padding: 10,
   },
@@ -1195,7 +1217,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     color: colors.gray,
-    marginTop: 20,
+    marginTop: 140,
+
   },
   disabledButtonText: {
     color: colors.darkGray,
@@ -1218,7 +1241,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: colors.darkGray,
+    borderColor: colors.lightGray,
     zIndex: 1000,
     elevation: 5,
     maxHeight: 200,
@@ -1234,7 +1257,26 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: 16,
     color: colors.black,
-  }
+  },
+  dropdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+   
+  },
+  dropdownLabel: {
+    fontSize: 16,
+    color: colors.darkGray,
+    marginRight: 10,
+  },
+  dropdownButton: {
+    
+    borderColor: colors.primary,
+    borderWidth: 1,
+    borderRadius: 5,
+    backgroundColor: colors.white,
+    elevation: 2,
+  },
 });
 
 export default ApartmentInfoScreen;
