@@ -50,7 +50,7 @@ api.interceptors.response.use(
 
 const ApartmentInfoScreen = () => {
   const [apartmentName, setApartmentName] = useState("");
-  const [numberOfFloors, setNumberOfFloors] = useState("");
+  const [numberOfFloors, setNumberOfFloors] = useState(0);
   const [totalApartments, setTotalApartments] = useState("");
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
@@ -79,7 +79,8 @@ const ApartmentInfoScreen = () => {
       !isNaN(numberOfFloors) && numberOfFloors > 0 &&
       !isNaN(totalApartments) && totalApartments > 0 &&
       city.trim() && district.trim() &&
-      neighborhood.trim() && street.trim() && buildingNumber.trim() &&
+      neighborhood.trim() && street.trim() && 
+      /^\d+$/.test(buildingNumber.trim()) &&
       /^\d{5}$/.test(postalCode)
     );
   };
@@ -132,7 +133,7 @@ const ApartmentInfoScreen = () => {
     setSelectedApartment(apartment);
     const units = Array.from({ length: apartment.totalApartments }, (_, index) => ({
       unitNumber: index + 1,
-      floor: 1,
+      floor: 0,
       rentAmount: '',
       duesAmount: '',
       type: '2+1',
@@ -143,29 +144,58 @@ const ApartmentInfoScreen = () => {
     setShowApartmentDetails(true);
   };
 
-  const handleNext = () => {
-    if (currentIndex < apartmentUnits.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  };
+const handleNext = () => {
+  if (currentIndex < apartmentUnits.length - 1) {
+    setCurrentIndex(currentIndex + 1);
+  }
+};
 
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
+const handlePrevious = () => {
+  if (currentIndex > 0) {
+    setCurrentIndex(currentIndex - 1);
+  }
+};
+
 
   const isFormValid = () => {
-    return apartmentUnits.every(unit => 
-      unit.rentAmount && unit.duesAmount && unit.notes // Tüm dairelerin eksiksiz olup olmadığını kontrol et
-    ) && apartmentUnits.length > 0; // Dairelerin varlığını kontrol et
+    const currentUnit = apartmentUnits[currentIndex];
+    
+    // Mevcut dairenin tüm alanlarının dolu olup olmadığını kontrol et
+    return currentUnit && 
+      currentUnit.rentAmount?.trim() && 
+      currentUnit.duesAmount?.trim() && 
+      currentUnit.type && 
+      currentUnit.floor >= 0 &&
+      currentUnit.notes?.trim();
   };
 
   const handleSave = () => {
-    // Burada kaydetme işlemleri yapılacak
-    Alert.alert("Başarılı", "Daire bilgileri kaydedildi.");
-    // İsterseniz burada API çağrısı yapabilir veya durumu güncelleyebilirsiniz
-  };
+    // Tüm dairelerin kontrolü
+    const allUnitsValid = apartmentUnits.every(unit => 
+        unit.rentAmount?.trim() && 
+        unit.duesAmount?.trim() && 
+        unit.type && 
+        unit.floor > 0
+    );
+
+    if (!allUnitsValid) {
+        Alert.alert("Uyarı", "Lütfen tüm dairelerin bilgilerini eksiksiz doldurun.");
+        return;
+    }
+
+    // Başarılı kayıt
+    console.log('Daire bilgileri kaydedildi:', apartmentUnits);
+    Alert.alert(
+        "Başarılı",
+        "Daire bilgileri başarıyla kaydedildi.",
+        [{ 
+            text: "Tamam",
+            onPress: () => setShowApartmentDetails(false)
+        }]
+    );
+};
+
+
 
   const renderApartmentForm = () => (
     <View style={styles.formContainer}>
@@ -232,6 +262,7 @@ const ApartmentInfoScreen = () => {
         label="Bina No"
         value={buildingNumber}
         onChangeText={setBuildingNumber}
+        keyboardType="numeric"
         style={styles.input}
       />
 
@@ -292,7 +323,7 @@ const ApartmentInfoScreen = () => {
             <MaterialIcons name="chevron-left" size={40} color={colors.primary} />
           </TouchableOpacity>
           <Text style={styles.detailsTitle}>
-            {selectedApartment.apartmentName} - Daire Bilgileri
+            {selectedApartment.apartmentName} 
           </Text>
           <TouchableOpacity onPress={handleNext} disabled={currentIndex === apartmentUnits.length - 1}>
             <MaterialIcons name="chevron-right" size={40} color={colors.primary} />
@@ -304,44 +335,14 @@ const ApartmentInfoScreen = () => {
           keyExtractor={(item) => item.unitNumber.toString()}
           renderItem={({ item, index }) => (
             <View style={[styles.unitCard, { display: index === currentIndex ? 'flex' : 'none' }]}>
-              {/* Daire bilgileri ve diğer bileşenler burada */}
-              <View style={styles.unitHeader}>
-                <Text style={styles.unitTitle}>Daire {item.unitNumber}</Text>
-                <View style={styles.counterContainer}>
-                  <Text style={styles.counterLabel}>Kat</Text>
-                  <View style={styles.counterButtons}>
-                    <TouchableOpacity
-                      onPress={() => {
-                        const updatedUnits = apartmentUnits.map(unit =>
-                          unit.unitNumber === item.unitNumber && item.floor > 1 // Kat sayısı 1'den büyükse azalt
-                            ? { ...unit, floor: unit.floor - 1 }
-                            : unit
-                        );
-                        setApartmentUnits(updatedUnits);
-                      }}
-                      style={styles.counterButton}
-                    >
-                      <Text style={styles.counterButtonText}>-</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.counterValue}>{item.floor}</Text>
-                    <TouchableOpacity
-                      onPress={() => {
-                        const updatedUnits = apartmentUnits.map(unit =>
-                          unit.unitNumber === item.unitNumber && item.floor < numberOfFloors // Kat sayısı, girilen kat sayısından azsa artır
-                            ? { ...unit, floor: unit.floor + 1 }
-                            : unit
-                        );
-                        setApartmentUnits(updatedUnits);
-                      }}
-                      style={styles.counterButton}
-                    >
-                      <Text style={styles.counterButtonText}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-
-              {/* Daire Tipi Dropdown */}
+              {/* Daire bilgileri ve diğer bileşenler  */}
+              <View style={{flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
+                 <View style={styles.unitHeader}>
+                <Text style={styles.unitTitle}>
+                    Daire {item.unitNumber} 
+                  </Text>
+                  <Text style={styles.smallText}>/ {selectedApartment.totalApartments} </Text>
+               {/* Daire Tipi Dropdown */}
               <View style={styles.dropdownContainer}>
                 <Text style={styles.dropdownLabel}>Daire Tipi</Text>
                 <PaperButton
@@ -368,25 +369,70 @@ const ApartmentInfoScreen = () => {
                   {item.type || 'Seçiniz'}
                 </PaperButton>
               </View>
+             </View>
+              </View>
 
+           
+<View style={{flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
               {/* Balkon Toggle */}
               <View style={styles.balconyContainer}>
                 <Text style={styles.balconyLabel}>Balkon</Text>
                 <Switch
                   value={item.hasBalcony}
                   onValueChange={() => {
-                    const updatedUnits = apartmentUnits.map(unit =>
-                      unit.unitNumber === item.unitNumber
-                        ? { ...unit, hasBalcony: !item.hasBalcony }
-                        : unit
-                    );
-                    setApartmentUnits(updatedUnits);
+                    // Zemin kat kontrolü
+                    if (item.floor > 0) {
+                      const updatedUnits = apartmentUnits.map(unit =>
+                        unit.unitNumber === item.unitNumber
+                          ? { ...unit, hasBalcony: !item.hasBalcony }
+                          : unit
+                      );
+                      setApartmentUnits(updatedUnits);
+                    }
                   }}
                   trackColor={{ false: colors.gray, true: colors.primary }}
                   thumbColor={item.hasBalcony ? colors.white : colors.gray}
+                  disabled={item.floor === 0}
                 />
+                   
               </View>
-
+               <View style={styles.counterContainer}>
+                  <Text style={styles.counterLabel}>Kat:</Text>
+                  <TouchableOpacity
+                    style={styles.counterButton}
+                    onPress={() => {
+                      const updatedUnits = apartmentUnits.map(unit =>
+                        unit.unitNumber === item.unitNumber
+                          ? { ...unit, floor: Math.max(0, unit.floor - 1) }
+                          : unit
+                      );
+                      setApartmentUnits(updatedUnits);
+                    }}
+                  >
+                    <Text style={styles.counterButtonText}>-</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.counterValue}>
+                    {item.floor === 0 ? 'Zemin' : item.floor}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.counterButton}
+                    onPress={() => {
+                      const updatedUnits = apartmentUnits.map(unit =>
+                        unit.unitNumber === item.unitNumber && unit.floor < selectedApartment.numberOfFloors
+                          ? { ...unit, floor: unit.floor + 1 }
+                          : unit
+                      );
+                      setApartmentUnits(updatedUnits);
+                    }}
+                    disabled={item.floor >= selectedApartment.numberOfFloors}
+                  >
+                    <Text style={[
+                      styles.counterButtonText,
+                      item.floor >= selectedApartment.numberOfFloors && styles.disabledButtonText
+                    ]}>+</Text>
+                  </TouchableOpacity>
+                </View>
+</View>
               {/* Kira Miktarı */}
               <PaperInput
                 mode="outlined"
@@ -436,8 +482,7 @@ const ApartmentInfoScreen = () => {
                   );
                   setApartmentUnits(updatedUnits);
                 }}
-                multiline
-                numberOfLines={3}
+                numberOfLines={1}
                 style={styles.notesInput}
               />
             </View>
@@ -453,9 +498,11 @@ const ApartmentInfoScreen = () => {
         <PaperButton
           mode="contained"
           onPress={handleSave}
-          style={styles.saveButton}
+          style={[
+            styles.saveButton,
+            { backgroundColor: isFormValid() ? colors.primary : colors.darkGray }
+          ]}
           labelStyle={styles.saveButtonLabel}
-          disabled={!isFormValid()} // Butonun aktif olup olmadığını kontrol et
         >
           Onayla
         </PaperButton>
@@ -549,7 +596,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 20 : 30,
+    paddingTop: Platform.OS === 'ios' ? 60 : 30,
   },
   animation: {
     width: 200,
@@ -658,13 +705,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 10,
     padding: 15,
-   
     shadowColor: "#000",
     shadowOffset: { width: 5, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 6,
-    width: 320,
+    width: 325,
     
   },
   unitHeader: {
@@ -674,7 +720,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   unitTitle: {
-    fontSize: 24,
+    fontSize: 21,
     fontWeight: "bold",
     color: colors.black,
     backgroundColor: colors.textPrimary,
@@ -684,18 +730,25 @@ const styles = StyleSheet.create({
   counterContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 5, 
+    marginBottom: 10,
+    
   },
   counterLabel: {
-    marginRight: 10,
-    fontSize: 14,
+   flexDirection: "row",
+   alignItems: "center",
+   justifyContent: "center",
+    fontSize: 16,
     color: colors.darkGray,
+    
   },
   counterButtons: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.background,
+    backgroundColor: colors.textPrimary,
     borderRadius: 8,
-    padding: 4,
+   
   },
   counterButton: {
     width: 30,
@@ -704,7 +757,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.white,
     borderRadius: 15,
-    marginHorizontal: 4,
+  
+    opacity: 1,
   },
   counterButtonText: {
     fontSize: 18,
@@ -712,29 +766,37 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   counterValue: {
-    marginHorizontal: 10,
-    fontSize: 16,
-    fontWeight: "bold",
-    color: colors.black,
+    marginHorizontal: 5,
+    fontSize: 14,
+    fontWeight: "normal",
+    color: colors.primary,
   },
   dropdownContainer: {
-    marginBottom: 15,
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    marginLeft: 45,
+
   },
   dropdownLabel: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.darkGray,
-    marginBottom: 5,
+    
   },
   dropdown: {
-    width: '100%',
+    width: '50%',
     borderColor: colors.primary,
+    borderRadius: 5,
+    padding: 0,
   },
   unitInput: {
     marginBottom: 10,
     backgroundColor: colors.white,
   },
   notesInput: {
-    marginTop: 10,
+   
     backgroundColor: colors.white,
   },
   saveButton: {
@@ -782,7 +844,9 @@ const styles = StyleSheet.create({
   balconyContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: "space-between",
     marginBottom: 10,
+    gap: 10,  
   },
   balconyLabel: {
     fontSize: 16,
@@ -811,6 +875,21 @@ const styles = StyleSheet.create({
   },
   navigationButton: {
     padding: 10,
+  },
+  noApartmentText: {
+    textAlign: 'center',
+    fontSize: 18,
+    color: colors.gray,
+    marginTop: 20,
+  },
+  disabledButtonText: {
+    color: colors.darkGray,
+    opacity: 0.5,
+  },
+  smallText: {
+    fontSize: 14,
+    color: colors.darkGray,
+  marginTop: 6,
   },
 });
 
