@@ -110,6 +110,9 @@ const ApartmentInfoScreen = () => {
   const [hasBasement, setHasBasement] = useState(false);
   const [currentFloorIndex, setCurrentFloorIndex] = useState(0);
 
+  const [showBasementSelector, setShowBasementSelector] = useState(false);
+  const [selectedBasementFloor, setSelectedBasementFloor] = useState(null);
+
   const APARTMENT_TYPES = ["1+0", "1+1", "2+1", "3+1", "4+1", "5+1"];
 
   const STEPS = [
@@ -236,7 +239,7 @@ const ApartmentInfoScreen = () => {
 
       setApartments([...apartments, apartmentData]);
 
-      // Input alanlarını temizle
+      // Input alanların�� temizle
       setApartmentName("");
       setNumberOfFloors("");
       setTotalApartments("");
@@ -260,7 +263,6 @@ const ApartmentInfoScreen = () => {
 
   const handleAddApartmentDetails = (apartment) => {
     setSelectedApartment(apartment);
-    // Boş daire bilgilerini oluştur
     const units = Array.from({ length: apartment.totalApartments }, (_, index) => ({
       unitNumber: index + 1,
       floor: undefined,
@@ -276,7 +278,9 @@ const ApartmentInfoScreen = () => {
     setCurrentStep('type');
     setSelectedType('');
     setSelectedUnits([]);
-    setSelectedFloor(null);
+    setSelectedFloor(0);
+    setSelectedBasementFloor(null);
+    setAvailableFloors([0, ...Array.from({ length: apartment.numberOfFloors - 1 }, (_, i) => i + 1)]);
   };
 
 const handleNext = () => {
@@ -803,62 +807,36 @@ const handlePrevious = () => {
           <FloorSelector 
             currentFloor={selectedFloor}
             onFloorChange={handleFloorChange}
-            canAddBasement={numberOfFloors > 1 && !hasBasement}
           />
 
           <View style={styles.floorsGrid}>
-            {Array.from({ length: numberOfFloors + 1 }, (_, i) => numberOfFloors - i).map(floor => (
-              <View key={floor} style={[
-                styles.floorRow,
-                selectedFloor === floor && styles.selectedFloorRow
-              ]}>
-                <TouchableOpacity 
-                  style={styles.floorNumberContainer}
-                  onPress={() => handleFloorSelection(floor)}
-                >
-                  <Text style={[
-                    styles.floorNumber,
-                    selectedFloor === floor && styles.selectedFloorNumber
-                  ]}>
-                    {floor === 0 ? 'Zemin' : `${floor}. Kat`}
-                  </Text>
-                </TouchableOpacity>
-                <View style={styles.floorUnits}>
-                  {apartmentUnits
-                    .filter(unit => unit.floor === undefined || unit.floor === floor) // Filtrelemeyi güncelle
-                    .map(unit => (
-                      <TouchableOpacity
-                        key={unit.unitNumber}
-                        style={[
-                          styles.unitButton,
-                          selectedUnits.includes(unit.unitNumber) && styles.selectedUnitButton,
-                          unit.floor !== undefined && styles.completedUnitButton,
-                          !unassignedUnits.includes(unit.unitNumber) && styles.inactiveUnitButton
-                        ]}
-                        onPress={() => handleUnitSelection(unit.unitNumber)}
-                        disabled={!unassignedUnits.includes(unit.unitNumber) || selectedFloor === null}
-                      >
-                        <Text style={[
-                          styles.unitButtonText,
-                          selectedUnits.includes(unit.unitNumber) && styles.selectedUnitButtonText
-                        ]}>
-                          {unit.unitNumber}
-                        </Text>
-                        {unit.type && (
-                          <Text style={styles.unitTypeText}>
-                            {unit.type}
-                          </Text>
-                        )}
-                        {unit.floor !== undefined && (
-                          <Text style={styles.unitFloorText}>
-                            {unit.floor === 0 ? 'Z' : unit.floor}
-                          </Text>
-                        )}
-                      </TouchableOpacity>
-                    ))}
-                </View>
-              </View>
-            ))}
+            <View style={styles.floorUnits}>
+              {apartmentUnits
+                .filter(unit => unit.floor === undefined || unit.floor === selectedFloor)
+                .map(unit => (
+                  <TouchableOpacity
+                    key={unit.unitNumber}
+                    style={[
+                      styles.unitButton,
+                      selectedUnits.includes(unit.unitNumber) && styles.selectedUnitButton,
+                      unit.floor !== undefined && styles.completedUnitButton,
+                      !unassignedUnits.includes(unit.unitNumber) && styles.inactiveUnitButton
+                    ]}
+                    onPress={() => handleUnitSelection(unit.unitNumber)}
+                    disabled={!unassignedUnits.includes(unit.unitNumber) || selectedFloor === null}
+                  >
+                    <Text style={[
+                      styles.unitButtonText,
+                      selectedUnits.includes(unit.unitNumber) && styles.selectedUnitButtonText
+                    ]}>
+                      {unit.unitNumber}
+                    </Text>
+                    {unit.type && (
+                      <Text style={styles.unitTypeText}>{unit.type}</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+            </View>
           </View>
 
           {selectedUnits.length > 0 && selectedFloor !== null && (
@@ -1380,7 +1358,54 @@ const handlePrevious = () => {
     return floors;
   };
 
-  const FloorSelector = ({ currentFloor, onFloorChange, canAddBasement }) => {
+  const FloorSelector = ({ currentFloor, onFloorChange }) => {
+    const possibleBasements = [-5, -4, -3, -2, -1];
+
+    // Geçici seçim için yeni state
+    const [tempBasementFloor, setTempBasementFloor] = useState(null);
+
+    const handleBasementSelect = (floor) => {
+      // Sadece geçici seçimi güncelle, henüz katları ekleme
+      setTempBasementFloor(floor);
+    };
+
+    const handleConfirmBasement = () => {
+      if (!tempBasementFloor) return;
+
+      // Seçilen kattan -1'e kadar olan tüm bodrum katları ekle
+      const basementFloors = [];
+      for (let i = tempBasementFloor; i <= -1; i++) {
+        basementFloors.push(i);
+      }
+      
+      // Bodrum kat sayısını hesapla
+      const numberOfBasements = Math.abs(tempBasementFloor);
+      
+      // Kalan kat sayısını hesapla (toplam kat - bodrum kat sayısı)
+      const remainingFloors = selectedApartment.numberOfFloors - numberOfBasements;
+      
+      // Zemin kat ve üst katları ekle
+      const upperFloors = [0]; // Zemin kat
+      // Üst katları ekle (1'den başlayarak kalan kat sayısına kadar)
+      for (let i = 1; i < remainingFloors; i++) {
+        upperFloors.push(i);
+      }
+
+      // Tüm katları birleştir
+      const allFloors = [...basementFloors.sort((a, b) => a - b), ...upperFloors];
+      
+      setAvailableFloors(allFloors);
+      setSelectedBasementFloor(tempBasementFloor);
+      setSelectedFloor(tempBasementFloor); // En alt kattan başla
+      setShowBasementSelector(false);
+      setTempBasementFloor(null);
+    };
+
+    const getFloorDisplay = (floor) => {
+      // Sadece 0. katta "Zemin" göster
+      return floor === 0 ? 'Zemin' : `${floor}. Kat`;
+    };
+
     return (
       <View style={styles.floorSelectorContainer}>
         <TouchableOpacity 
@@ -1397,34 +1422,70 @@ const handlePrevious = () => {
 
         <View style={styles.currentFloorContainer}>
           <Text style={styles.currentFloorText}>
-            {currentFloor === 0 ? 'Zemin' : `${currentFloor}. Kat`}
+            {getFloorDisplay(currentFloor)}
           </Text>
         </View>
 
-        <TouchableOpacity 
-          style={styles.floorArrowButton}
-          onPress={() => onFloorChange('down')}
-          disabled={currentFloor === Math.min(...availableFloors)}
-        >
-          <MaterialIcons 
-            name="keyboard-arrow-down" 
-            size={30} 
-            color={currentFloor === Math.min(...availableFloors) ? colors.lightGray : colors.primary} 
-          />
-        </TouchableOpacity>
-
-        {canAddBasement && !hasBasement && (
+        <View style={styles.downArrowContainer}>
           <TouchableOpacity 
-            style={styles.addBasementButton}
-            onPress={() => {
-              setHasBasement(true);
-              const newFloors = generateFloorList(numberOfFloors, true);
-              setAvailableFloors(newFloors);
-            }}
+            style={styles.floorArrowButton}
+            onPress={() => onFloorChange('down')}
+            disabled={currentFloor === Math.min(...availableFloors)}
           >
-            <MaterialIcons name="add-circle" size={24} color={colors.primary} />
-            <Text style={styles.addBasementText}>Bodrum Kat Ekle</Text>
+            <MaterialIcons 
+              name="keyboard-arrow-down" 
+              size={30} 
+              color={currentFloor === Math.min(...availableFloors) ? colors.lightGray : colors.primary} 
+            />
           </TouchableOpacity>
+
+          {!selectedBasementFloor && (
+            <TouchableOpacity 
+              style={[
+                styles.addBasementButton,
+                selectedBasementFloor && styles.disabledButton
+              ]}
+              onPress={() => setShowBasementSelector(true)}
+              disabled={selectedBasementFloor}
+            >
+              <MaterialIcons 
+                name="add" 
+                size={24} 
+                color={selectedBasementFloor ? colors.lightGray : colors.primary} 
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {showBasementSelector && (
+          <View style={styles.basementSelectorContainer}>
+            <Text style={styles.basementSelectorTitle}>Bodrum Kat Seç</Text>
+            {possibleBasements.map((floor) => (
+              <TouchableOpacity
+                key={floor}
+                style={[
+                  styles.basementOptionButton,
+                  tempBasementFloor === floor && styles.selectedBasementButton
+                ]}
+                onPress={() => handleBasementSelect(floor)}
+              >
+                <Text style={[
+                  styles.basementOptionText,
+                  tempBasementFloor === floor && styles.selectedBasementText
+                ]}>
+                  {floor}. Kat
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <PaperButton
+              mode="contained"
+              onPress={handleConfirmBasement}
+              style={styles.confirmBasementButton}
+              disabled={!tempBasementFloor}
+            >
+              Onayla
+            </PaperButton>
+          </View>
         )}
       </View>
     );
@@ -1482,6 +1543,12 @@ const handlePrevious = () => {
     setCompletionStatus(prev => ({ ...prev, floor: false }));
     setHasBasement(false);
     setAvailableFloors(generateFloorList(numberOfFloors, false));
+  };
+
+  // Kat hesaplama yardımcı fonksiyonu ekleyelim
+  const calculateTotalFloors = (basementCount) => {
+    // Toplam kat sayısından bodrum kat sayısını çıkar ve zemin katı da hesaba kat
+    return numberOfFloors - basementCount;
   };
 
   return (
@@ -1632,7 +1699,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   listContainer: {
-   
+    marginVertical: 20,
+    borderRadius: 10,
+    padding: 10,
   },
   apartmentCard: {
     flexDirection: 'row',
@@ -1671,7 +1740,6 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontWeight: '500',
   },
-  // Daire detayları için stiller
   detailsContainer: {
     flex: 1,
     backgroundColor: '#bbdefb',
@@ -1696,7 +1764,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   unitCard: {
-    
     borderRadius: 10,
     padding: 15,
     shadowColor: "#000",
@@ -1705,7 +1772,6 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 6,
     width: 330,
-    
   },
   unitHeader: {
     flex: 1,
@@ -1718,7 +1784,6 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "bold",
     color: colors.black,
-  
   },
   counterContainer: {
     flexDirection: "row",
@@ -1726,22 +1791,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 5,
     marginBottom: 10,
-    
   },
   counterLabel: {
-   flexDirection: "row",
-   alignItems: "center",
-   justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     fontSize: 16,
     color: colors.darkGray,
-    
   },
   counterButtons: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: colors.textPrimary,
     borderRadius: 8,
-   
   },
   counterButton: {
     width: 30,
@@ -1750,7 +1812,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.white,
     borderRadius: 15,
-  
     opacity: 1,
   },
   counterButtonText: {
@@ -1769,35 +1830,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-   
-    
-
   },
   dropdownLabel: {
     fontSize: 16,
     color: colors.darkGray,
-    
   },
   dropdown: {
-  
     borderColor: colors.primary,
     borderRadius: 5,
-  
   },
   unitInput: {
     marginBottom: 10,
     backgroundColor: colors.white,
   },
   notesInput: {
-   
     backgroundColor: colors.white,
+    height: 100,
   },
   saveButton: {
     backgroundColor: colors.primary,
     borderRadius: 8,
     width: "70%",
     alignSelf: "center",
-   
   },
   saveButtonLabel: {
     fontSize: 16,
@@ -1873,7 +1927,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: colors.gray,
     marginTop: 140,
-
   },
   disabledButtonText: {
     color: colors.darkGray,
@@ -1882,7 +1935,7 @@ const styles = StyleSheet.create({
   smallText: {
     fontSize: 14,
     color: colors.darkGray,
-  marginTop: 6,
+    marginTop: 6,
   },
   dropdownWrapper: {
     flex: 1,
@@ -1917,7 +1970,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-   
   },
   dropdownLabel: {
     fontSize: 16,
@@ -1925,7 +1977,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   dropdownButton: {
-    
     borderColor: colors.primary,
     borderWidth: 1,
     borderRadius: 5,
@@ -1954,7 +2005,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.primary,
     backgroundColor: colors.white,
-    opacity: (props) => props.disabled ? 0.5 : 1, // Disabled durumu için opacity
+    opacity: (props) => props.disabled ? 0.5 : 1,
   },
   selectedTypeButton: {
     backgroundColor: colors.primary,
@@ -2153,26 +2204,22 @@ const styles = StyleSheet.create({
   floorsGrid: {
     padding: 10,
   },
-  floorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-    backgroundColor: colors.white,
-    borderRadius: 8,
-    padding: 10,
-    elevation: 2,
-  },
-  floorNumber: {
-    width: 80,
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
   floorUnits: {
-    flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
+    justifyContent: 'center',
+    padding: 15,
+  },
+  unitButton: {
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: colors.white,
   },
   balconyUnitButton: {
     backgroundColor: colors.lightGreen,
@@ -2260,6 +2307,68 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     color: colors.error,
     fontSize: 12,
+  },
+  basementSelectorContainer: {
+    position: 'absolute',
+    right: 40,
+    top: 45,
+    backgroundColor: colors.white,
+    borderRadius: 8,
+    padding: 15,
+    elevation: 4,
+    minWidth: 120,
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  basementSelectorTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  basementOptionButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 4,
+    marginVertical: 2,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  selectedBasementButton: {
+    backgroundColor: colors.primary,
+  },
+  basementOptionText: {
+    color: colors.primary,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  selectedBasementText: {
+    color: colors.white,
+  },
+  addBasementButton: {
+    padding: 5,
+    marginLeft: 5,
+    backgroundColor: colors.lightBlue,
+    borderRadius: 20,
+    width: 34,
+    height: 34,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disabledButton: {
+    opacity: 0.5,
+    backgroundColor: colors.lightGray,
+  },
+  confirmBasementButton: {
+    marginTop: 10,
+    backgroundColor: colors.primary,
   },
 });
 
