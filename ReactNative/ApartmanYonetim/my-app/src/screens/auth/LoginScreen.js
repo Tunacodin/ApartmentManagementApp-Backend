@@ -23,7 +23,7 @@ const LoginScreen = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
   const role = route.params?.role || 'admin';
 
-  const API_URL = "http://172.16.1.155:5001/api/User/login";
+  const API_URL = "http://172.20.0.226:5001/api/User/login";
 
   const validateForm = () => {
     if (!email.trim() || !password.trim()) {
