@@ -239,7 +239,7 @@ const ApartmentInfoScreen = () => {
 
       setApartments([...apartments, apartmentData]);
 
-      // Input alanların�� temizle
+      // Input alanların temizle
       setApartmentName("");
       setNumberOfFloors("");
       setTotalApartments("");
@@ -1372,22 +1372,19 @@ const handlePrevious = () => {
     const handleConfirmBasement = () => {
       if (!tempBasementFloor) return;
 
-      // Seçilen kattan -1'e kadar olan tüm bodrum katları ekle
+      // Seçilen kattan -1'e kadar olan tüm katları ekle
       const basementFloors = [];
       for (let i = tempBasementFloor; i <= -1; i++) {
         basementFloors.push(i);
       }
       
-      // Bodrum kat sayısını hesapla
-      const numberOfBasements = Math.abs(tempBasementFloor);
-      
-      // Kalan kat sayısını hesapla (toplam kat - bodrum kat sayısı)
-      const remainingFloors = selectedApartment.numberOfFloors - numberOfBasements;
-      
       // Zemin kat ve üst katları ekle
       const upperFloors = [0]; // Zemin kat
-      // Üst katları ekle (1'den başlayarak kalan kat sayısına kadar)
-      for (let i = 1; i < remainingFloors; i++) {
+      // Toplam kat sayısından bodrum kat sayısını çıkarma
+      const remainingFloors = selectedApartment.numberOfFloors - 1; // -1 for ground floor
+      
+      // Üst katları ekle (1'den başlayarak)
+      for (let i = 1; i <= remainingFloors; i++) {
         upperFloors.push(i);
       }
 
@@ -1551,6 +1548,84 @@ const handlePrevious = () => {
     return numberOfFloors - basementCount;
   };
 
+  const renderApartmentList = () => (
+    <View style={styles.listContainer}>
+      {apartments.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.noApartmentText}>Henüz apartman eklenmedi</Text>
+        </View>
+      ) : (
+        <ScrollView style={styles.apartmentList}>
+          {apartments.map((apartment, index) => (
+            <View key={index} style={styles.apartmentCard}>
+              <View style={styles.apartmentHeader}>
+                <Text style={styles.apartmentName}>{apartment.apartmentName}</Text>
+                <MaterialIcons name="apartment" size={24} color={colors.primary} />
+              </View>
+              
+              <View style={styles.apartmentDetails}>
+                <View style={styles.detailRow}>
+                  <MaterialIcons name="location-on" size={20} color={colors.darkGray} />
+                  <Text style={styles.detailText}>
+                    {apartment.street} No:{apartment.buildingNumber}, {apartment.neighborhood}
+                  </Text>
+                </View>
+                
+                <View style={styles.detailRow}>
+                  <MaterialIcons name="place" size={20} color={colors.darkGray} />
+                  <Text style={styles.detailText}>
+                    {apartment.district}/{apartment.city}
+                  </Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <MaterialIcons name="layers" size={20} color={colors.darkGray} />
+                  <Text style={styles.detailText}>
+                    {apartment.numberOfFloors} Kat | {apartment.totalApartments} Daire
+                  </Text>
+                </View>
+
+                <View style={styles.utilitiesRow}>
+                  <Text style={styles.utilitiesTitle}>Dahil Hizmetler:</Text>
+                  <View style={styles.utilitiesIcons}>
+                    {apartment.includedUtilities.electric && (
+                      <MaterialIcons name="flash-on" size={20} color={colors.success} />
+                    )}
+                    {apartment.includedUtilities.water && (
+                      <MaterialIcons name="water-drop" size={20} color={colors.success} />
+                    )}
+                    {apartment.includedUtilities.gas && (
+                      <MaterialIcons name="local-fire-department" size={20} color={colors.success} />
+                    )}
+                    {apartment.includedUtilities.internet && (
+                      <MaterialIcons name="wifi" size={20} color={colors.success} />
+                    )}
+                  </View>
+                </View>
+              </View>
+
+              <PaperButton
+                mode="outlined"
+                onPress={() => handleAddApartmentDetails(apartment)}
+                style={styles.detailsButton}
+                icon="arrow-right"
+              >
+                Daire Bilgilerini Düzenle
+              </PaperButton>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+
+      <TouchableOpacity 
+        style={styles.fabButton}
+        onPress={() => setShowForm(true)}
+      >
+        <MaterialIcons name="add" size={30} color={colors.white} />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView 
@@ -1577,45 +1652,8 @@ const handlePrevious = () => {
             renderApartmentDetails()
           ) : showForm ? (
             renderApartmentForm()
-          ) : apartments.length === 0 ? (
-            renderNoApartmentMessage()
-          ) : (
-            <View style={styles.listContainer}>
-              <FlatList
-                data={apartments}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item }) => (
-                  <View style={styles.apartmentCard}>
-                    <MaterialIcons name="apartment" size={24} color={colors.primary} />
-                    <View style={styles.apartmentInfo}>
-                      <Text style={styles.apartmentName}>{item.apartmentName}</Text>
-                      <Text style={styles.apartmentDetails}>
-                        {item.totalApartments} Daire • {item.numberOfFloors} Kat
-                      </Text>
-                    </View>
-                    <TouchableOpacity 
-                      style={styles.detailsButton}
-                      onPress={() => handleAddApartmentDetails(item)}
-                    >
-                      <MaterialIcons name="add-circle" size={24} color={colors.primary} />
-                      <Text style={styles.detailsButtonText}>Daire Bilgileri</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-                scrollEnabled={false}
-              />
-            </View>
-          )}
+          ) : renderApartmentList()}
         </ScrollView>
-
-        {!showForm && !showApartmentDetails && (
-          <TouchableOpacity 
-            style={styles.addButton}
-            onPress={() => setShowForm(true)}
-          >
-            <MaterialIcons name="add" size={30} color={colors.white} />
-          </TouchableOpacity>
-        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -1637,52 +1675,25 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 100 : 90,
   },
   headerContainer: {
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 30,
+    marginTop: 80,
+    marginBottom: 20,
+    paddingHorizontal: 15,
   },
   animation: {
-    width: 200,
-    height: 200,
+    width: 150,
+    height: 150,
   },
   titleContainer: {
-    paddingVertical: 10,
-    paddingHorizontal: 30,
+    marginTop: 10,
   },
   title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: colors.black,
-    textAlign: "center",
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.primary,
+    textAlign: 'center',
   },
-  formContainer: {
-    padding: 20,
-    width: '100%',
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-    width: "100%",
-  },
-  icon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: colors.white,
-    borderRadius: 10,
-  },
-  submitButton: {
-    marginTop: 20,
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-  },
-  submitButtonLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  addButton: {
+  fabButton: {
     position: 'absolute',
     right: 20,
     bottom: 20,
@@ -1693,60 +1704,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  listContainer: {
-    marginVertical: 20,
-    borderRadius: 10,
-    padding: 10,
-  },
-  apartmentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    elevation: 3,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  apartmentInfo: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  apartmentName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.black,
-  },
-  apartmentDetails: {
-    fontSize: 14,
-    color: colors.darkGray,
-    marginTop: 4,
-  },
-  detailsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-  },
-  detailsButtonText: {
-    color: colors.primary,
-    marginLeft: 5,
-    fontWeight: '500',
-  },
-  detailsContainer: {
-    flex: 1,
-    backgroundColor: '#bbdefb',
-    borderRadius: 10,
-    marginVertical: 10,
-    marginHorizontal: 20,
-    padding: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -1754,570 +1711,98 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
   },
-  detailsTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: colors.black,
-    marginBottom: 10,
-    textAlign: "center",
+  listTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.primary,
   },
-  unitCard: {
+  apartmentList: {
+    paddingHorizontal: 15,
+  },
+  apartmentCard: {
+    backgroundColor: colors.white,
     borderRadius: 10,
     padding: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 5, height: 5 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 6,
-    width: 330,
+    marginBottom: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
-  unitHeader: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  apartmentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  apartmentName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+  apartmentDetails: {
     marginBottom: 15,
   },
-  unitTitle: {
-    fontSize: 21,
-    fontWeight: "bold",
-    color: colors.black,
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  counterContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    marginBottom: 10,
-  },
-  counterLabel: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+  detailText: {
+    marginLeft: 10,
     fontSize: 16,
     color: colors.darkGray,
   },
-  counterButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.textPrimary,
-    borderRadius: 8,
-  },
-  counterButton: {
-    width: 30,
-    height: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.white,
-    borderRadius: 15,
-    opacity: 1,
-  },
-  counterButtonText: {
-    fontSize: 18,
-    color: colors.primary,
-    fontWeight: "bold",
-  },
-  counterValue: {
-    marginHorizontal: 5,
-    fontSize: 14,
-    fontWeight: "normal",
-    color: colors.primary,
-  },
-  dropdownContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dropdownLabel: {
-    fontSize: 16,
-    color: colors.darkGray,
-  },
-  dropdown: {
-    borderColor: colors.primary,
-    borderRadius: 5,
-  },
-  unitInput: {
-    marginBottom: 10,
-    backgroundColor: colors.white,
-  },
-  notesInput: {
-    backgroundColor: colors.white,
-    height: 100,
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    width: "70%",
-    alignSelf: "center",
-  },
-  saveButtonLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: colors.white,
-  },
-  utilitiesContainer: {
-    marginVertical: 10,
+  utilitiesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
   },
   utilitiesTitle: {
     fontSize: 16,
     color: colors.darkGray,
-    marginBottom: 10,
-  },
-  checkboxGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  checkbox: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: colors.primary,    
-  },
-  checkboxChecked: {
-    backgroundColor: colors.primary,
-  },
-  checkboxLabel: {
-    color: colors.primary,
-    fontSize: 14,
-  },
-  checkboxLabelChecked: {
-    color: colors.white,
-  },
-  balconyContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: "space-between",
-    marginBottom: 10,
-    gap: 10,  
-  },
-  balconyLabel: {
-    fontSize: 16,
-    color: colors.darkGray,
     marginRight: 10,
   },
-  horizontalList: {
-    paddingHorizontal: 10,
-    paddingBottom: 20,
-  },
-  saveButtonContainer: {
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  listContainer: {
-    marginVertical: 20,
-    borderRadius: 10,
-    padding: 10,
-  },
-  buttonContainer: {
+  utilitiesIcons: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    marginBottom: 10,
-    alignItems: 'center',
+    gap: 10,
   },
-  navigationButton: {
-    padding: 10,
+  detailsButton: {
+    marginTop: 10,
+    borderColor: colors.primary,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   noApartmentText: {
+    fontSize: 18,
+    color: colors.darkGray,
     textAlign: 'center',
-    fontSize: 18,
-    color: colors.gray,
-    marginTop: 140,
   },
-  disabledButtonText: {
-    color: colors.darkGray,
-    opacity: 0.5,
+  animation: {
+    width: 200,
+    height: 200,
   },
-  smallText: {
-    fontSize: 14,
-    color: colors.darkGray,
-    marginTop: 6,
-  },
-  dropdownWrapper: {
+  listContainer: {
     flex: 1,
-    position: 'relative',
-  },
-  dropdown: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    backgroundColor: colors.white,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    zIndex: 1000,
-    elevation: 5,
-    maxHeight: 200,
-  },
-  dropdownScroll: {
-    maxHeight: 200,
-  },
-  dropdownItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
-  },
-  dropdownText: {
-    fontSize: 16,
-    color: colors.black,
-  },
-  dropdownRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  dropdownLabel: {
-    fontSize: 16,
-    color: colors.darkGray,
-    marginRight: 10,
-  },
-  dropdownButton: {
-    borderColor: colors.primary,
-    borderWidth: 1,
-    borderRadius: 5,
-    backgroundColor: colors.white,
-    elevation: 2,
-  },
-  typeSelectionContainer: {
     padding: 15,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: colors.primary,
-  },
-  typeButtonsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    justifyContent: 'center',
-  },
-  typeButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: colors.white,
-    opacity: (props) => props.disabled ? 0.5 : 1,
-  },
-  selectedTypeButton: {
-    backgroundColor: colors.primary,
-  },
-  typeButtonText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  selectedTypeButtonText: {
-    color: colors.white,
-  },
-  unitSelectorContainer: {
-    padding: 15,
-  },
-  quickSelectContainer: {
-    marginBottom: 15,
-  },
-  quickSelectTitle: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: colors.darkGray,
-  },
-  quickSelectButton: {
-    marginRight: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    backgroundColor: colors.lightGray,
-  },
-  quickSelectButtonText: {
-    color: colors.primary,
-    fontWeight: '500',
-  },
-  unitsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  unitButton: {
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: colors.white,
-  },
-  selectedUnitButton: {
-    backgroundColor: colors.primary,
-  },
-  alreadySetUnit: {
-    borderColor: colors.success,
-    backgroundColor: colors.lightGreen,
-  },
-  unitButtonText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  selectedUnitButtonText: {
-    color: colors.white,
-  },
-  existingTypeText: {
-    fontSize: 12,
-    color: colors.success,
-    marginTop: 2,
-  },
-  bulkInputContainer: {
-    padding: 15,
-    backgroundColor: colors.lightGray,
-    borderRadius: 8,
-  },
-  selectedCountText: {
-    fontSize: 16,
-    color: colors.primary,
-    marginBottom: 10,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  bulkInput: {
-    backgroundColor: colors.white,
-    marginBottom: 10,
-  },
-  updateButton: {
-    marginTop: 10,
-    backgroundColor: colors.primary,
-  },
-  stepsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 15,
-    backgroundColor: colors.white,
-    borderRadius: 8,
-    marginBottom: 20,
-    elevation: 2,
-  },
-  stepItem: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 5,
-  },
-  stepTitle: {
-    fontSize: 14,
-    color: colors.darkGray,
-  },
-  completedUnitButton: {
-    borderColor: colors.success,
-    backgroundColor: colors.lightGreen,
-  },
-  inactiveUnitButton: {
-    opacity: 0.5,
-    backgroundColor: colors.lightGray,
-  },
-  navigationButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-  },
-  navButton: {
+  apartmentList: {
     flex: 1,
-    marginHorizontal: 5,
   },
-  primaryButton: {
-    backgroundColor: colors.primary,
-  },
-  completedUnitButtonText: {
-    color: colors.success,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  unitTypeText: {
-    fontSize: 12,
-    color: colors.success,
-    marginTop: 2,
-  },
-  inputHeader: {
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  inputTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.primary,
-    marginBottom: 5,
-  },
-  remainingText: {
-    fontSize: 14,
-    color: colors.darkGray,
-  },
-  amountInputContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  amountInput: {
+  apartmentCard: {
     backgroundColor: colors.white,
-  },
-  notesInputContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  notesInput: {
-    backgroundColor: colors.white,
-    height: 100,
-  },
-  unitAmountText: {
-    fontSize: 12,
-    color: colors.success,
-    marginTop: 2,
-  },
-  applyButton: {
-    marginTop: 20,
-    marginHorizontal: 20,
-    backgroundColor: colors.primary,
-  },
-  floorContainer: {
-    padding: 15,
-    backgroundColor: '#bbdefb',
     borderRadius: 10,
-    marginVertical: 10,
-    marginHorizontal: 20,
-    padding: 5,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  floorsGrid: {
-    padding: 10,
-  },
-  floorUnits: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    justifyContent: 'center',
     padding: 15,
-  },
-  unitButton: {
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: colors.white,
-  },
-  balconyUnitButton: {
-    backgroundColor: colors.lightGreen,
-    borderColor: colors.success,
-  },
-  balconyUnitText: {
-    color: colors.success,
-  },
-  unitDetailText: {
-    fontSize: 10,
-    color: colors.darkGray,
-    marginTop: 2,
-  },
-  selectedFloorRow: {
-    backgroundColor: colors.lightBlue,
-    borderColor: colors.primary,
-    borderWidth: 1,
-  },
-  floorNumberContainer: {
-    width: 80,
-    padding: 5,
-    borderRadius: 4,
-  },
-  selectedFloorNumber: {
-    color: colors.primary,
-    fontWeight: 'bold',
-  },
-  unitFloorText: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    fontSize: 10,
-    color: colors.darkGray,
-    backgroundColor: colors.lightGray,
-    padding: 2,
-    borderRadius: 4,
-  },
-  floorSelectorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 15,
-    padding: 10,
-  },
-  floorArrowButton: {
-    padding: 10,
-  },
-  currentFloorContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: colors.white,
-    borderRadius: 8,
-    marginHorizontal: 10,
-    minWidth: 120,
-    alignItems: 'center',
-  },
-  currentFloorText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  addBasementButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: colors.lightBlue,
-    marginLeft: 10,
-  },
-  addBasementText: {
-    marginLeft: 5,
-    color: colors.primary,
-    fontSize: 12,
-  },
-  resetButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: colors.lightRed,
-    alignSelf: 'center',
-    marginTop: 10,
-  },
-  resetButtonText: {
-    marginLeft: 5,
-    color: colors.error,
-    fontSize: 12,
-  },
-  basementSelectorContainer: {
-    position: 'absolute',
-    right: 40,
-    top: 45,
-    backgroundColor: colors.white,
-    borderRadius: 8,
-    padding: 15,
-    elevation: 4,
-    minWidth: 120,
-    zIndex: 1000,
+    marginBottom: 15,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -2326,50 +1811,48 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
-  basementSelectorTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.primary,
+  apartmentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 10,
-    textAlign: 'center',
   },
-  basementOptionButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 4,
-    marginVertical: 2,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  selectedBasementButton: {
-    backgroundColor: colors.primary,
-  },
-  basementOptionText: {
+  apartmentName: {
+    fontSize: 20,
+    fontWeight: 'bold',
     color: colors.primary,
-    fontSize: 14,
-    textAlign: 'center',
   },
-  selectedBasementText: {
-    color: colors.white,
+  apartmentDetails: {
+    marginBottom: 15,
   },
-  addBasementButton: {
-    padding: 5,
-    marginLeft: 5,
-    backgroundColor: colors.lightBlue,
-    borderRadius: 20,
-    width: 34,
-    height: 34,
-    justifyContent: 'center',
+  detailRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
   },
-  disabledButton: {
-    opacity: 0.5,
-    backgroundColor: colors.lightGray,
+  detailText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: colors.darkGray,
   },
-  confirmBasementButton: {
+  utilitiesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  utilitiesTitle: {
+    fontSize: 16,
+    color: colors.darkGray,
+    marginRight: 10,
+  },
+  utilitiesIcons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  detailsButton: {
     marginTop: 10,
-    backgroundColor: colors.primary,
-  },
+    borderColor: colors.primary,
+  }
 });
 
 export default ApartmentInfoScreen;
