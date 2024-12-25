@@ -118,7 +118,7 @@ const AdminInfoScreen = () => {
       
       Alert.alert(
         "Başarılı", 
-        "E-posta adresinize doğrulama linki gönderildi. Lütfen e-postanızı kontrol edin ve linke tıklayarak hesabınızı doğrulayın."
+        "E-posta adresinize do��rulama linki gönderildi. Lütfen e-postanızı kontrol edin ve linke tıklayarak hesabınızı doğrulayın."
       );
 
     } catch (error) {
@@ -377,10 +377,10 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.primary,
-    textAlign: 'center',
+    fontSize: 26,
+    fontWeight: "bold",
+    color: colors.black,
+    textAlign: "center",
   },
   inputContainer: {
     flexDirection: "row",

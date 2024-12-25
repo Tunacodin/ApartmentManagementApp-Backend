@@ -223,10 +223,10 @@ const styles = StyleSheet.create({
   
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.primary,
-    textAlign: 'center',
+    fontSize: 26,
+    fontWeight: "bold",
+    color: colors.black,
+    textAlign: "center",
   },
   inputContainer: {
     flexDirection: "row",
