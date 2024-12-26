@@ -8,15 +8,16 @@ import {
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
-  Alert
+  Alert,
+  TouchableOpacity
 } from "react-native";
 import { TextInput as PaperInput, Button as PaperButton } from "react-native-paper";
 import { MaterialIcons } from "react-native-vector-icons";
-import LottieView from "lottie-react-native";
 import colors from "../../../styles/colors";
-import animate from "../../../assets/json/animFinance.json";
 import axios from "axios";
 import { IYZICO_API_CONFIG } from "../../../config/apiConfig";
+import LottieView from "lottie-react-native";
+import animate from "../../../assets/json/animFinance.json";
 
 const FinancialInfoScreen = forwardRef((props, ref) => {
   const [cardAlias, setCardAlias] = useState("");
@@ -27,6 +28,8 @@ const FinancialInfoScreen = forwardRef((props, ref) => {
   const [cvv, setCvv] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [cards, setCards] = useState([]);
+  const [showForm, setShowForm] = useState(false);
 
   const formatCardNumber = (text) => {
     // Sadece rakamları al
@@ -49,12 +52,11 @@ const FinancialInfoScreen = forwardRef((props, ref) => {
 
     setLoading(true);
     try {
-      const [month, year] = expirationDate.split('/');
       const cardDetails = {
         cardAlias: cardAlias || "Varsayılan Kart",
         email,
-        expireYear: `20${year}`,
-        expireMonth: month,
+        expireYear: `20${expireYear}`,
+        expireMonth: expireMonth,
         cardNumber: cardNumber.replace(/\s/g, ''),
         cardHolderName: cardHolder,
         externalId: `user-${Date.now()}`,
@@ -63,6 +65,18 @@ const FinancialInfoScreen = forwardRef((props, ref) => {
       };
 
       const response = await saveCardToIyzipay(cardDetails);
+      
+      // Kartı listeye ekle
+      setCards(prevCards => [...prevCards, {
+        ...cardDetails,
+        cardNumber: `**** **** **** ${cardNumber.slice(-4)}`, // Güvenlik için son 4 hane
+        id: Date.now().toString()
+      }]);
+
+      // Formu temizle ve gizle
+      resetForm();
+      setShowForm(false);
+      
       Alert.alert("Başarılı", "Kart bilgileri başarıyla kaydedildi.");
     } catch (error) {
       Alert.alert("Hata", error.message || "Kart kaydedilirken bir hata oluştu.");
@@ -114,6 +128,48 @@ const FinancialInfoScreen = forwardRef((props, ref) => {
     return true;
   };
 
+  // Form resetleme fonksiyonu
+  const resetForm = () => {
+    setCardAlias("");
+    setCardHolder("");
+    setCardNumber("");
+    setExpireMonth("");
+    setExpireYear("");
+    setCvv("");
+    setEmail("");
+  };
+
+  // Kart silme fonksiyonu
+  const handleDeleteCard = (index) => {
+    Alert.alert(
+      "Kartı Sil",
+      "Bu kartı silmek istediğinizden emin misiniz?",
+      [
+        { text: "İptal", style: "cancel" },
+        { 
+          text: "Sil", 
+          style: "destructive",
+          onPress: () => {
+            setCards(prevCards => prevCards.filter((_, i) => i !== index));
+            Alert.alert("Başarılı", "Kart başarıyla silindi.");
+          }
+        }
+      ]
+    );
+  };
+
+  const handleEditCard = (card) => {
+    // Form alanlarını seçilen kart bilgileriyle doldur
+    setCardHolder(card.cardHolderName);
+    setCardNumber(card.cardNumber);
+    setExpireMonth(card.expireMonth);
+    setExpireYear(card.expireYear.slice(-2));
+    setEmail(card.email);
+    
+    // Form görünümünü aç
+    setShowForm(true);
+  };
+
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
@@ -121,122 +177,178 @@ const FinancialInfoScreen = forwardRef((props, ref) => {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <LottieView source={animate} autoPlay loop style={styles.animation} />
-          
-          <View style={styles.cardPreview}>
-            <View style={styles.cardFront}>
-              <Text style={styles.cardType}>CREDIT CARD</Text>
-              <Text style={styles.cardNumber}>
-                {cardNumber || '•••• •••• •••• ••••'}
-              </Text>
-              <View style={styles.cardBottom}>
-                <View>
-                  <Text style={styles.cardLabel}>CARD HOLDER</Text>
-                  <Text style={styles.cardHolder}>
-                    {cardHolder || 'YOUR NAME'}
-                  </Text>
-                </View>
-                <View>
-                  <Text style={styles.cardLabel}>EXPIRES</Text>
-                  <Text style={styles.cardExpiry}>
-                    {expireMonth || 'MM'}/{expireYear || 'YY'}
-                  </Text>
-                </View>
-              </View>
+          <View style={styles.headerContainer}>
+            <LottieView source={animate} autoPlay loop style={styles.animation} />
+            <View style={styles.titleContainer}>
+              <Text style={styles.title}>Hesap Bilgileri</Text>
             </View>
           </View>
 
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <MaterialIcons name="person" size={24} color={colors.primary} />
-              <PaperInput
-                mode="outlined"
-                label="Kart Sahibi"
-                value={cardHolder}
-                onChangeText={setCardHolder}
-                style={styles.input}
-                autoCapitalize="characters"
-              />
-            </View>
+          {showForm ? (
+            <View style={styles.form}>
+              <View style={styles.cardPreview}>
+                <View style={styles.cardFront}>
+                  <Text style={styles.cardType}>CREDIT CARD</Text>
+                  <Text style={styles.cardNumber}>
+                    {cardNumber || '•••• •••• •••• ••••'}
+                  </Text>
+                  <View style={styles.cardBottom}>
+                    <View>
+                      <Text style={styles.cardLabel}>CARD HOLDER</Text>
+                      <Text style={styles.cardHolder}>
+                        {cardHolder || 'YOUR NAME'}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text style={styles.cardLabel}>EXPIRES</Text>
+                      <Text style={styles.cardExpiry}>
+                        {expireMonth || 'MM'}/{expireYear || 'YY'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
 
-            <View style={styles.inputContainer}>
-              <MaterialIcons name="credit-card" size={24} color={colors.primary} />
-              <PaperInput
-                mode="outlined"
-                label="Kart Numarası"
-                value={cardNumber}
-                onChangeText={(text) => setCardNumber(formatCardNumber(text))}
-                keyboardType="numeric"
-                style={styles.input}
-              />
-            </View>
-
-            <View style={styles.row}>
-              <View style={[styles.inputContainer, styles.halfWidth]}>
-                <MaterialIcons name="date-range" size={24} color={colors.primary} />
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="person" size={24} color={colors.primary} />
                 <PaperInput
                   mode="outlined"
-                  label="Son Kullanma Ay"
-                  value={expireMonth}
-                  onChangeText={setExpireMonth}
+                  label="Kart Sahibi"
+                  value={cardHolder}
+                  onChangeText={setCardHolder}
+                  style={styles.input}
+                  autoCapitalize="characters"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="credit-card" size={24} color={colors.primary} />
+                <PaperInput
+                  mode="outlined"
+                  label="Kart Numarası"
+                  value={cardNumber}
+                  onChangeText={(text) => setCardNumber(formatCardNumber(text))}
                   keyboardType="numeric"
-                  maxLength={2}
                   style={styles.input}
                 />
               </View>
 
-              <View style={[styles.inputContainer, styles.halfWidth]}>
+              <View style={styles.row}>
+                <View style={[styles.inputContainer, styles.halfWidth]}>
+                  <MaterialIcons name="date-range" size={24} color={colors.primary} />
+                  <PaperInput
+                    mode="outlined"
+                    label="Son Kullanma Ay"
+                    value={expireMonth}
+                    onChangeText={setExpireMonth}
+                    keyboardType="numeric"
+                    maxLength={2}
+                    style={styles.input}
+                  />
+                </View>
+
+                <View style={[styles.inputContainer, styles.halfWidth]}>
+                  <PaperInput
+                    mode="outlined"
+                    label="Son Kullanma Yıl"
+                    value={expireYear}
+                    onChangeText={setExpireYear}
+                    keyboardType="numeric"
+                    maxLength={2}
+                    style={styles.input}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="lock" size={24} color={colors.primary} />
                 <PaperInput
                   mode="outlined"
-                  label="Son Kullanma Yıl"
-                  value={expireYear}
-                  onChangeText={setExpireYear}
+                  label="CVV"
+                  value={cvv}
+                  onChangeText={setCvv}
                   keyboardType="numeric"
-                  maxLength={2}
+                  maxLength={3}
+                  secureTextEntry
                   style={styles.input}
                 />
               </View>
-            </View>
 
-            <View style={styles.inputContainer}>
-              <MaterialIcons name="lock" size={24} color={colors.primary} />
-              <PaperInput
-                mode="outlined"
-                label="CVV"
-                value={cvv}
-                onChangeText={setCvv}
-                keyboardType="numeric"
-                maxLength={3}
-                secureTextEntry
-                style={styles.input}
-              />
-            </View>
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="email" size={24} color={colors.primary} />
+                <PaperInput
+                  mode="outlined"
+                  label="E-posta"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  style={styles.input}
+                />
+              </View>
 
-            <View style={styles.inputContainer}>
-              <MaterialIcons name="email" size={24} color={colors.primary} />
-              <PaperInput
-                mode="outlined"
-                label="E-posta"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={styles.input}
-              />
+              <PaperButton
+                mode="contained"
+                onPress={handleSaveCard}
+                style={styles.button}
+                loading={loading}
+                disabled={loading}
+              >
+                Kartı Kaydet
+              </PaperButton>
             </View>
-
-            <PaperButton
-              mode="contained"
-              onPress={handleSaveCard}
-              style={styles.button}
-              loading={loading}
-              disabled={loading}
-            >
-              Kartı Kaydet
-            </PaperButton>
-          </View>
+          ) : (
+            <View style={styles.cardsContainer}>
+              {cards.length > 0 && (
+                <>
+                  <Text style={styles.sectionTitle}>Mevcut Hesaplar</Text>
+                  {cards.map((card, index) => (
+                    <View key={card.id} style={styles.cardItem}>
+                      <View style={styles.cardInfo}>
+                        <Text style={styles.cardNumberText}>{card.cardNumber}</Text>
+                        <Text style={styles.cardHolderText}>{card.cardHolderName}</Text>
+                        <Text style={styles.cardExpiryText}>
+                          Son Kullanma: {card.expireMonth}/{card.expireYear.slice(-2)}
+                        </Text>
+                      </View>
+                      <View style={styles.actionButtons}>
+                        <TouchableOpacity 
+                          onPress={() => handleEditCard(card)}
+                          style={styles.editButton}
+                        >
+                          <MaterialIcons name="edit" size={24} color={colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          onPress={() => handleDeleteCard(index)}
+                          style={styles.deleteButton}
+                        >
+                          <MaterialIcons name="delete" size={24} color={colors.error} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
+                </>
+              )}
+              {cards.length === 0 && (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.noCardText}>
+                    Henüz hesap bilgisi eklemediniz
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
         </ScrollView>
       </TouchableWithoutFeedback>
+
+      {!showForm && (
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={() => setShowForm(true)}
+        >
+          <MaterialIcons name="add" size={30} color={colors.white} />
+        </TouchableOpacity>
+      )}
     </KeyboardAvoidingView>
   );
 });
@@ -249,15 +361,10 @@ const styles = StyleSheet.create({
   scrollContainer: {
     padding: 20,
   },
-  animation: {
-    width: 200,
-    height: 200,
-    alignSelf: 'center',
-  },
   cardPreview: {
-    marginVertical: 20,
     height: 200,
     perspective: 1000,
+    marginBottom: 20,
   },
   cardFront: {
     backgroundColor: colors.primary,
@@ -300,6 +407,7 @@ const styles = StyleSheet.create({
   },
   form: {
     marginTop: 20,
+    paddingHorizontal: 16,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -322,6 +430,110 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 8,
     backgroundColor: colors.primary,
+  },
+  titleContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: colors.primary,
+    textAlign: "center",
+  },
+  cardsContainer: {
+    paddingHorizontal: 16,
+    marginTop: 20,
+  },
+  cardItem: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  cardNumberText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.black,
+    marginBottom: 4,
+  },
+  cardHolderText: {
+    fontSize: 14,
+    color: colors.darkGray,
+    marginBottom: 2,
+  },
+  cardExpiryText: {
+    fontSize: 14,
+    color: colors.darkGray,
+  },
+  deleteButton: {
+    padding: 8,
+    backgroundColor: colors.lightRed,
+    borderRadius: 8,
+  },
+  addButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noCardText: {
+    textAlign: 'center',
+    fontSize: 18,
+    color: colors.gray,
+    marginTop: 130,
+  },
+  animation: {
+    width: 250,
+    height: 250,
+    alignSelf: 'center',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: colors.primary,
+    marginBottom: 15,
+    marginLeft: 5,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  editButton: {
+    padding: 8,
+    backgroundColor: colors.lightBlue,
+    borderRadius: 8,
+  },
+  headerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 60 : 30,
   },
 });
 

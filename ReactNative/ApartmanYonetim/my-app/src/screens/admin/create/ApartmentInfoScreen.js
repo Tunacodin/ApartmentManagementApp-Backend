@@ -470,6 +470,7 @@ const ApartmentInfoScreen = () => {
         <PaperInput
           mode="outlined"
           label="Apartman Adı"
+          placeholder="örn: Melek Apartmanı"
           value={apartmentName}
           onChangeText={setApartmentName}
           style={styles.input}
@@ -676,7 +677,7 @@ const ApartmentInfoScreen = () => {
           style={styles.input}
           outlineColor={colors.darkGray}
           activeOutlineColor={colors.primary}
-          right={<PaperInput.Affix text="₺" />}
+         
         />
       </View>
 
@@ -741,14 +742,26 @@ const ApartmentInfoScreen = () => {
       <View style={styles.stepsHeader}>
         {STEPS.map(step => (
           <View key={step.id} style={styles.stepItem}>
-            <MaterialIcons
-              name={step.icon}
-              size={24}
-              color={completionStatus[step.id] ? colors.success : colors.darkGray}
-            />
-            <Text style={styles.stepTitle}>{step.title}</Text>
+            <View style={styles.stepContent}>
+              <MaterialIcons
+                name={step.icon}
+                size={24}
+                color={completionStatus[step.id] ? colors.primary : colors.darkGray}
+              />
+              <Text style={[
+                styles.stepTitle,
+                completionStatus[step.id] && styles.stepTitleCompleted
+              ]}>
+                {step.title}
+              </Text>
+            </View>
             {completionStatus[step.id] && (
-              <MaterialIcons name="check-circle" size={16} color={colors.success} />
+              <MaterialIcons 
+                name="check-circle" 
+                size={16} 
+                color={colors.primary}
+                style={styles.stepCheckIcon}
+              />
             )}
           </View>
         ))}
@@ -824,7 +837,7 @@ const ApartmentInfoScreen = () => {
       {currentStep === 'floor' && (
         <View style={styles.floorContainer}>
           <View style={styles.inputHeader}>
-            <Text style={styles.inputTitle}>Kat Bilgisi</Text>
+            
             <Text style={styles.remainingText}>
               {unassignedUnits.length} daire için kat bilgisi girilmesi gerekiyor
             </Text>
@@ -1141,7 +1154,11 @@ const ApartmentInfoScreen = () => {
   );
 
   const renderNoApartmentMessage = () => (
-    <Text style={styles.noApartmentText}>Henüz bir apartman eklemediniz</Text>
+    <View style={styles.emptyContainer}>
+      <Text style={styles.noApartmentText}>
+        Henüz bir apartman eklemediniz
+      </Text>
+    </View>
   );
 
   const handleApplyType = () => {
@@ -1887,7 +1904,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: "bold",
-    color: colors.black,
+    color: colors.primary,
     textAlign: "center",
   },
   formContainer: {
@@ -1976,8 +1993,6 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     flex: 1,
-    backgroundColor: '#bbdefb',
-    borderRadius: 10,
     marginVertical: 10,
     marginHorizontal: 20,
     padding: 5,
@@ -1987,7 +2002,7 @@ const styles = StyleSheet.create({
       height: 2,
     },
     shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowRadius: 1.84,
     elevation: 5,
   },
   detailsTitle: {
@@ -2000,11 +2015,7 @@ const styles = StyleSheet.create({
   unitCard: {
     borderRadius: 10,
     padding: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 5, height: 5 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 6,
+   
     width: 330,
   },
   unitHeader: {
@@ -2151,11 +2162,16 @@ const styles = StyleSheet.create({
   navigationButton: {
     padding: 10,
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   noApartmentText: {
     textAlign: 'center',
     fontSize: 18,
     color: colors.gray,
-    marginTop: 140,
+   
   },
   disabledButtonText: {
     color: colors.darkGray,
@@ -2175,10 +2191,9 @@ const styles = StyleSheet.create({
     top: '100%',
     left: 0,
     right: 0,
-    backgroundColor: colors.white,
+    backgroundColor: colors.textPrimary,
     borderRadius: 4,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
+    
     zIndex: 1000,
     elevation: 5,
     maxHeight: 200,
@@ -2188,12 +2203,13 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
+    marginVertical: 3,
+
+    backgroundColor:colors.lightGray,
   },
   dropdownText: {
     fontSize: 16,
-    color: colors.black,
+    color: colors.white,
   },
   dropdownRow: {
     flexDirection: 'row',
@@ -2274,7 +2290,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 10,
     justifyContent: 'center',
-    marginBottom: 20,
+    marginVertical: 20,
   },
   unitButton: {
     width: 60,
@@ -2308,7 +2324,6 @@ const styles = StyleSheet.create({
   },
   bulkInputContainer: {
     padding: 15,
-    backgroundColor: colors.lightGray,
     borderRadius: 8,
   },
   selectedCountText: {
@@ -2326,23 +2341,38 @@ const styles = StyleSheet.create({
     marginTop: 10,
     backgroundColor: colors.primary,
   },
+
   stepsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 15,
-    backgroundColor: colors.white,
     borderRadius: 8,
     marginBottom: 20,
     elevation: 2,
   },
   stepItem: {
+    flex: 1,
     alignItems: 'center',
-    flexDirection: 'row',
-    gap: 5,
+    height: 80, // Sabit yükseklik ver
+  },
+  stepContent: {
+    alignItems: 'center',
+    height: 60, // İçerik için sabit yükseklik
   },
   stepTitle: {
     fontSize: 14,
     color: colors.darkGray,
+    textAlign: 'center',
+    marginTop: 4,
+    height: 36, // İki satırlı başlıklar için yeterli yükseklik
+  },
+  stepTitleCompleted: {
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  stepCheckIcon: {
+    position: 'absolute',
+    bottom: 0, // stepItem'ın en altına yerleştir
   },
   completedUnitButton: {
     borderColor: colors.success,
@@ -2416,19 +2446,12 @@ const styles = StyleSheet.create({
   },
   floorContainer: {
     padding: 15,
-    backgroundColor: '#bbdefb',
+   
+
     borderRadius: 10,
     marginVertical: 10,
     marginHorizontal: 20,
-    padding: 5,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+   
   },
   floorsGrid: {
     padding: 10,
@@ -2706,6 +2729,49 @@ const styles = StyleSheet.create({
     color: colors.darkGray,
     fontStyle: 'italic',
     marginTop: 4,
+  },
+  stepsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap', // Satır sonunda alt satıra geçmesi için
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    gap: 8, // Adımlar arası boşluk
+  },
+  stepItemCompleted: {
+    backgroundColor: colors.lightBlue, // Tamamlanan adımlar için arka plan
+  },
+  stepIcon: {
+    marginRight: 4,
+    color: colors.darkGray, // Tamamlanmamış adımlar için
+  },
+  stepIconCompleted: {
+    color: colors.primary, // Tamamlanan adımlar için
+  },
+  stepText: {
+    fontSize: 12, // Yazı boyutunu küçült
+    color: colors.darkGray,
+    fontWeight: '500',
+  },
+  stepTextCompleted: {
+    color: colors.primary, // Tamamlanan adımlar için
+  },
+  // Seçili kat için
+  selectedFloorButton: {
+    backgroundColor: "#4A90E2", // Orta mavi
+  },
+  // Seçili olmayan katlar için
+  floorButton: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#4A90E2",
+  },
+  // Kat numarası text rengi
+  floorButtonText: {
+    color: "#4A90E2", // Normal durumda
+  },
+  selectedFloorButtonText: {
+    color: "#FFFFFF", // Seçili durumda
   },
 });
 
