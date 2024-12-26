@@ -7,191 +7,233 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
+  Alert
 } from "react-native";
-import { TextInput as PaperInput } from "react-native-paper";
+import { TextInput as PaperInput, Button as PaperButton } from "react-native-paper";
 import { MaterialIcons } from "react-native-vector-icons";
-import LottieView from "lottie-react-native"; // LottieView import edildi
+import LottieView from "lottie-react-native";
 import colors from "../../../styles/colors";
-import animate from "../../../assets/json/animFinance.json"; // Animasyon dosyası import edildi
+import animate from "../../../assets/json/animFinance.json";
+import axios from "axios";
+import { IYZICO_API_CONFIG } from "../../../config/apiConfig";
 
 const FinancialInfoScreen = forwardRef((props, ref) => {
-  const [bankName, setBankName] = useState("");
+  const [cardAlias, setCardAlias] = useState("");
   const [cardHolder, setCardHolder] = useState("");
   const [cardNumber, setCardNumber] = useState("");
-  const [expirationDate, setExpirationDate] = useState("");
+  const [expireMonth, setExpireMonth] = useState("");
+  const [expireYear, setExpireYear] = useState("");
   const [cvv, setCvv] = useState("");
-  const [cardType, setCardType] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  useImperativeHandle(ref, () => ({
-    validate() {
-      if (!bankName.trim()) {
-        alert("Banka adı boş bırakılamaz!");
-        return false;
-      }
-      if (!cardHolder.trim()) {
-        alert("Kart sahibi adı boş bırakılamaz!");
-        return false;
-      }
-      if (!cardNumber.trim() || cardNumber.length !== 16) {
-        alert("Geçerli bir kart numarası giriniz!");
-        return false;
-      }
-      if (!expirationDate.trim() || !expirationDate.match(/^(0[1-9]|1[0-2])\/([0-9]{2})$/)) {
-        alert("Geçerli bir son kullanma tarihi giriniz (AA/YY)!");
-        return false;
-      }
-      if (!cvv.trim() || cvv.length !== 3) {
-        alert("Geçerli bir CVV giriniz!");
-        return false;
-      }
-      return true;
-    },
-  }));
+  const formatCardNumber = (text) => {
+    // Sadece rakamları al
+    const numbers = text.replace(/\D/g, '');
+    // 4'lü gruplar halinde formatla
+    const formatted = numbers.match(/.{1,4}/g)?.join(' ') || numbers;
+    return formatted.substr(0, 19); // Max 16 rakam + 3 boşluk
+  };
+
+  const formatExpiryDate = (text) => {
+    const numbers = text.replace(/\D/g, '');
+    if (numbers.length >= 2) {
+      return `${numbers.substr(0, 2)}/${numbers.substr(2, 2)}`;
+    }
+    return numbers;
+  };
+
+  const handleSaveCard = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      const [month, year] = expirationDate.split('/');
+      const cardDetails = {
+        cardAlias: cardAlias || "Varsayılan Kart",
+        email,
+        expireYear: `20${year}`,
+        expireMonth: month,
+        cardNumber: cardNumber.replace(/\s/g, ''),
+        cardHolderName: cardHolder,
+        externalId: `user-${Date.now()}`,
+        locale: "tr",
+        conversationId: Date.now().toString()
+      };
+
+      const response = await saveCardToIyzipay(cardDetails);
+      Alert.alert("Başarılı", "Kart bilgileri başarıyla kaydedildi.");
+    } catch (error) {
+      Alert.alert("Hata", error.message || "Kart kaydedilirken bir hata oluştu.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveCardToIyzipay = async (cardDetails) => {
+    try {
+      const response = await axios.post(
+        `${IYZICO_API_CONFIG.baseUrl}/cardstorage/card`,
+        cardDetails,
+        {
+          headers: {
+            "Authorization": `Basic ${btoa(`${IYZICO_API_CONFIG.apiKey}:${IYZICO_API_CONFIG.secretKey}`)}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Kart Kaydetme Hatası:", error.response?.data || error.message);
+      throw error;
+    }
+  };
+
+  const validateForm = () => {
+    if (!cardHolder.trim()) {
+      Alert.alert("Hata", "Kart sahibi adı boş bırakılamaz!");
+      return false;
+    }
+    if (!cardNumber.trim() || cardNumber.replace(/\s/g, '').length !== 16) {
+      Alert.alert("Hata", "Geçerli bir kart numarası giriniz!");
+      return false;
+    }
+    if (!email.trim() || !email.includes('@')) {
+      Alert.alert("Hata", "Geçerli bir e-posta adresi giriniz!");
+      return false;
+    }
+    if (!expireMonth || !expireYear || expireMonth.length !== 2 || expireYear.length !== 2) {
+      Alert.alert("Hata", "Geçerli bir son kullanma tarihi giriniz!");
+      return false;
+    }
+    if (!cvv.trim() || cvv.length !== 3) {
+      Alert.alert("Hata", "Geçerli bir CVV giriniz!");
+      return false;
+    }
+    return true;
+  };
 
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView 
-          contentContainerStyle={styles.scrollContainer} 
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Animasyon */}
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
           <LottieView source={animate} autoPlay loop style={styles.animation} />
-
-          {/* Başlık */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>Kart Bilgileri</Text>
+          
+          <View style={styles.cardPreview}>
+            <View style={styles.cardFront}>
+              <Text style={styles.cardType}>CREDIT CARD</Text>
+              <Text style={styles.cardNumber}>
+                {cardNumber || '•••• •••• •••• ••••'}
+              </Text>
+              <View style={styles.cardBottom}>
+                <View>
+                  <Text style={styles.cardLabel}>CARD HOLDER</Text>
+                  <Text style={styles.cardHolder}>
+                    {cardHolder || 'YOUR NAME'}
+                  </Text>
+                </View>
+                <View>
+                  <Text style={styles.cardLabel}>EXPIRES</Text>
+                  <Text style={styles.cardExpiry}>
+                    {expireMonth || 'MM'}/{expireYear || 'YY'}
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
 
-          {/* Banka Adı Input */}
-          <View style={styles.inputContainer}>
-            <MaterialIcons
-              name="account-balance-wallet"
-              size={24}
-              color={colors.primary}
-              style={styles.icon}
-            />
-            <PaperInput
-              mode="outlined"
-              label="Banka Adı"
-              placeholder="Banka adını girin"
-              value={bankName}
-              onChangeText={setBankName}
-              style={styles.input}
-              outlineColor={colors.darkGray}
-              activeOutlineColor={colors.primary}
-            />
-          </View>
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <MaterialIcons name="person" size={24} color={colors.primary} />
+              <PaperInput
+                mode="outlined"
+                label="Kart Sahibi"
+                value={cardHolder}
+                onChangeText={setCardHolder}
+                style={styles.input}
+                autoCapitalize="characters"
+              />
+            </View>
 
-          {/* Kart Sahibi Input */}
-          <View style={styles.inputContainer}>
-            <MaterialIcons
-              name="credit-card"
-              size={24}
-              color={colors.primary}
-              style={styles.icon}
-            />
-            <PaperInput
-              mode="outlined"
-              label="Kart Sahibi"
-              placeholder="Kart üzerindeki ismi girin"
-              value={cardHolder}
-              onChangeText={setCardHolder}
-              style={styles.input}
-              outlineColor={colors.darkGray}
-              activeOutlineColor={colors.primary}
-            />
-          </View>
+            <View style={styles.inputContainer}>
+              <MaterialIcons name="credit-card" size={24} color={colors.primary} />
+              <PaperInput
+                mode="outlined"
+                label="Kart Numarası"
+                value={cardNumber}
+                onChangeText={(text) => setCardNumber(formatCardNumber(text))}
+                keyboardType="numeric"
+                style={styles.input}
+              />
+            </View>
 
-          {/* Kart Numarası Input */}
-          <View style={styles.inputContainer}>
-            <MaterialIcons
-              name="credit-card"
-              size={24}
-              color={colors.primary}
-              style={styles.icon}
-            />
-            <PaperInput
-              mode="outlined"
-              label="Kart Numarası"
-              placeholder="1234 5678 9012 3456"
-              value={cardNumber}
-              onChangeText={setCardNumber}
-              keyboardType="numeric"
-              maxLength={16}
-              style={styles.input}
-              outlineColor={colors.darkGray}
-              activeOutlineColor={colors.primary}
-            />
-          </View>
+            <View style={styles.row}>
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <MaterialIcons name="date-range" size={24} color={colors.primary} />
+                <PaperInput
+                  mode="outlined"
+                  label="Son Kullanma Ay"
+                  value={expireMonth}
+                  onChangeText={setExpireMonth}
+                  keyboardType="numeric"
+                  maxLength={2}
+                  style={styles.input}
+                />
+              </View>
 
-          {/* Son Kullanma Tarihi Input */}
-          <View style={styles.inputContainer}>
-            <MaterialIcons
-              name="date-range"
-              size={24}
-              color={colors.primary}
-              style={styles.icon}
-            />
-            <PaperInput
-              mode="outlined"
-              label="Son Kullanma Tarihi"
-              placeholder="AA/YY"
-              value={expirationDate}
-              onChangeText={setExpirationDate}
-              maxLength={5}
-              style={styles.input}
-              outlineColor={colors.darkGray}
-              activeOutlineColor={colors.primary}
-            />
-          </View>
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <PaperInput
+                  mode="outlined"
+                  label="Son Kullanma Yıl"
+                  value={expireYear}
+                  onChangeText={setExpireYear}
+                  keyboardType="numeric"
+                  maxLength={2}
+                  style={styles.input}
+                />
+              </View>
+            </View>
 
-          {/* CVV Input */}
-          <View style={styles.inputContainer}>
-            <MaterialIcons
-              name="lock"
-              size={24}
-              color={colors.primary}
-              style={styles.icon}
-            />
-            <PaperInput
-              mode="outlined"
-              label="CVV"
-              placeholder="123"
-              value={cvv}
-              onChangeText={setCvv}
-              keyboardType="numeric"
-              maxLength={3}
-              secureTextEntry
-              style={styles.input}
-              outlineColor={colors.darkGray}
-              activeOutlineColor={colors.primary}
-            />
-          </View>
+            <View style={styles.inputContainer}>
+              <MaterialIcons name="lock" size={24} color={colors.primary} />
+              <PaperInput
+                mode="outlined"
+                label="CVV"
+                value={cvv}
+                onChangeText={setCvv}
+                keyboardType="numeric"
+                maxLength={3}
+                secureTextEntry
+                style={styles.input}
+              />
+            </View>
 
-          {/* Kart Tipi Input */}
-          <View style={styles.inputContainer}>
-            <MaterialIcons
-              name="credit-card"
-              size={24}
-              color={colors.primary}
-              style={styles.icon}
-            />
-            <PaperInput
-              mode="outlined"
-              label="Kart Tipi"
-              placeholder="Visa/Mastercard/American Express"
-              value={cardType}
-              onChangeText={setCardType}
-              style={styles.input}
-              outlineColor={colors.darkGray}
-              activeOutlineColor={colors.primary}
-            />
+            <View style={styles.inputContainer}>
+              <MaterialIcons name="email" size={24} color={colors.primary} />
+              <PaperInput
+                mode="outlined"
+                label="E-posta"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={styles.input}
+              />
+            </View>
+
+            <PaperButton
+              mode="contained"
+              onPress={handleSaveCard}
+              style={styles.button}
+              loading={loading}
+              disabled={loading}
+            >
+              Kartı Kaydet
+            </PaperButton>
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
@@ -205,42 +247,81 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   scrollContainer: {
-    flexGrow: 1,
     padding: 20,
-    paddingTop: Platform.OS === "ios" ? 50 : 30,
   },
   animation: {
     width: 200,
     height: 200,
-    alignSelf: "center",
-    marginTop: 60,
+    alignSelf: 'center',
+  },
+  cardPreview: {
+    marginVertical: 20,
+    height: 200,
+    perspective: 1000,
+  },
+  cardFront: {
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    padding: 20,
+    height: '100%',
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  cardType: {
+    color: colors.white,
+    fontSize: 14,
+    marginBottom: 40,
+  },
+  cardNumber: {
+    color: colors.white,
+    fontSize: 22,
+    letterSpacing: 2,
     marginBottom: 20,
   },
-  titleContainer: {
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    marginBottom: 20,
-  
+  cardBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: colors.black,
-    textAlign: "center",
+  cardLabel: {
+    color: colors.white,
+    fontSize: 10,
+    marginBottom: 4,
+  },
+  cardHolder: {
+    color: colors.white,
+    fontSize: 16,
+  },
+  cardExpiry: {
+    color: colors.white,
+    fontSize: 16,
+  },
+  form: {
+    marginTop: 20,
   },
   inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 15,
-    width: "100%",
-  },
-  icon: {
-    marginRight: 10,
   },
   input: {
     flex: 1,
+    marginLeft: 10,
     backgroundColor: colors.white,
-    borderRadius: 10,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  halfWidth: {
+    width: '48%',
+  },
+  button: {
+    marginTop: 20,
+    paddingVertical: 8,
+    backgroundColor: colors.primary,
   },
 });
 

@@ -1,4 +1,4 @@
-{
+export const IYZICO_API_CONFIG={
     "baseUrl": "https://sandbox-api.iyzipay.com", 
     "apiKey": "sandbox-g0FnbYsETLTtpJCd0IvQ3Gs3UJgC4kMd",
     "secretKey": "sandbox-CKjlWH9oZo0MWtc2x9cf984QF2s5Peio"

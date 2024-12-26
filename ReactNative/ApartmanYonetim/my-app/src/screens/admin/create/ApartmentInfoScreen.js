@@ -310,18 +310,17 @@ const ApartmentInfoScreen = () => {
     setAvailableFloors([0, ...Array.from({ length: apartment.numberOfFloors - 1 }, (_, i) => i + 1)]);
   };
 
-const handleNext = () => {
-  if (currentIndex < apartmentUnits.length - 1) {
-    setCurrentIndex(currentIndex + 1);
-  }
-};
+  const handleNext = () => {
+    if (currentIndex < apartmentUnits.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
 
-const handlePrevious = () => {
-  if (currentIndex > 0) {
-    setCurrentIndex(currentIndex - 1);
-  }
-};
-
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
 
   const isFormValid = () => {
     const currentUnit = apartmentUnits[currentIndex];
@@ -376,7 +375,7 @@ const handlePrevious = () => {
           }))
         }));
         setCities(cityData);
-        console.log('Processed city data:', cityData);
+        
       }
     } catch (error) {
       console.error('Error fetching cities:', error);
@@ -1675,13 +1674,13 @@ const handlePrevious = () => {
               {item.units && (
                 <View style={styles.unitsSection}>
                   <Text style={styles.sectionTitle}>Daire Bilgileri</Text>
-                  <ScrollView 
-                    horizontal 
+                  <FlatList
+                    horizontal
                     showsHorizontalScrollIndicator={false}
-                    style={styles.unitsScrollView}
-                  >
-                    {item.units.map((unit, unitIndex) => (
-                      <View key={unitIndex} style={styles.unitSummary}>
+                    data={item.units}
+                    keyExtractor={(unit, unitIndex) => unitIndex.toString()}
+                    renderItem={({ item: unit }) => (
+                      <View style={styles.unitSummary}>
                         <Text style={styles.unitNumber}>Daire {unit.unitNumber}</Text>
                         <Text style={styles.unitType}>{unit.type}</Text>
                         <Text style={styles.unitFloor}>
@@ -1701,8 +1700,9 @@ const handlePrevious = () => {
                           </Text>
                         )}
                       </View>
-                    ))}
-                  </ScrollView>
+                    )}
+                    style={styles.unitsScrollView}
+                  />
                 </View>
               )}
             </View>
@@ -1780,6 +1780,31 @@ const handlePrevious = () => {
       deposit: false,
       notes: false
     });
+  };
+
+  const handleDeleteApartment = (index) => {
+    Alert.alert(
+      "Apartmanı Sil",
+      "Bu apartmanı silmek istediğinizden emin misiniz?",
+      [
+        {
+          text: "İptal",
+          style: "cancel"
+        },
+        {
+          text: "Sil",
+          style: "destructive",
+          onPress: () => {
+            setApartments(prevApartments => {
+              const updatedApartments = [...prevApartments];
+              updatedApartments.splice(index, 1);
+              return updatedApartments;
+            });
+            Alert.alert("Başarılı", "Apartman başarıyla silindi.");
+          }
+        }
+      ]
+    );
   };
 
   return (
