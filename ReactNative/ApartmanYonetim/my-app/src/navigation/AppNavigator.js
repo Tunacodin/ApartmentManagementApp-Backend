@@ -16,9 +16,9 @@ import ForgotPasswordScreen from "../screens/common/ForgotPasswordScreen";
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-  return (
+  return ( 
     <Stack.Navigator
-      initialRouteName="LoginScreen"
+      initialRouteName="RoleScreen"
       screenOptions={{ headerShown: false }}
     >
       {/* İlk açılış ekranları */}

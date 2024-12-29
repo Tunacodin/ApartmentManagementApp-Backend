@@ -13,6 +13,9 @@ import {
   Switch,
   TouchableWithoutFeedback,
   Keyboard,
+  Animated,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import axios from "axios";
 import colors from "../../../styles/colors";
@@ -20,6 +23,8 @@ import { TextInput as PaperInput, Button as PaperButton } from "react-native-pap
 import { MaterialIcons } from '@expo/vector-icons';
 import LottieView from "lottie-react-native";
 import animate from "../../../assets/json/animApartment.json";
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as DocumentPicker from "expo-document-picker";
 
 const API_URL = "http://172.16.1.155:5001/api/Building";
 
@@ -125,6 +130,139 @@ const ApartmentInfoScreen = () => {
   ];
 
   const scrollViewRef = useRef(null);
+
+  // Yeni state'ler ekleyelim
+  const [buildingFeatures, setBuildingFeatures] = useState({
+    parking: {
+      exists: false,
+      type: null,
+    },
+    elevator: false,
+    park: false,
+    heatingSystem: 'central', // Varsayılan olarak merkezi seçili
+    pool: {
+      exists: false,
+      type: null,
+    },
+    gym: false,
+    buildingAge: '',
+    garden: false,
+    thermalInsulation: false,
+  });
+
+  // Isıtma sistemi seçenekleri
+  const heatingOptions = [
+    { label: 'Merkezi', value: 'central' },
+    { label: 'Kombi', value: 'combi' },
+    { label: 'Yerden', value: 'floor' },
+  ];
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [constructionDate, setConstructionDate] = useState(null);
+
+  const calculateBuildingAge = (constructionDate) => {
+    if (!constructionDate) return '';
+    const today = new Date();
+    const age = today.getFullYear() - constructionDate.getFullYear();
+    return age.toString();
+  };
+
+  const [tempDate, setTempDate] = useState(null);
+
+  const handleDateChange = (event, selectedDate) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    
+    if (selectedDate) {
+      setTempDate(selectedDate);
+      if (Platform.OS === 'android') {
+        // Android için onay dialogu göster
+        Alert.alert(
+          "Tarih Seçimi",
+          `${selectedDate.toLocaleDateString('tr-TR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })} tarihini onaylıyor musunuz?`,
+          [
+            {
+              text: "Hayır",
+              onPress: () => {
+                setTempDate(null);
+                setShowDatePicker(false);
+              },
+              style: "cancel"
+            },
+            {
+              text: "Evet",
+              onPress: () => {
+                setConstructionDate(selectedDate);
+                handleFeatureChange('buildingAge', calculateBuildingAge(selectedDate));
+                setShowDatePicker(false);
+              }
+            }
+          ]
+        );
+      }
+    }
+  };
+
+  // iOS için onay butonu
+  const handleConfirmDate = () => {
+    if (tempDate) {
+      setConstructionDate(tempDate);
+      handleFeatureChange('buildingAge', calculateBuildingAge(tempDate));
+    }
+    setTempDate(null);
+    setShowDatePicker(false);
+  };
+
+  // iOS için iptal butonu
+  const handleCancelDate = () => {
+    setTempDate(null);
+    setShowDatePicker(false);
+  };
+
+  const handleFeatureChange = (feature, value) => {
+    setBuildingFeatures(prev => ({
+      ...prev,
+      [feature]: value
+    }));
+  };
+
+  // Animasyon değerleri için ref'ler oluşturalım
+  const parkingAnimation = useRef(new Animated.Value(0)).current;
+  const poolAnimation = useRef(new Animated.Value(0)).current;
+
+  // Switch değiştiğinde animasyonu tetikleyen fonksiyon
+  const animateFeature = (animation, show) => {
+    Animated.timing(animation, {
+      toValue: show ? 1 : 0,
+      duration: 500, // 0.5 saniye
+      useNativeDriver: true,
+    }).start();
+  };
+
+  // Switch değişimlerini güncelleyelim
+  const handleNestedFeatureChange = (feature, subFeature, value) => {
+    setBuildingFeatures(prev => ({
+      ...prev,
+      [feature]: {
+        ...prev[feature],
+        [subFeature]: value
+      }
+    }));
+
+    // Switch açıldığında/kapandığında animasyonu tetikle
+    if (subFeature === 'exists') {
+      if (feature === 'parking') {
+        animateFeature(parkingAnimation, value);
+      } else if (feature === 'pool') {
+        animateFeature(poolAnimation, value);
+      }
+    }
+  };
 
   useEffect(() => {
     fetchCities();
@@ -702,7 +840,7 @@ const ApartmentInfoScreen = () => {
       </View>
 
       <View style={styles.utilitiesContainer}>
-        <Text style={styles.utilitiesTitle}>Dahil Hizmetler</Text>
+        <Text style={styles.sectionTitle}>Dahili Hizmetler</Text>
         <View style={styles.checkboxGroup}>
           {Object.entries(includedUtilities).map(([key, value]) => (
             <TouchableOpacity
@@ -726,6 +864,10 @@ const ApartmentInfoScreen = () => {
         </View>
       </View>
 
+      {renderBuildingFeatures()}
+
+      {renderImageUpload()}
+
       <PaperButton
         mode="contained"
         onPress={handleSubmit}
@@ -737,31 +879,370 @@ const ApartmentInfoScreen = () => {
     </View>
   );
 
+  const renderBuildingFeatures = () => (
+    <View style={styles.featuresContainer}>
+      <Text style={styles.sectionTitle}>Bina Özellikleri</Text>
+      
+      {/* Otopark */}
+      <View style={styles.featureRow}>
+        <Text style={styles.featureLabel}>Otopark</Text>
+        <View style={styles.featureControls}>
+          <Animated.View style={[
+            styles.radioGroupContainer,
+            {
+              opacity: parkingAnimation,
+              transform: [{
+                translateX: parkingAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [50, 0] // Sağdan sola doğru kayma
+                })
+              }]
+            }
+          ]}>
+            {buildingFeatures.parking.exists && (
+              <View style={styles.radioGroup}>
+                <TouchableOpacity
+                  style={[
+                    styles.radioButton,
+                    buildingFeatures.parking.type === 'open' && styles.radioButtonSelected
+                  ]}
+                  onPress={() => handleNestedFeatureChange('parking', 'type', 'open')}
+                >
+                  <Text style={[
+                    styles.radioText,
+                    buildingFeatures.parking.type === 'open' && styles.radioTextSelected
+                  ]}>
+                    Açık
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.radioButton,
+                    buildingFeatures.parking.type === 'closed' && styles.radioButtonSelected
+                  ]}
+                  onPress={() => handleNestedFeatureChange('parking', 'type', 'closed')}
+                >
+                  <Text style={[
+                    styles.radioText,
+                    buildingFeatures.parking.type === 'closed' && styles.radioTextSelected
+                  ]}>
+                    Kapalı
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </Animated.View>
+          <Switch
+            value={buildingFeatures.parking.exists}
+            onValueChange={(value) => handleNestedFeatureChange('parking', 'exists', value)}
+            trackColor={{ false: colors.lightGray, true: colors.primary }}
+          />
+        </View>
+      </View>
+
+      {/* Havuz */}
+      <View style={styles.featureRow}>
+        <Text style={styles.featureLabel}>Havuz</Text>
+        <View style={styles.featureControls}>
+          <Animated.View style={[
+            styles.radioGroupContainer,
+            {
+              opacity: poolAnimation,
+              transform: [{
+                translateX: poolAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [50, 0] // Sağdan sola doğru kayma
+                })
+              }]
+            }
+          ]}>
+            {buildingFeatures.pool.exists && (
+              <View style={styles.radioGroup}>
+                <TouchableOpacity
+                  style={[
+                    styles.radioButton,
+                    buildingFeatures.pool.type === 'open' && styles.radioButtonSelected
+                  ]}
+                  onPress={() => handleNestedFeatureChange('pool', 'type', 'open')}
+                >
+                  <Text style={[
+                    styles.radioText,
+                    buildingFeatures.pool.type === 'open' && styles.radioTextSelected
+                  ]}>
+                    Açık
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.radioButton,
+                    buildingFeatures.pool.type === 'closed' && styles.radioButtonSelected
+                  ]}
+                  onPress={() => handleNestedFeatureChange('pool', 'type', 'closed')}
+                >
+                  <Text style={[
+                    styles.radioText,
+                    buildingFeatures.pool.type === 'closed' && styles.radioTextSelected
+                  ]}>
+                    Kapalı
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </Animated.View>
+          <Switch
+            value={buildingFeatures.pool.exists}
+            onValueChange={(value) => handleNestedFeatureChange('pool', 'exists', value)}
+            trackColor={{ false: colors.lightGray, true: colors.primary }}
+          />
+        </View>
+      </View>
+
+      {/* Isıtma Sistemi */}
+      <View style={styles.featureRow}>
+        <Text style={styles.featureLabel}>Isıtma Sistemi</Text>
+        <View style={styles.radioGroup}>
+          {heatingOptions.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.radioButton,
+                buildingFeatures.heatingSystem === option.value && styles.radioButtonSelected
+              ]}
+              onPress={() => handleFeatureChange('heatingSystem', option.value)}
+            >
+              <Text style={styles.radioText}>{option.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Bina Yaşı yerine Yapım Tarihi */}
+      <View style={styles.featureRow}>
+        <Text style={styles.featureLabel}>Yapım Tarihi</Text>
+        <View style={styles.datePickerContainer}>
+          <TouchableOpacity 
+            style={styles.datePickerButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.datePickerButtonText}>
+              {constructionDate 
+                ? constructionDate.toLocaleDateString('tr-TR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })
+                : 'Tarih Seç'}
+            </Text>
+          </TouchableOpacity>
+          {buildingFeatures.buildingAge && (
+            <Text style={styles.buildingAgeText}>
+              {buildingFeatures.buildingAge} yaşında
+            </Text>
+          )}
+        </View>
+      </View>
+
+      {showDatePicker && (
+        <View>
+          {Platform.OS === 'android' ? (
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={constructionDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={handleDateChange}
+              maximumDate={new Date()}
+            />
+          ) : (
+            <View style={styles.iosDatePickerContainer}>
+              <View style={styles.iosDatePickerHeader}>
+                <TouchableOpacity onPress={handleCancelDate}>
+                  <Text style={styles.iosDatePickerButtonText}>İptal</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleConfirmDate}>
+                  <Text style={[styles.iosDatePickerButtonText, styles.confirmText]}>Tamam</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={tempDate || constructionDate || new Date()}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+                locale="tr-TR"
+              />
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Diğer özellikler için Switch'ler */}
+      <View style={styles.switchGroup}>
+        <View style={styles.featureRow}>
+          <Text style={styles.featureLabel}>Asansör</Text>
+          <Switch
+            value={buildingFeatures.elevator}
+            onValueChange={(value) => handleFeatureChange('elevator', value)}
+            trackColor={{ false: colors.lightGray, true: colors.primary }}
+          />
+        </View>
+
+        <View style={styles.featureRow}>
+          <Text style={styles.featureLabel}>Park Alanı</Text>
+          <Switch
+            value={buildingFeatures.park}
+            onValueChange={(value) => handleFeatureChange('park', value)}
+            trackColor={{ false: colors.lightGray, true: colors.primary }}
+          />
+        </View>
+
+        <View style={styles.featureRow}>
+          <Text style={styles.featureLabel}>Spor Salonu</Text>
+          <Switch
+            value={buildingFeatures.gym}
+            onValueChange={(value) => handleFeatureChange('gym', value)}
+            trackColor={{ false: colors.lightGray, true: colors.primary }}
+          />
+        </View>
+
+        <View style={styles.featureRow}>
+          <Text style={styles.featureLabel}>Bahçe</Text>
+          <Switch
+            value={buildingFeatures.garden}
+            onValueChange={(value) => handleFeatureChange('garden', value)}
+            trackColor={{ false: colors.lightGray, true: colors.primary }}
+          />
+        </View>
+
+        <View style={styles.featureRow}>
+          <Text style={styles.featureLabel}>Isı Yalıtımı</Text>
+          <Switch
+            value={buildingFeatures.thermalInsulation}
+            onValueChange={(value) => handleFeatureChange('thermalInsulation', value)}
+            trackColor={{ false: colors.lightGray, true: colors.primary }}
+          />
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderImageUpload = () => (
+    <View style={styles.imageUploadContainer}>
+      <Text style={styles.sectionTitle}>Apartman Görselleri</Text>
+      
+      {/* Seçili Görseller */}
+      <FlatList
+        horizontal
+        data={selectedImages}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.imageItemContainer}>
+            <Image
+              source={{ uri: item.uri }}
+              style={styles.imagePreview}
+            />
+            <TouchableOpacity 
+              style={styles.removeImageButton}
+              onPress={() => removeImage(item.id)}
+            >
+              <MaterialIcons name="close" size={20} color={colors.white} />
+            </TouchableOpacity>
+          </View>
+        )}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyImageContainer}>
+            <MaterialIcons name="image" size={40} color={colors.darkGray} />
+            <Text style={styles.placeholderText}>Görsel Seçilmedi</Text>
+          </View>
+        )}
+        contentContainerStyle={styles.imageListContainer}
+        showsHorizontalScrollIndicator={false}
+      />
+
+      {/* Yüklenmiş Görseller */}
+      {uploadedImageUrls.length > 0 && (
+        <>
+          <Text style={styles.uploadedImagesTitle}>Yüklenmiş Görseller</Text>
+          <FlatList
+            horizontal
+            data={uploadedImageUrls}
+            keyExtractor={(url, index) => index.toString()}
+            renderItem={({ item: url }) => (
+              <View style={styles.imageItemContainer}>
+                <Image
+                  source={{ uri: url }}
+                  style={styles.imagePreview}
+                />
+                <View style={styles.uploadedBadge}>
+                  <MaterialIcons name="check-circle" size={20} color={colors.success} />
+                </View>
+              </View>
+            )}
+            contentContainerStyle={styles.imageListContainer}
+            showsHorizontalScrollIndicator={false}
+          />
+        </>
+      )}
+
+      <View style={styles.imageButtonsContainer}>
+        <TouchableOpacity 
+          style={styles.imageButton} 
+          onPress={pickImage}
+        >
+          <MaterialIcons 
+            name="add-photo-alternate" 
+            size={24} 
+            color={colors.primary} 
+          />
+          <Text style={styles.imageButtonText}>
+            Yeni Görsel Ekle
+          </Text>
+        </TouchableOpacity>
+
+        {selectedImages.length > 0 && (
+          <TouchableOpacity 
+            style={[
+              styles.imageButton, 
+              styles.uploadButton,
+              isUploading && styles.uploadingButton
+            ]} 
+            onPress={uploadImages}
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <>
+                <ActivityIndicator size="small" color={colors.white} />
+                <Text style={[styles.imageButtonText, styles.uploadButtonText]}>
+                  Yükleniyor...
+                </Text>
+              </>
+            ) : (
+              <>
+                <MaterialIcons name="cloud-upload" size={24} color={colors.white} />
+                <Text style={[styles.imageButtonText, styles.uploadButtonText]}>
+                  {selectedImages.length} {selectedImages.length > 1 ? 'Görseli' : 'Görseli'} Yükle
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+
   const renderApartmentDetails = () => (
     <View style={styles.detailsContainer}>
       <View style={styles.stepsHeader}>
         {STEPS.map(step => (
           <View key={step.id} style={styles.stepItem}>
-            <View style={styles.stepContent}>
-              <MaterialIcons
-                name={step.icon}
-                size={24}
-                color={completionStatus[step.id] ? colors.primary : colors.darkGray}
-              />
-              <Text style={[
-                styles.stepTitle,
-                completionStatus[step.id] && styles.stepTitleCompleted
-              ]}>
-                {step.title}
-              </Text>
-            </View>
+            <MaterialIcons
+              name={step.icon}
+              size={24}
+              color={completionStatus[step.id] ? colors.success : colors.darkGray}
+            />
+            <Text style={styles.stepTitle}>{step.title}</Text>
             {completionStatus[step.id] && (
-              <MaterialIcons 
-                name="check-circle" 
-                size={16} 
-                color={colors.primary}
-                style={styles.stepCheckIcon}
-              />
+              <MaterialIcons name="check-circle" size={16} color={colors.success} />
             )}
           </View>
         ))}
@@ -1659,7 +2140,7 @@ const ApartmentInfoScreen = () => {
               </View>
 
               <View style={styles.utilitiesSection}>
-                <Text style={styles.sectionTitle}>Dahil Hizmetler</Text>
+                <Text style={styles.sectionTitle}>Dahili Hizmetler</Text>
                 <View style={styles.utilitiesRow}>
                   {item.includedUtilities.electric && (
                     <View style={styles.utilityItem}>
@@ -1823,6 +2304,88 @@ const ApartmentInfoScreen = () => {
       ]
     );
   };
+
+  const [selectedImages, setSelectedImages] = useState([]); // Tekli image yerine array kullan
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
+
+  // Görsel seçme işlemini çoklu seçim için güncelleyelim
+  const pickImage = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'image/*',
+        multiple: true, // Çoklu seçim için
+        copyToCacheDirectory: true
+      });
+      
+      console.log('Picker Result:', result);
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const newImages = result.assets.map(asset => ({
+          id: Date.now().toString() + Math.random().toString(), // Benzersiz ID
+          uri: asset.uri,
+          type: asset.mimeType,
+          name: asset.name,
+        }));
+        
+        setSelectedImages(prevImages => [...prevImages, ...newImages]);
+      }
+    } catch (error) {
+      console.error("Error picking images:", error);
+      Alert.alert("Hata", "Görseller seçilirken bir hata oluştu.");
+    }
+  };
+
+  // Görsel silme işlemi
+  const removeImage = (imageId) => {
+    setSelectedImages(prevImages => 
+      prevImages.filter(image => image.id !== imageId)
+    );
+  };
+
+  // Görselleri yükleme işlemini güncelle
+  const uploadImages = async () => {
+    if (selectedImages.length === 0) {
+      Alert.alert("Uyarı", "Lütfen en az bir görsel seçin.");
+      return;
+    }
+
+    setIsUploading(true); // Yükleme başladığında
+
+    try {
+      const uploadPromises = selectedImages.map(async (image) => {
+        const formData = new FormData();
+        formData.append("file", {
+          uri: image.uri,
+          type: image.type || "image/jpeg",
+          name: image.name || "image.jpg",
+        });
+
+        const response = await fetch("http://<API_BASE_URL>/api/drive/upload", {
+          method: "POST",
+          body: formData,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        const data = await response.json();
+        return data.fileUrl;
+      });
+
+      const urls = await Promise.all(uploadPromises);
+      setUploadedImageUrls(prevUrls => [...prevUrls, ...urls]);
+      setSelectedImages([]); // Yüklenen görselleri temizle
+      Alert.alert("Başarılı", `${urls.length} görsel başarıyla yüklendi.`);
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      Alert.alert("Hata", "Görseller yüklenirken bir hata oluştu.");
+    } finally {
+      setIsUploading(false); // Yükleme bittiğinde
+    }
+  };
+
+  // isUploading state'ini ekleyelim
+  const [isUploading, setIsUploading] = useState(false);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -2104,12 +2667,17 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   utilitiesContainer: {
-    marginVertical: 10,
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    elevation: 2,
   },
   utilitiesTitle: {
-    fontSize: 16,
-    color: colors.darkGray,
-    marginBottom: 10,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: 15,
   },
   checkboxGroup: {
     flexDirection: 'row',
@@ -2352,27 +2920,64 @@ const styles = StyleSheet.create({
   },
   stepItem: {
     flex: 1,
-    alignItems: 'center',
-    height: 80, // Sabit yükseklik ver
-  },
-  stepContent: {
-    alignItems: 'center',
-    height: 60, // İçerik için sabit yükseklik
+    flexWrap: 'wrap',
+    flexDirection: 'row',
+    gap: 5,
   },
   stepTitle: {
     fontSize: 14,
     color: colors.darkGray,
-    textAlign: 'center',
-    marginTop: 4,
-    height: 36, // İki satırlı başlıklar için yeterli yükseklik
   },
-  stepTitleCompleted: {
-    color: colors.primary,
-    fontWeight: '500',
+  completedUnitButton: {
+    borderColor: colors.success,
+    backgroundColor: colors.lightGreen,
   },
-  stepCheckIcon: {
-    position: 'absolute',
-    bottom: 0, // stepItem'ın en altına yerleştir
+  inactiveUnitButton: {
+    opacity: 0.5,
+    backgroundColor: colors.lightGray,
+  },
+  navigationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+  },
+  navButton: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  primaryButton: {
+    backgroundColor: colors.primary,
+  },
+  completedUnitButtonText: {
+    color: colors.success,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  unitTypeText: {
+    fontSize: 12,
+    color: colors.success,
+    marginTop: 2,
+  },
+  stepsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+    elevation: 2,
+  },
+  stepItem: {
+    flex: 1,
+    flexWrap: 'wrap',
+
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 5,
+  },
+  stepTitle: {
+    fontSize: 14,
+    color: colors.darkGray,
   },
   completedUnitButton: {
     borderColor: colors.success,
@@ -2772,6 +3377,222 @@ const styles = StyleSheet.create({
   },
   selectedFloorButtonText: {
     color: "#FFFFFF", // Seçili durumda
+  },
+  featuresContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    elevation: 2,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingRight: 10, // Switch için sağ tarafta boşluk bırak
+  },
+  featureLabel: {
+    fontSize: 16,
+    color: colors.darkGray,
+    flex: 1,
+  },
+  featureControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end', // Sağa hizala
+    flex: 1,
+    gap: 15, // Switch ile radio butonlar arası mesafe
+  },
+  radioGroupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginRight: 10, // Switch'ten önce boşluk bırak
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  radioButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  radioButtonSelected: {
+    backgroundColor: colors.primary,
+  },
+  radioText: {
+    color: colors.primary,
+    fontSize: 14,
+  },
+  radioTextSelected: {
+    color: colors.white,  // Seçili durumda metin rengi beyaz olsun
+  },
+  switchGroup: {
+    marginTop: 10,
+  },
+  ageInput: {
+    width: 80,
+    height: 40,
+    backgroundColor: colors.white,
+  },
+  datePickerContainer: {
+    alignItems: 'flex-end',
+  },
+  datePickerButton: {
+    backgroundColor: colors.white,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  datePickerButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+  },
+  buildingAgeText: {
+    fontSize: 12,
+    color: colors.darkGray,
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  iosDatePickerContainer: {
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+  },
+  iosDatePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+  },
+  iosDatePickerButtonText: {
+    color: colors.primary,
+    fontSize: 16,
+  },
+  confirmText: {
+    fontWeight: 'bold',
+  },
+  imageUploadContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    elevation: 2,
+  },
+  imagePreviewContainer: {
+    height: 200,
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginVertical: 15,
+    backgroundColor: colors.lightGray,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  placeholderImage: {
+    alignItems: 'center',
+  },
+  placeholderText: {
+    marginTop: 10,
+    color: colors.darkGray,
+    fontSize: 14,
+  },
+  imageButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 15,
+  },
+  imageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    gap: 8,
+  },
+  imageButtonSelected: {
+    backgroundColor: colors.primary,
+  },
+  uploadButton: {
+    backgroundColor: colors.success,
+    borderColor: colors.success,
+  },
+  imageButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  imageButtonTextSelected: {
+    color: colors.white,
+  },
+  imageListContainer: {
+    paddingVertical: 10,
+    minHeight: 200,
+    width: '100%', // Genişlik ekle
+  },
+  imageItemContainer: {
+    marginRight: 10,
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+    width: 150,  // Sabit genişlik ekle
+    height: 200, // Sabit yükseklik ekle
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 15,
+    padding: 5,
+    zIndex: 1, // Üstte görünmesi için
+  },
+  emptyImageContainer: {
+    width: 150,
+    height: 200,
+    backgroundColor: colors.lightGray,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10, // Boş durumda kenarlardan boşluk ekle
+  },
+  uploadedImagesTitle: {
+    fontSize: 16,
+    color: colors.darkGray,
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  uploadedBadge: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 15,
+    padding: 5,
+    zIndex: 1,
+  },
+  uploadingButton: {
+    opacity: 0.7,
   },
 });
 
