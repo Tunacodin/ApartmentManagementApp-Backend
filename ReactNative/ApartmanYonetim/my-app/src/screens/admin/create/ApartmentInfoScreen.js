@@ -25,32 +25,56 @@ import LottieView from "lottie-react-native";
 import animate from "../../../assets/json/animApartment.json";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DocumentPicker from "expo-document-picker";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = "http://172.16.1.155:5001/api/Building";
+// API URL'lerini güncelleyelim
+const BASE_URL = "http://172.16.1.155:5001/api";
+const BUILDING_API_URL = `${BASE_URL}/Building`;
+const IMAGE_API_URL = `${BASE_URL}/Image/Add`;
 
+// API yapılandırmasını güncelleyelim
 const api = axios.create({
+  baseURL: BASE_URL,
   timeout: 30000,
   headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'Content-Type': 'multipart/form-data'
   },
-  validateStatus: function (status) {
-    return status >= 200 && status < 300;
-  }
+  transformRequest: [(data, headers) => {
+    if (data instanceof FormData) {
+      headers['Content-Type'] = 'multipart/form-data';
+      return data;
+    }
+    return JSON.stringify(data);
+  }]
 });
 
+// İstek interceptor'ı ekleyelim
 api.interceptors.request.use(request => {
-  console.log('Starting Request:', request.url);
+  console.log('Starting Request:', {
+    url: request.url,
+    method: request.method,
+    headers: request.headers,
+    data: request.data
+  });
   return request;
 });
 
+// Yanıt interceptor'ı ekleyelim
 api.interceptors.response.use(
   response => {
-    console.log('Response:', response.data);
+    console.log('Response:', {
+      status: response.status,
+      data: response.data
+    });
     return response;
   },
   error => {
-    console.log('Error:', error);
+    console.error('API Error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
     return Promise.reject(error);
   }
 );
@@ -297,7 +321,7 @@ const ApartmentInfoScreen = () => {
       setDistricts(cityData.districts);
       setFilteredDistricts([]);
       setShowDistrictDropdown(false);
-      console.log('Updated districts for selected city:', cityData.districts);
+    
     }
     
     setShowCityDropdown(false);
@@ -313,7 +337,7 @@ const ApartmentInfoScreen = () => {
       );
       setFilteredDistricts(filtered);
       setShowDistrictDropdown(true);
-      console.log('Filtered districts:', filtered);
+     
     } else {
       setFilteredDistricts([]);
       setShowDistrictDropdown(false);
@@ -344,85 +368,209 @@ const ApartmentInfoScreen = () => {
   };
 
   const validateForm = () => {
-    return (
-      apartmentName.trim() &&
-      !isNaN(numberOfFloors) && numberOfFloors > 0 &&
-      !isNaN(totalApartments) && totalApartments > 0 &&
-      city.trim() && district.trim() &&
-      neighborhood.trim() && street.trim() && 
-      /^\d+$/.test(buildingNumber.trim()) &&
-      /^\d{5}$/.test(postalCode)
-    );
+    const missingFields = [];
+
+    if (!apartmentName?.trim()) missingFields.push("Apartman Adı");
+    if (!numberOfFloors) missingFields.push("Kat Sayısı");
+    if (!totalApartments) missingFields.push("Toplam Daire Sayısı");
+    if (!city?.trim()) missingFields.push("Şehir");
+    if (!district?.trim()) missingFields.push("İlçe");
+    if (!neighborhood?.trim()) missingFields.push("Mahalle");
+    if (!street?.trim()) missingFields.push("Sokak");
+    if (!buildingNumber?.trim()) missingFields.push("Bina No");
+    if (!postalCode?.trim()) missingFields.push("Posta Kodu");
+
+    if (selectedImages.length === 0) {
+      missingFields.push("En az bir apartman görseli");
+    }
+
+    if (missingFields.length > 0) {
+      Alert.alert(
+        "Eksik Bilgiler",
+        `Lütfen aşağıdaki alanları doldurun:\n\n${missingFields.join("\n")}`
+      );
+      return false;
+    }
+
+    return true;
   };
 
+  // AsyncStorage'dan veri yükleme
+  useEffect(() => {
+    loadSavedApartment();
+  }, []);
+
+  // Kaydedilmiş apartman bilgilerini yükle
+  const loadSavedApartment = async () => {
+    try {
+      const savedApartment = await AsyncStorage.getItem('savedApartment');
+      if (savedApartment) {
+        const apartmentData = JSON.parse(savedApartment);
+        
+        // State'leri güncelle
+        setApartmentName(apartmentData.buildingName || '');
+        setNumberOfFloors(apartmentData.numberOfFloors?.toString() || '');
+        setTotalApartments(apartmentData.totalApartments?.toString() || '');
+        setCity(apartmentData.city || '');
+        setDistrict(apartmentData.district || '');
+        setNeighborhood(apartmentData.neighborhood || '');
+        setStreet(apartmentData.street || '');
+        setBuildingNumber(apartmentData.buildingNumber || '');
+        setPostalCode(apartmentData.postalCode || '');
+        setDuesAmount(apartmentData.duesAmount?.toString() || '');
+        
+        setIncludedUtilities({
+          electric: apartmentData.includedElectric || false,
+          water: apartmentData.includedWater || false,
+          gas: apartmentData.includedGas || false,
+          internet: apartmentData.includedInternet || false
+        });
+
+        setBuildingFeatures({
+          parking: {
+            exists: apartmentData.parkingType !== 'Yok',
+            type: apartmentData.parkingType !== 'Yok' ? apartmentData.parkingType : null
+          },
+          elevator: apartmentData.hasElevator || false,
+          park: apartmentData.hasPlayground || false,
+          heatingSystem: apartmentData.heatingType || 'central',
+          pool: {
+            exists: apartmentData.poolType !== 'Yok',
+            type: apartmentData.poolType !== 'Yok' ? apartmentData.poolType : null
+          },
+          gym: apartmentData.hasGym || false,
+          buildingAge: apartmentData.buildingAge?.toString() || '',
+          garden: apartmentData.hasGarden || false,
+          thermalInsulation: apartmentData.hasThermalInsulation || false
+        });
+
+        if (apartmentData.imageId) {
+          setUploadedImageUrls([{ id: apartmentData.imageId }]);
+        }
+
+        console.log('Apartman bilgileri yüklendi:', apartmentData);
+      }
+    } catch (error) {
+      console.error('Apartman bilgileri yüklenirken hata:', error);
+    }
+  };
+
+  // Apartman bilgilerini kaydet
+  const saveApartmentToStorage = async (apartmentData) => {
+    try {
+      await AsyncStorage.setItem('savedApartment', JSON.stringify(apartmentData));
+      console.log('Apartman bilgileri kaydedildi');
+    } catch (error) {
+      console.error('Apartman bilgileri kaydedilirken hata:', error);
+    }
+  };
+
+  // handleSubmit fonksiyonunu güncelle
   const handleSubmit = async () => {
     if (!validateForm()) {
-      Alert.alert("Hata", "Lütfen tüm alanları eksiksiz doldurun.");
       return;
     }
 
+    setIsUploading(true);
+
     try {
-      const apartmentData = {
-        apartmentName,
+      // Önce görselleri yükle
+      const uploadedImages = await uploadImages();
+      console.log("Yüklenen görseller:", uploadedImages);
+
+      if (!uploadedImages || uploadedImages.length === 0) {
+        throw new Error("Görseller yüklenemedi");
+      }
+
+      // Apartman bilgilerini hazırla
+      const buildingAge = constructionDate ? 
+        new Date().getFullYear() - constructionDate.getFullYear() : 
+        0;
+
+      const requestBody = {
+        buildingName: apartmentName.trim(),
         numberOfFloors: parseInt(numberOfFloors),
         totalApartments: parseInt(totalApartments),
-        city,
-        district,
-        neighborhood,
-        street,
-        buildingNumber,
-        postalCode,
-        includedUtilities
+        occupancyRate: 0,
+        city: city.trim(),
+        district: district.trim(),
+        neighborhood: neighborhood.trim(),
+        street: street.trim(),
+        buildingNumber: buildingNumber.trim(),
+        postalCode: postalCode.trim(),
+        duesAmount: parseFloat(duesAmount || "0"),
+        includedElectric: includedUtilities.electric || false,
+        includedWater: includedUtilities.water || false,
+        includedGas: includedUtilities.gas || false,
+        includedInternet: includedUtilities.internet || false,
+        adminId: 1,
+        parkingType: buildingFeatures.parking.exists ? 
+          buildingFeatures.parking.type : 'Yok',
+        hasElevator: buildingFeatures.elevator || false,
+        hasPlayground: buildingFeatures.park || false,
+        heatingType: buildingFeatures.heatingSystem || 'Merkezi',
+        poolType: buildingFeatures.pool.exists ? 
+          buildingFeatures.pool.type : 'Yok',
+        hasGym: buildingFeatures.gym || false,
+        buildingAge: buildingAge,
+        hasGarden: buildingFeatures.garden || false,
+        hasThermalInsulation: buildingFeatures.thermalInsulation || false,
+        imageId: uploadedImages[0].id // Backend tek görsel ID'si bekliyorsa
+        // imageIds: uploadedImages.map(img => img.id) // Backend çoklu görsel ID'si bekliyorsa
       };
 
-      // Yeni daire bilgileri oluştur
-      const units = Array.from(
-        { length: parseInt(totalApartments) },
-        (_, index) => ({
-          unitNumber: index + 1,
-          floor: undefined,
-          rentAmount: '',
-          depositAmount: '',
-          type: '',
-          hasBalcony: false,
-          notes: '',
-        })
-      );
+      console.log("API'ye gönderilecek veriler:", requestBody);
 
-      // Daire bilgilerini ayarla
-      setApartmentUnits(units);
-      setUnassignedUnits([]);  // Hiçbir daire seçili olmasın
-      setSelectedUnits([]);
-      
-      // Seçili apartmanı ayarla
-      setSelectedApartment(apartmentData);
-      
-      // Form ekranını kapat
-      setShowForm(false);
-      
-      // Daire bilgileri ekranını aç
-      setShowApartmentDetails(true);
-      setCurrentStep('type');
-      
-      // Kat bilgileri için gerekli state'leri ayarla
-      setSelectedType('');
-      setSelectedFloor(0);
-      setSelectedBasementFloor(null);
-      setAvailableFloors([
-        0,
-        ...Array.from(
-          { length: parseInt(numberOfFloors) - 1 },
-          (_, i) => i + 1
-        )
-      ]);
+      // Apartman bilgilerini kaydet
+      const apartmentResponse = await api.post(BUILDING_API_URL, requestBody);
 
-      Alert.alert(
-        "Başarılı", 
-        "Apartman bilgileri kaydedildi. Şimdi daire bilgilerini girebilirsiniz."
-      );
+      console.log("Apartman kaydetme yanıtı:", apartmentResponse.data);
+
+      if (apartmentResponse.data) {
+        // Daire bilgileri için state'leri hazırla
+        setApartmentUnits(Array.from(
+          { length: parseInt(totalApartments) },
+          (_, index) => ({
+            unitNumber: index + 1,
+            floor: undefined,
+            rentAmount: '',
+            depositAmount: '',
+            type: '',
+            hasBalcony: false,
+            notes: '',
+          })
+        ));
+        
+        setSelectedApartment(apartmentResponse.data);
+        setShowForm(false);
+        setShowApartmentDetails(true);
+        setCurrentStep('type');
+
+        Alert.alert(
+          "Başarılı", 
+          "Apartman bilgileri kaydedildi. Şimdi daire bilgilerini girebilirsiniz."
+        );
+      }
     } catch (error) {
-      console.error("Hata:", error);
-      Alert.alert("Hata", "Apartman bilgileri kaydedilemedi");
+      console.error("Form gönderme hatası:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        validationErrors: error.response?.data?.errors
+      });
+
+      let errorMessage = "Apartman bilgileri kaydedilirken bir hata oluştu.";
+      
+      if (error.response?.data?.errors) {
+        const validationErrors = Object.entries(error.response.data.errors)
+          .map(([key, value]) => `${key}: ${value.join(', ')}`)
+          .join('\n');
+        errorMessage += `\n\nValidasyon hataları:\n${validationErrors}`;
+      }
+
+      Alert.alert("Hata", errorMessage);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -502,7 +650,7 @@ const ApartmentInfoScreen = () => {
     try {
       console.log('Fetching cities...');
       const response = await axios.get('https://turkiyeapi.dev/api/v1/provinces');
-      console.log('Cities API Response:', response.data);
+      
       
       if (response.data.status === "OK") {
         const cityData = response.data.data.map(city => ({
@@ -531,7 +679,7 @@ const ApartmentInfoScreen = () => {
     try {
       console.log('Fetching neighborhoods for district ID:', selectedDistrict.districtId);
       const response = await axios.get('https://turkiyeapi.dev/api/v1/neighborhoods');
-      console.log('Neighborhoods API Response:', response.data);
+     
       
       if (response.data.status === "OK") {
         const districtNeighborhoods = response.data.data
@@ -1010,7 +1158,12 @@ const ApartmentInfoScreen = () => {
               ]}
               onPress={() => handleFeatureChange('heatingSystem', option.value)}
             >
-              <Text style={styles.radioText}>{option.label}</Text>
+              <Text style={[
+                styles.radioText,
+                buildingFeatures.heatingSystem === option.value && styles.radioTextSelected
+              ]}>
+                {option.label}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -1130,103 +1283,45 @@ const ApartmentInfoScreen = () => {
     <View style={styles.imageUploadContainer}>
       <Text style={styles.sectionTitle}>Apartman Görselleri</Text>
       
-      {/* Seçili Görseller */}
       <FlatList
         horizontal
-        data={selectedImages}
+        data={[{ id: 'add' }, ...selectedImages]}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.imageItemContainer}>
-            <Image
-              source={{ uri: item.uri }}
-              style={styles.imagePreview}
-            />
-            <TouchableOpacity 
-              style={styles.removeImageButton}
-              onPress={() => removeImage(item.id)}
-            >
-              <MaterialIcons name="close" size={20} color={colors.white} />
-            </TouchableOpacity>
-          </View>
-        )}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyImageContainer}>
-            <MaterialIcons name="image" size={40} color={colors.darkGray} />
-            <Text style={styles.placeholderText}>Görsel Seçilmedi</Text>
-          </View>
-        )}
+        renderItem={({ item }) => {
+          if (item.id === 'add') {
+            return (
+              <TouchableOpacity 
+                style={styles.addImageCard}
+                onPress={pickImage}
+              >
+                <MaterialIcons 
+                  name="add-photo-alternate" 
+                  size={32} 
+                  color={colors.primary} 
+                />
+                <Text style={styles.addImageText}>Görsel Ekle</Text>
+              </TouchableOpacity>
+            );
+          }
+          
+          return (
+            <View style={styles.imageItemContainer}>
+              <Image
+                source={{ uri: item.uri }}
+                style={styles.imagePreview}
+              />
+              <TouchableOpacity 
+                style={styles.removeImageButton}
+                onPress={() => removeImage(item.id)}
+              >
+                <MaterialIcons name="delete" size={20} color={colors.white} />
+              </TouchableOpacity>
+            </View>
+          );
+        }}
         contentContainerStyle={styles.imageListContainer}
         showsHorizontalScrollIndicator={false}
       />
-
-      {/* Yüklenmiş Görseller */}
-      {uploadedImageUrls.length > 0 && (
-        <>
-          <Text style={styles.uploadedImagesTitle}>Yüklenmiş Görseller</Text>
-          <FlatList
-            horizontal
-            data={uploadedImageUrls}
-            keyExtractor={(url, index) => index.toString()}
-            renderItem={({ item: url }) => (
-              <View style={styles.imageItemContainer}>
-                <Image
-                  source={{ uri: url }}
-                  style={styles.imagePreview}
-                />
-                <View style={styles.uploadedBadge}>
-                  <MaterialIcons name="check-circle" size={20} color={colors.success} />
-                </View>
-              </View>
-            )}
-            contentContainerStyle={styles.imageListContainer}
-            showsHorizontalScrollIndicator={false}
-          />
-        </>
-      )}
-
-      <View style={styles.imageButtonsContainer}>
-        <TouchableOpacity 
-          style={styles.imageButton} 
-          onPress={pickImage}
-        >
-          <MaterialIcons 
-            name="add-photo-alternate" 
-            size={24} 
-            color={colors.primary} 
-          />
-          <Text style={styles.imageButtonText}>
-            Yeni Görsel Ekle
-          </Text>
-        </TouchableOpacity>
-
-        {selectedImages.length > 0 && (
-          <TouchableOpacity 
-            style={[
-              styles.imageButton, 
-              styles.uploadButton,
-              isUploading && styles.uploadingButton
-            ]} 
-            onPress={uploadImages}
-            disabled={isUploading}
-          >
-            {isUploading ? (
-              <>
-                <ActivityIndicator size="small" color={colors.white} />
-                <Text style={[styles.imageButtonText, styles.uploadButtonText]}>
-                  Yükleniyor...
-                </Text>
-              </>
-            ) : (
-              <>
-                <MaterialIcons name="cloud-upload" size={24} color={colors.white} />
-                <Text style={[styles.imageButtonText, styles.uploadButtonText]}>
-                  {selectedImages.length} {selectedImages.length > 1 ? 'Görseli' : 'Görseli'} Yükle
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        )}
-      </View>
     </View>
   );
 
@@ -2305,26 +2400,26 @@ const ApartmentInfoScreen = () => {
     );
   };
 
-  const [selectedImages, setSelectedImages] = useState([]); // Tekli image yerine array kullan
-  const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
+  const [selectedImages, setSelectedImages] = useState([]); // Seçilen görseller
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Görsel seçme işlemini çoklu seçim için güncelleyelim
+  // Görsel seçme işlemini güncelle
   const pickImage = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: 'image/*',
-        multiple: true, // Çoklu seçim için
-        copyToCacheDirectory: true
+        multiple: true // Çoklu seçim için
       });
       
-      console.log('Picker Result:', result);
+      console.log("Picker Result:", result);
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const newImages = result.assets.map(asset => ({
-          id: Date.now().toString() + Math.random().toString(), // Benzersiz ID
+          id: Date.now().toString() + Math.random().toString(),
           uri: asset.uri,
           type: asset.mimeType,
           name: asset.name,
+          size: asset.size
         }));
         
         setSelectedImages(prevImages => [...prevImages, ...newImages]);
@@ -2342,50 +2437,65 @@ const ApartmentInfoScreen = () => {
     );
   };
 
-  // Görselleri yükleme işlemini güncelle
+  // Görselleri yükleme işlemi
   const uploadImages = async () => {
-    if (selectedImages.length === 0) {
-      Alert.alert("Uyarı", "Lütfen en az bir görsel seçin.");
-      return;
-    }
+    const uploadedImages = [];
+    
+    for (const image of selectedImages) {
+      try {
+        const timestamp = Date.now();
+        const extension = image.name ? image.name.split('.').pop() : 'jpg';
+        const fileName = `image_${timestamp}.${extension}`;
 
-    setIsUploading(true); // Yükleme başladığında
-
-    try {
-      const uploadPromises = selectedImages.map(async (image) => {
         const formData = new FormData();
-        formData.append("file", {
+        formData.append('file', {
           uri: image.uri,
           type: image.type || "image/jpeg",
-          name: image.name || "image.jpg",
+          name: fileName
         });
 
-        const response = await fetch("http://<API_BASE_URL>/api/drive/upload", {
-          method: "POST",
-          body: formData,
+        const config = {
+          method: 'POST',
+          url: `${IMAGE_API_URL}?fileName=${encodeURIComponent(fileName)}`,
           headers: {
-            "Content-Type": "multipart/form-data",
+            'Content-Type': 'multipart/form-data',
           },
-        });
+          data: formData,
+          timeout: 60000,
+        };
 
-        const data = await response.json();
-        return data.fileUrl;
-      });
-
-      const urls = await Promise.all(uploadPromises);
-      setUploadedImageUrls(prevUrls => [...prevUrls, ...urls]);
-      setSelectedImages([]); // Yüklenen görselleri temizle
-      Alert.alert("Başarılı", `${urls.length} görsel başarıyla yüklendi.`);
-    } catch (error) {
-      console.error("Error uploading images:", error);
-      Alert.alert("Hata", "Görseller yüklenirken bir hata oluştu.");
-    } finally {
-      setIsUploading(false); // Yükleme bittiğinde
+        const response = await axios(config);
+        
+        if (response.data && response.data.imageId) {
+          uploadedImages.push({
+            id: response.data.imageId,
+            uri: image.uri,
+            fileName: fileName
+          });
+        }
+      } catch (error) {
+        console.error("Görsel yükleme hatası:", error);
+        throw error;
+      }
     }
+    
+    return uploadedImages;
   };
 
-  // isUploading state'ini ekleyelim
-  const [isUploading, setIsUploading] = useState(false);
+  // Apartman bilgilerini sıfırla
+  const resetApartment = async () => {
+    try {
+      await AsyncStorage.removeItem('savedApartment');
+      // Tüm state'leri sıfırla
+      setApartmentName('');
+      setNumberOfFloors('');
+      setTotalApartments('');
+      // ... diğer state'leri sıfırla
+      Alert.alert('Başarılı', 'Apartman bilgileri sıfırlandı');
+    } catch (error) {
+      console.error('Apartman bilgileri sıfırlanırken hata:', error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -2492,6 +2602,8 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: colors.primary,
     borderRadius: 8,
+    width: "70%",
+    alignSelf: "center",
   },
   submitButtonLabel: {
     fontSize: 16,
@@ -2734,6 +2846,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    
   },
   noApartmentText: {
     textAlign: 'center',
@@ -3430,7 +3543,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   radioTextSelected: {
-    color: colors.white,  // Seçili durumda metin rengi beyaz olsun
+    color: colors.white,  // Seçili durumda metin rengi beyaz
   },
   switchGroup: {
     marginTop: 10,
@@ -3491,6 +3604,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 10,
     elevation: 2,
+    minHeight: 300, // Container'a minimum yükseklik ekleyelim
   },
   imagePreviewContainer: {
     height: 200,
@@ -3534,65 +3648,71 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   uploadButton: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
-  },
-  imageButtonText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  imageButtonTextSelected: {
-    color: colors.white,
-  },
-  imageListContainer: {
-    paddingVertical: 10,
-    minHeight: 200,
-    width: '100%', // Genişlik ekle
-  },
-  imageItemContainer: {
-    marginRight: 10,
-    borderRadius: 10,
-    overflow: 'hidden',
-    position: 'relative',
-    width: 150,  // Sabit genişlik ekle
-    height: 200, // Sabit yükseklik ekle
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 15,
-    padding: 5,
-    zIndex: 1, // Üstte görünmesi için
-  },
-  emptyImageContainer: {
-    width: 150,
-    height: 200,
-    backgroundColor: colors.lightGray,
-    borderRadius: 10,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 10, // Boş durumda kenarlardan boşluk ekle
+    justifyContent: 'center',
+    backgroundColor: colors.success,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 15,
+    gap: 8,
   },
-  uploadedImagesTitle: {
+  uploadButtonText: {
+    color: colors.white,
     fontSize: 16,
-    color: colors.darkGray,
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  uploadedBadge: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 15,
-    padding: 5,
-    zIndex: 1,
+    fontWeight: '500',
   },
   uploadingButton: {
     opacity: 0.7,
+  },
+  imageListContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+  },
+  addImageCard: {
+    width: 150,
+    height: 200,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: colors.primary,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    backgroundColor: 'transparent',
+  },
+  addImageText: {
+    color: colors.primary,
+    marginTop: 8,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  imageItemContainer: {
+    width: 150,
+    height: 200,
+    marginHorizontal: 5,
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 15,
+    padding: 6,
+    zIndex: 1,
+  },
+  uploadedBadge: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 15,
+    padding: 4,
+    zIndex: 1,
   },
 });
 

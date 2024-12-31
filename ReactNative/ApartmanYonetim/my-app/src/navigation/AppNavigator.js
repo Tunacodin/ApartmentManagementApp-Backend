@@ -18,7 +18,7 @@ const Stack = createNativeStackNavigator();
 export default function AppNavigator() {
   return ( 
     <Stack.Navigator
-      initialRouteName="RoleScreen"
+      initialRouteName="Splash"
       screenOptions={{ headerShown: false }}
     >
       {/* İlk açılış ekranları */}

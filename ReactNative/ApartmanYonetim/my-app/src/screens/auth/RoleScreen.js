@@ -8,7 +8,7 @@ const { width } = Dimensions.get('window');
 
 const roles = [
   { id: '1', label: 'Yönetici', value: 'admin', icon: 'user-shield', active: true },
-  { id: '2', label: 'Kiracı', value: 'tenant', icon: 'user', active: false },
+  { id: '2', label: 'Kiracı', value: 'tenant', icon: 'user', active: true },
   { id: '3', label: 'Ev Sahibi', value: 'owner', icon: 'home', active: false },
   { id: '4', label: 'Personel', value: 'worker', icon: 'briefcase', active: false },
 ];
