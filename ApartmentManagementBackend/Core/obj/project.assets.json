@@ -2813,11 +2813,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj",
+      "projectUniqueName": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj",
       "projectName": "Core",
-      "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj",
+      "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj",
       "packagesPath": "C:\\Users\\Tuna\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\obj\\",
+      "outputPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Tuna\\AppData\\Roaming\\NuGet\\NuGet.Config",

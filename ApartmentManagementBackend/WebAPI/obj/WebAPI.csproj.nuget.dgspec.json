@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\WebAPI.csproj": {}
+    "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\WebAPI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Business.csproj": {
+    "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Business.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Business.csproj",
+        "projectUniqueName": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Business.csproj",
         "projectName": "Business",
-        "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Business.csproj",
+        "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Business.csproj",
         "packagesPath": "C:\\Users\\Tuna\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\obj\\",
+        "outputPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Tuna\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -29,11 +29,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj": {
-                "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj"
+              "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj": {
+                "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj"
               },
-              "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj": {
-                "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj"
+              "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj": {
+                "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj"
               }
             }
           }
@@ -73,14 +73,14 @@
         }
       }
     },
-    "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj": {
+    "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj",
+        "projectUniqueName": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj",
         "projectName": "Core",
-        "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj",
+        "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj",
         "packagesPath": "C:\\Users\\Tuna\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\obj\\",
+        "outputPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Tuna\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -141,14 +141,14 @@
         }
       }
     },
-    "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj": {
+    "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj",
+        "projectUniqueName": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj",
         "projectName": "DataAccess",
-        "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj",
+        "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\DataAccess.csproj",
         "packagesPath": "C:\\Users\\Tuna\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\obj\\",
+        "outputPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\DataAccess\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Tuna\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -166,11 +166,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj": {
-                "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj"
+              "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj": {
+                "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj"
               },
-              "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj": {
-                "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj"
+              "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj": {
+                "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj"
               }
             }
           }
@@ -220,14 +220,14 @@
         }
       }
     },
-    "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj": {
+    "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj",
+        "projectUniqueName": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj",
         "projectName": "Entities",
-        "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj",
+        "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\Entities.csproj",
         "packagesPath": "C:\\Users\\Tuna\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\obj\\",
+        "outputPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Entities\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Tuna\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -245,8 +245,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj": {
-                "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj"
+              "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj": {
+                "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Core\\Core.csproj"
               }
             }
           }
@@ -286,14 +286,14 @@
         }
       }
     },
-    "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\WebAPI.csproj": {
+    "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\WebAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\WebAPI.csproj",
+        "projectUniqueName": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\WebAPI.csproj",
         "projectName": "WebAPI",
-        "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\WebAPI.csproj",
+        "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\WebAPI.csproj",
         "packagesPath": "C:\\Users\\Tuna\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\obj\\",
+        "outputPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Tuna\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -311,8 +311,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Business.csproj": {
-                "projectPath": "C:\\Users\\Tuna\\source\\repos\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Business.csproj"
+              "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Business.csproj": {
+                "projectPath": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\Business\\Business.csproj"
               }
             }
           }

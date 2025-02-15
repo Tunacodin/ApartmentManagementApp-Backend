@@ -136,6 +136,91 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "WebAPI.Controllers.BuildingDetailController",
+    "Method": "GetAll",
+    "RelativePath": "api/BuildingDetail",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "buildingId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.BuildingDetailController",
+    "Method": "Add",
+    "RelativePath": "api/BuildingDetail",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "buildingDetail",
+        "Type": "Entities.Concrete.BuildingDetail",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.BuildingDetailController",
+    "Method": "GetById",
+    "RelativePath": "api/BuildingDetail/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.BuildingDetailController",
+    "Method": "Delete",
+    "RelativePath": "api/BuildingDetail/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.BuildingDetailController",
+    "Method": "Update",
+    "RelativePath": "api/BuildingDetail/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "buildingDetail",
+        "Type": "Entities.Concrete.BuildingDetail",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "WebAPI.Controllers.CardInfoController",
     "Method": "GetById",
     "RelativePath": "api/CardInfo/{id}",
