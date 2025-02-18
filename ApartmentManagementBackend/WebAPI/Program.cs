@@ -2,33 +2,55 @@ using Business.Abstract;
 using Business.Concrete;
 using DataAccess.Abstract;
 using DataAccess.Concrete.EntityFramework;
+using Microsoft.EntityFrameworkCore;
+using WebAPI.Middleware;
+using Business.ValidationRules.FluentValidation;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
-// Swagger/OpenAPI yapýlandýrmasý
+
+// FluentValidation configuration
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<TenantDtoValidator>();
+
+// Swagger/OpenAPI yapÄ±landÄ±rmasÄ±
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Dependency Injection (DI) Konfigürasyonu
-builder.Services.AddScoped<IUserService, UserManager>();
-builder.Services.AddScoped<IUserDal, EfUserDal>();
+// Dependency Injection (DI) KonfigÃ¼rasyonu
 builder.Services.AddScoped<IAdminService, AdminManager>();
-builder.Services.AddScoped<ITenantService, TenantManager>();
-builder.Services.AddScoped<ITenantDal,EfTenantDal>(); 
-builder.Services.AddScoped<IBuildingService, BuildingManager>();    
-builder.Services.AddScoped<IBuildingDal,EfBuildingDal>();
-builder.Services.AddScoped<ICardInfoService, CardInfoManager>();
-builder.Services.AddScoped<ICardInfoDal,EfCardInfoDal>();
+builder.Services.AddScoped<IApartmentDal, EfApartmentDal>();
+builder.Services.AddScoped<IUserDal, EfUserDal>();
+builder.Services.AddScoped<IBuildingDal, EfBuildingDal>();
+builder.Services.AddScoped<ITenantDal, EfTenantDal>();
+builder.Services.AddScoped<INotificationDal, EfNotificationDal>();
+builder.Services.AddScoped<IMeetingDal, EfMeetingDal>();
+builder.Services.AddScoped<IPaymentDal, EfPaymentDal>();
+builder.Services.AddScoped<IOwnerDal, EfOwnerDal>();
 
+// Service registrations
+builder.Services.AddScoped<IUserService, UserManager>();
+builder.Services.AddScoped<IBuildingService, BuildingManager>();
+builder.Services.AddScoped<ITenantService, TenantManager>();
+builder.Services.AddScoped<INotificationService, NotificationManager>();
+builder.Services.AddScoped<IMeetingService, MeetingManager>();
+builder.Services.AddScoped<IPaymentService, PaymentManager>();
+builder.Services.AddScoped<IOwnerService, OwnerManager>();
+
+builder.Services.AddDbContext<ApartmentManagementDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage(); // Hata detaylarýný geliþtirme ortamýnda göster
+    app.UseDeveloperExceptionPage(); // Hata detaylarÄ±nÄ± geliÅŸtirme ortamÄ±nda gÃ¶ster
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -38,5 +60,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Add ExceptionMiddleware
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.Run();

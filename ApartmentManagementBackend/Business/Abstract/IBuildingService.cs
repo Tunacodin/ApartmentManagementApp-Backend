@@ -5,10 +5,10 @@ namespace Business.Abstract
 {
     public interface IBuildingService
     {
+        List<Building> GetAll();
+        Building GetById(int id);
         void Add(Building building);
         void Update(Building building);
-        void Delete(Building building);
-        Building GetById(int buildingId);
-        List<Building> GetAll();
+        void Delete(int id);
     }
 }

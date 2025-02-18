@@ -5,15 +5,11 @@ namespace Entities.Concrete
     public class Meeting : IEntity
     {
         public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
         public DateTime MeetingDate { get; set; }
-        public string Agenda { get; set; } = string.Empty;
-        public string Summary { get; set; } = string.Empty;
-        public int CreatedByAdminId { get; set; }
-        public bool IsActive { get; set; }
-
-        // Navigation properties
-        public Admin? CreatedByAdmin { get; set; }  // 1-1 ilişki: Her toplantının bir oluşturucusu var
-        public List<User> Participants { get; set; } = new List<User>();  // n-n ilişki: Toplantıya katılanlar
-        public Building? Building { get; set; }     // 1-1 ilişki: Hangi binaya ait toplantı
+        public int BuildingId { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public bool IsCancelled { get; set; }
+        public string CancellationReason { get; set; } = string.Empty;
     }
-} 
+}

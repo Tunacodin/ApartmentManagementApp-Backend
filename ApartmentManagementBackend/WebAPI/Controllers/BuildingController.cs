@@ -1,91 +1,121 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Business.Abstract;
+﻿using Business.Abstract;
 using Entities.Concrete;
-using System;
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BuildingController : ControllerBase
+    public class BuildingsController : ControllerBase
     {
         private readonly IBuildingService _buildingService;
+        private readonly ILogger<BuildingsController> _logger;
 
-        public BuildingController(IBuildingService buildingService)
+        public BuildingsController(IBuildingService buildingService, ILogger<BuildingsController> logger)
         {
             _buildingService = buildingService;
+            _logger = logger;
         }
 
-        // Get all buildings
         [HttpGet]
-        public IActionResult GetAll()
+        public ActionResult<List<Building>> GetAll()
         {
-            var buildings = _buildingService.GetAll();
-            if (buildings == null || buildings.Count == 0)
+            try
             {
-                return NotFound("No buildings found.");
+                var buildings = _buildingService.GetAll();
+                if (buildings == null || !buildings.Any())
+                {
+                    _logger.LogWarning("No buildings found");
+                    return NotFound("No buildings found.");
+                }
+                _logger.LogInformation("Successfully retrieved all buildings");
+                return Ok(buildings);
             }
-            return Ok(buildings);
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error retrieving buildings: {ex.Message}");
+                return StatusCode(500, "An error occurred while retrieving buildings");
+            }
         }
 
-        // Get building by ID
         [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        public ActionResult<Building> GetById(int id)
         {
-            var building = _buildingService.GetById(id);
-            if (building == null)
+            try
             {
-                return NotFound($"Building with ID {id} not found.");
+                var building = _buildingService.GetById(id);
+                if (building == null)
+                {
+                    _logger.LogWarning($"Building with ID {id} not found");
+                    return NotFound($"Building with ID {id} not found");
+                }
+                _logger.LogInformation($"Successfully retrieved building with ID {id}");
+                return Ok(building);
             }
-            return Ok(building);
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error retrieving building with ID {id}: {ex.Message}");
+                return StatusCode(500, "An error occurred while retrieving the building");
+            }
         }
 
-        // Add a new building
         [HttpPost]
         public IActionResult Add([FromBody] Building building)
         {
-            if (building == null)
-            {
-                return BadRequest("Building data is null.");
-            }
-
-            // Validate required fields
-            if (string.IsNullOrWhiteSpace(building.BuildingName) ||
-                string.IsNullOrWhiteSpace(building.City) ||
-                string.IsNullOrWhiteSpace(building.District))
-            {
-                return BadRequest("ApartmentName, City, and District are required.");
-            }
-
             try
             {
+                if (building == null)
+                {
+                    _logger.LogWarning("Building data is null");
+                    return BadRequest("Building data cannot be null");
+                }
                 _buildingService.Add(building);
-                return CreatedAtAction(nameof(GetById), new { id = building.BuildingId }, building);
+                _logger.LogInformation($"Successfully added new building with ID {building.Id}");
+                return Ok("Building added successfully");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                _logger.LogError($"Error adding building: {ex.Message}");
+                return StatusCode(500, "An error occurred while adding the building");
             }
         }
 
-        // Delete a building
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        [HttpPut]
+        public IActionResult Update([FromBody] Building building)
         {
-            var building = _buildingService.GetById(id);
-            if (building == null)
-            {
-                return NotFound($"Building with ID {id} not found.");
-            }
-
             try
             {
-                _buildingService.Delete(building);
-                return Ok("Building deleted successfully.");
+                if (building == null)
+                {
+                    _logger.LogWarning("Building update data is null");
+                    return BadRequest("Building data cannot be null");
+                }
+                _buildingService.Update(building);
+                _logger.LogInformation($"Successfully updated building with ID {building.Id}");
+                return Ok("Building updated successfully");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                _logger.LogError($"Error updating building: {ex.Message}");
+                return StatusCode(500, "An error occurred while updating the building");
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            try
+            {
+                _buildingService.Delete(id);
+                _logger.LogInformation($"Successfully deleted building with ID {id}");
+                return Ok($"Building with ID {id} deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error deleting building with ID {id}: {ex.Message}");
+                return StatusCode(500, "An error occurred while deleting the building");
             }
         }
     }

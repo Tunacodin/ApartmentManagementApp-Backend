@@ -34,7 +34,7 @@ namespace WebAPI.Controllers
             return Ok(new
             {
                 Message = "Login successful",
-                UserId = user.UserId,
+                UserId = user.Id,
                 
                 Email = user.Email,
                 Role = user.Role // Backend role bilgisi döner.
@@ -58,7 +58,7 @@ namespace WebAPI.Controllers
         [HttpGet("{userId}")]
         public IActionResult GetById(int userId)
         {
-            var user = _userService.Get(u => u.UserId == userId);
+            var user = _userService.Get(u => u.Id == userId);
             if (user != null)
             {
                 return Ok(user); // 200 OK
@@ -83,7 +83,7 @@ namespace WebAPI.Controllers
         [HttpPut("{userId}")]
         public IActionResult Update(int userId, [FromBody] User user)
         {
-            if (user == null || user.UserId != userId)
+            if (user == null || user.Id != userId)
             {
                 return BadRequest("Invalid user data."); // 400 Bad Request
             }
@@ -96,7 +96,7 @@ namespace WebAPI.Controllers
         [HttpDelete("{userId}")]
         public IActionResult Delete(int userId)
         {
-            var user = _userService.Get(u => u.UserId == userId);
+            var user = _userService.Get(u => u.Id == userId);
             if (user == null)
             {
                 return NotFound($"User with UserId {userId} not found."); // 404 Not Found

@@ -11,5 +11,11 @@ namespace Business.Abstract
         void DeleteUser(int userId);                   // Kullanıcı sil
         void DeleteBuilding(int buildingId);           // Bina sil
         void DeleteTenant(int tenantId);               // Kiracı sil
+        void CreateNotification(Notification notification);
+        void ScheduleMeeting(Meeting meeting);
+        void AssignOwnerToApartment(int ownerId, int apartmentId);
+        void AssignTenantToApartment(int tenantId, int apartmentId);
+        void ApproveTenantRequest(int requestId);
+        void RejectTenantRequest(int requestId, string reason);
     }
 }

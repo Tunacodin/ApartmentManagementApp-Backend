@@ -25,31 +25,31 @@ namespace Business.Concrete
 
         public void Delete(User user)
         {
-            if (user == null || user.UserId <= 0)
+            if (user == null || user.Id <= 0)
                 throw new ArgumentException("Invalid user.");
 
             _userDal.Delete(user);
         }
 
-        public User Get(Expression<Func<User, bool>> filter)
+        public User? Get(Expression<Func<User, bool>> filter)
         {
             return _userDal.Get(filter);
         }
 
-        public List<User> GetAll(Expression<Func<User, bool>> filter = null)
+        public List<User>? GetAll(Expression<Func<User, bool>>? filter = null)
         {
             return _userDal.GetAll(filter);
         }
 
         public void Update(User user)
         {
-            if (user == null || user.UserId <= 0)
+            if (user == null || user.Id <= 0)
                 throw new ArgumentException("Invalid user.");
 
             _userDal.Update(user);
         }
 
-        public User ValidateUser(string email, string password)
+        public User? ValidateUser(string email, string password)
         {
             var user = _userDal.Get(u => u.Email == email);
             if (user != null && user.Password == password) // Şifre doğrulaması yapılır

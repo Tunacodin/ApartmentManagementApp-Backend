@@ -34,3 +34,5 @@ C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAcce
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\refint\DataAccess.dll
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.pdb
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\ref\DataAccess.dll
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\bin\Debug\net8.0\DataAccess.runtimeconfig.json
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.genruntimeconfig.cache

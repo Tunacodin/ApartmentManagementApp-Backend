@@ -10,9 +10,9 @@ namespace Business.Abstract
         void Add(User user);
         void Update(User user);
         void Delete(User user);
-        User Get(Expression<Func<User, bool>> filter);
-        List<User> GetAll(Expression<Func<User, bool>> filter = null);
+        User? Get(Expression<Func<User, bool>> filter);
+        List<User>? GetAll(Expression<Func<User, bool>>? filter = null);
 
-        User ValidateUser(string email, string password);
+        User? ValidateUser(string email, string password);
     }
 }

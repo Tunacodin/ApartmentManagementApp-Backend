@@ -18,126 +18,93 @@ namespace WebAPI.Controllers
             _logger = logger;
         }
 
-        // Get all users
-        [HttpGet("users")]
-        public IActionResult GetAllUsers()
+        [HttpPost("notifications")]
+        public IActionResult CreateNotification([FromBody] Notification notification)
         {
             try
             {
-                var users = _adminService.GetAllUsers();
-                if (users == null || users.Count == 0)
-                {
-                    return NotFound(new { Message = "No users found." });
-                }
-                return Ok(users);
+                _adminService.CreateNotification(notification);
+                return Ok("Notification created successfully");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error retrieving users: {ex.Message}");
-                return StatusCode(500, new { Message = "An error occurred while retrieving users." });
+                _logger.LogError($"Error creating notification: {ex.Message}");
+                return StatusCode(500, "Error creating notification");
             }
         }
 
-        // Get all buildings
-        [HttpGet("buildings")]
-        public IActionResult GetAllBuildings()
+        [HttpPost("meetings")]
+        public IActionResult ScheduleMeeting([FromBody] Meeting meeting)
         {
             try
             {
-                var buildings = _adminService.GetAllBuildings();
-                if (buildings == null || buildings.Count == 0)
-                {
-                    return NotFound(new { Message = "No buildings found." });
-                }
-                return Ok(buildings);
+                _adminService.ScheduleMeeting(meeting);
+                return Ok("Meeting scheduled successfully");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error retrieving buildings: {ex.Message}");
-                return StatusCode(500, new { Message = "An error occurred while retrieving buildings." });
+                _logger.LogError($"Error scheduling meeting: {ex.Message}");
+                return StatusCode(500, "Error scheduling meeting");
             }
         }
 
-        // Get all tenants
-        [HttpGet("tenants")]
-        public IActionResult GetAllTenants()
+        [HttpPost("apartments/{apartmentId}/owner/{ownerId}")]
+        public IActionResult AssignOwner(int apartmentId, int ownerId)
         {
             try
             {
-                var tenants = _adminService.GetAllTenants();
-                if (tenants == null || tenants.Count == 0)
-                {
-                    return NotFound(new { Message = "No tenants found." });
-                }
-                return Ok(tenants);
+                _adminService.AssignOwnerToApartment(ownerId, apartmentId);
+                return Ok("Owner assigned successfully");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error retrieving tenants: {ex.Message}");
-                return StatusCode(500, new { Message = "An error occurred while retrieving tenants." });
+                _logger.LogError($"Error assigning owner: {ex.Message}");
+                return StatusCode(500, "Error assigning owner");
             }
         }
 
-        // Delete a user
-        [HttpDelete("users/{userId}")]
-        public IActionResult DeleteUser(int userId)
+        [HttpPost("apartments/{apartmentId}/tenant/{tenantId}")]
+        public IActionResult AssignTenant(int apartmentId, int tenantId)
         {
             try
             {
-                _adminService.DeleteUser(userId);
-                return Ok(new { Message = "User deleted successfully." });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning($"User not found: {ex.Message}");
-                return NotFound(new { Message = ex.Message });
+                _adminService.AssignTenantToApartment(tenantId, apartmentId);
+                return Ok("Tenant assigned successfully");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error deleting user: {ex.Message}");
-                return StatusCode(500, new { Message = "An error occurred while deleting the user." });
+                _logger.LogError($"Error assigning tenant: {ex.Message}");
+                return StatusCode(500, "Error assigning tenant");
             }
         }
 
-        // Delete a building
-        [HttpDelete("buildings/{buildingId}")]
-        public IActionResult DeleteBuilding(int buildingId)
+        [HttpPost("tenant-requests/{requestId}/approve")]
+        public IActionResult ApproveTenantRequest(int requestId)
         {
             try
             {
-                _adminService.DeleteBuilding(buildingId);
-                return Ok(new { Message = "Building deleted successfully." });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning($"Building not found: {ex.Message}");
-                return NotFound(new { Message = ex.Message });
+                _adminService.ApproveTenantRequest(requestId);
+                return Ok("Tenant request approved");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error deleting building: {ex.Message}");
-                return StatusCode(500, new { Message = "An error occurred while deleting the building." });
+                _logger.LogError($"Error approving tenant request: {ex.Message}");
+                return StatusCode(500, "Error approving request");
             }
         }
 
-        // Delete a tenant
-        [HttpDelete("tenants/{tenantId}")]
-        public IActionResult DeleteTenant(int tenantId)
+        [HttpPost("tenant-requests/{requestId}/reject")]
+        public IActionResult RejectTenantRequest(int requestId, [FromBody] string reason)
         {
             try
             {
-                _adminService.DeleteTenant(tenantId);
-                return Ok(new { Message = "Tenant deleted successfully." });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning($"Tenant not found: {ex.Message}");
-                return NotFound(new { Message = ex.Message });
+                _adminService.RejectTenantRequest(requestId, reason);
+                return Ok("Tenant request rejected");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error deleting tenant: {ex.Message}");
-                return StatusCode(500, new { Message = "An error occurred while deleting the tenant." });
+                _logger.LogError($"Error rejecting tenant request: {ex.Message}");
+                return StatusCode(500, "Error rejecting request");
             }
         }
     }

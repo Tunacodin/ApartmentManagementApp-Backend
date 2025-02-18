@@ -49,14 +49,7 @@ namespace WebAPI.Controllers
                 return BadRequest("Card data is null.");
             }
 
-            // Validating required fields
-            if (string.IsNullOrWhiteSpace(cardInfo.CardHolder) ||
-                string.IsNullOrWhiteSpace(cardInfo.CardNumber) ||
-                string.IsNullOrWhiteSpace(cardInfo.ExpirationDate) ||
-                string.IsNullOrWhiteSpace(cardInfo.CVV))
-            {
-                return BadRequest("CardHolder, CardNumber, ExpirationDate, and CVV are required.");
-            }
+          
 
             // Additional validation: Card number length
             if (cardInfo.CardNumber.Length != 16)
@@ -67,7 +60,7 @@ namespace WebAPI.Controllers
             try
             {
                 _cardInfoService.Add(cardInfo);
-                return CreatedAtAction(nameof(Add), new { id = cardInfo.CardId }, cardInfo);
+                return CreatedAtAction(nameof(Add), new { id = cardInfo.Id }, cardInfo);
             }
             catch (Exception ex)
             {

@@ -16,10 +16,5 @@ namespace Entities.Concrete
         public decimal MonthlyRent { get; set; }
         public decimal MonthlyDues { get; set; }
         public DateTime? LastPaymentDate { get; set; }
-
-        // Navigation properties
-        public Apartment? Apartment { get; set; }
-        public List<Payment> Payments { get; set; } = new List<Payment>();
-        public List<Contract> Contracts { get; set; } = new List<Contract>();
     }
 }

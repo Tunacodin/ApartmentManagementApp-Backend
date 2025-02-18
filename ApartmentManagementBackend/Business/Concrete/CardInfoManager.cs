@@ -31,7 +31,7 @@ namespace Business.Concrete
 
         public CardInfo GetById(int cardId)
         {
-            return _cardInfoDal.Get(c => c.CardId == cardId);
+            return _cardInfoDal.Get(c => c.Id == cardId);
         }
 
         public List<CardInfo> GetAllByUserId(int userId)

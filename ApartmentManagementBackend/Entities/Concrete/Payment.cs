@@ -11,11 +11,8 @@ namespace Entities.Concrete
         public PaymentType PaymentType { get; set; } = PaymentType.rent;
         public decimal Amount { get; set; }
         public DateTime PaymentDate { get; set; }
+        public DateTime DueDate { get; set; }
         public bool IsPaid { get; set; }
         public string? Description { get; set; }
-
-        // Navigation properties
-        public User? User { get; set; }
-        public Apartment? Apartment { get; set; }
     }
 }

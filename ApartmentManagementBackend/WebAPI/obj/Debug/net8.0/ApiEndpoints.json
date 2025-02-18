@@ -1,24 +1,19 @@
 [
   {
     "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "GetAllBuildings",
-    "RelativePath": "api/Admin/buildings",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "DeleteBuilding",
-    "RelativePath": "api/Admin/buildings/{buildingId}",
-    "HttpMethod": "DELETE",
+    "Method": "AssignOwner",
+    "RelativePath": "api/Admin/apartments/{apartmentId}/owner/{ownerId}",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "buildingId",
+        "Name": "apartmentId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "ownerId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -27,22 +22,17 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "GetAllTenants",
-    "RelativePath": "api/Admin/tenants",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "DeleteTenant",
-    "RelativePath": "api/Admin/tenants/{tenantId}",
-    "HttpMethod": "DELETE",
+    "Method": "AssignTenant",
+    "RelativePath": "api/Admin/apartments/{apartmentId}/tenant/{tenantId}",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
+      {
+        "Name": "apartmentId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
       {
         "Name": "tenantId",
         "Type": "System.Int32",
@@ -53,24 +43,46 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "GetAllUsers",
-    "RelativePath": "api/Admin/users",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "DeleteUser",
-    "RelativePath": "api/Admin/users/{userId}",
-    "HttpMethod": "DELETE",
+    "Method": "ScheduleMeeting",
+    "RelativePath": "api/Admin/meetings",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "userId",
+        "Name": "meeting",
+        "Type": "Entities.Concrete.Meeting",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminController",
+    "Method": "CreateNotification",
+    "RelativePath": "api/Admin/notifications",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "notification",
+        "Type": "Entities.Concrete.Notification",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminController",
+    "Method": "ApproveTenantRequest",
+    "RelativePath": "api/Admin/tenant-requests/{requestId}/approve",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "requestId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -78,19 +90,50 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "WebAPI.Controllers.BuildingController",
+    "ContainingType": "WebAPI.Controllers.AdminController",
+    "Method": "RejectTenantRequest",
+    "RelativePath": "api/Admin/tenant-requests/{requestId}/reject",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "requestId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "reason",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.BuildingsController",
     "Method": "GetAll",
-    "RelativePath": "api/Building",
+    "RelativePath": "api/Buildings",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[Entities.Concrete.Building, Entities, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
-    "ContainingType": "WebAPI.Controllers.BuildingController",
+    "ContainingType": "WebAPI.Controllers.BuildingsController",
     "Method": "Add",
-    "RelativePath": "api/Building",
+    "RelativePath": "api/Buildings",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -104,117 +147,58 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "WebAPI.Controllers.BuildingController",
-    "Method": "GetById",
-    "RelativePath": "api/Building/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.BuildingController",
-    "Method": "Delete",
-    "RelativePath": "api/Building/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.BuildingDetailController",
-    "Method": "GetAll",
-    "RelativePath": "api/BuildingDetail",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "buildingId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.BuildingDetailController",
-    "Method": "Add",
-    "RelativePath": "api/BuildingDetail",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "buildingDetail",
-        "Type": "Entities.Concrete.BuildingDetail",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.BuildingDetailController",
-    "Method": "GetById",
-    "RelativePath": "api/BuildingDetail/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.BuildingDetailController",
-    "Method": "Delete",
-    "RelativePath": "api/BuildingDetail/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.BuildingDetailController",
+    "ContainingType": "WebAPI.Controllers.BuildingsController",
     "Method": "Update",
-    "RelativePath": "api/BuildingDetail/{id}",
+    "RelativePath": "api/Buildings",
     "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
+        "Name": "building",
+        "Type": "Entities.Concrete.Building",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.BuildingsController",
+    "Method": "GetById",
+    "RelativePath": "api/Buildings/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
         "Name": "id",
         "Type": "System.Int32",
         "IsRequired": true
-      },
+      }
+    ],
+    "ReturnTypes": [
       {
-        "Name": "buildingDetail",
-        "Type": "Entities.Concrete.BuildingDetail",
+        "Type": "Entities.Concrete.Building",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.BuildingsController",
+    "Method": "Delete",
+    "RelativePath": "api/Buildings/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
         "IsRequired": true
       }
     ],
@@ -262,7 +246,7 @@
     "Parameters": [
       {
         "Name": "cardInfo",
-        "Type": "CardInfo",
+        "Type": "Entities.Concrete.CardInfo",
         "IsRequired": true
       }
     ],
@@ -303,8 +287,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "tenant",
-        "Type": "Entities.Concrete.Tenant",
+        "Name": "tenantDto",
+        "Type": "Entities.DTOs.TenantDto",
         "IsRequired": true
       }
     ],
@@ -340,8 +324,8 @@
         "IsRequired": true
       },
       {
-        "Name": "tenant",
-        "Type": "Entities.Concrete.Tenant",
+        "Name": "tenantDto",
+        "Type": "Entities.DTOs.TenantDto",
         "IsRequired": true
       }
     ],
@@ -352,6 +336,38 @@
     "Method": "Delete",
     "RelativePath": "api/Tenant/{id}",
     "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.TenantController",
+    "Method": "GetTenantPayments",
+    "RelativePath": "api/Tenant/{id}/payments",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.TenantController",
+    "Method": "GetTenantWithPayments",
+    "RelativePath": "api/Tenant/{id}/with-payments",
+    "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [

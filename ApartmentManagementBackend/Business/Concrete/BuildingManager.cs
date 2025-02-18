@@ -14,6 +14,16 @@ namespace Business.Concrete
             _buildingDal = buildingDal;
         }
 
+        public List<Building> GetAll()
+        {
+            return _buildingDal.GetAll();
+        }
+
+        public Building GetById(int id)
+        {
+            return _buildingDal.Get(b => b.Id == id);
+        }
+
         public void Add(Building building)
         {
             _buildingDal.Add(building);
@@ -24,19 +34,13 @@ namespace Business.Concrete
             _buildingDal.Update(building);
         }
 
-        public void Delete(Building building)
+        public void Delete(int id)
         {
-            _buildingDal.Delete(building);
-        }
-
-        public Building GetById(int buildingId)
-        {
-            return _buildingDal.Get(b => b.BuildingId == buildingId);
-        }
-
-        public List<Building> GetAll()
-        {
-            return _buildingDal.GetAll();
+            var building = _buildingDal.Get(b => b.Id == id);
+            if (building != null)
+            {
+                _buildingDal.Delete(building);
+            }
         }
     }
 }
