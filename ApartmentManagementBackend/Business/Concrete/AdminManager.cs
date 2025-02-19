@@ -154,16 +154,24 @@ namespace Business.Concrete
                         RelatedUserName = c.CreatedByName ?? string.Empty,
                         Status = c.IsResolved ? "Resolved" : "Pending"
                     }).ToList(),
-                    FinancialSummaries = managedBuildings.Select(b => new FinancialSummaryDto
+                    FinancialSummaries = managedBuildings.Select(async b =>
                     {
-                        BuildingName = b.BuildingName,
-                        ExpectedIncome = b.DuesAmount * buildingApartmentCounts[b.Id],
-                        CollectedAmount = recentPayments.Where(p => p.BuildingId == b.Id).Sum(p => p.Amount),
-                        PendingAmount = (b.DuesAmount * buildingApartmentCounts[b.Id]) - recentPayments.Where(p => p.BuildingId == b.Id).Sum(p => p.Amount),
-                        CollectionRate = recentPayments.Where(p => p.BuildingId == b.Id).Sum(p => p.Amount) / (b.DuesAmount * buildingApartmentCounts[b.Id]) * 100,
-                        TotalPayments = recentPayments.Count(p => p.BuildingId == b.Id),
-                        PendingPayments = recentPayments.Count(p => p.BuildingId == b.Id && !p.IsPaid)
-                    }).ToList()
+                        var buildingTenants = await _adminDal.GetBuildingTenants(b.Id);
+                        var buildingPayments = recentPayments.Where(p => buildingTenants.Contains(p.UserId));
+                        var expectedIncome = b.DuesAmount * buildingApartmentCounts[b.Id];
+                        var collectedAmount = buildingPayments.Sum(p => p.Amount);
+
+                        return new FinancialSummaryDto
+                        {
+                            BuildingName = b.BuildingName,
+                            ExpectedIncome = expectedIncome,
+                            CollectedAmount = collectedAmount,
+                            PendingAmount = expectedIncome - collectedAmount,
+                            CollectionRate = expectedIncome > 0 ? (collectedAmount / expectedIncome * 100) : 0,
+                            TotalPayments = buildingPayments.Count(),
+                            PendingPayments = buildingPayments.Count(p => !p.IsPaid)
+                        };
+                    }).Select(t => t.Result).ToList()
                 };
 
                 return ApiResponse<AdminDashboardDto>.SuccessResult(Messages.AdminDashboardRetrieved, dashboard);
@@ -239,16 +247,16 @@ namespace Business.Concrete
                 {
                     var apartmentCount = await _adminDal.GetBuildingApartmentCount(b.Id);
                     var expectedIncome = b.DuesAmount * apartmentCount;
-                    var buildingPayments = payments.Where(p => p.BuildingId == b.Id);
-                    var collectedAmount = buildingPayments.Sum(p => p.Amount);
+                    var buildingTenants = await _adminDal.GetBuildingTenants(b.Id);
+                    var buildingPayments = payments.Where(p => buildingTenants.Contains(p.UserId));
 
                     return new FinancialSummaryDto
                     {
                         BuildingName = b.BuildingName,
                         ExpectedIncome = expectedIncome,
-                        CollectedAmount = collectedAmount,
-                        PendingAmount = expectedIncome - collectedAmount,
-                        CollectionRate = collectedAmount / expectedIncome * 100,
+                        CollectedAmount = buildingPayments.Sum(p => p.Amount),
+                        PendingAmount = expectedIncome - buildingPayments.Sum(p => p.Amount),
+                        CollectionRate = buildingPayments.Sum(p => p.Amount) / expectedIncome * 100,
                         TotalPayments = buildingPayments.Count(),
                         PendingPayments = buildingPayments.Count(p => !p.IsPaid)
                     };
@@ -271,6 +279,7 @@ namespace Business.Concrete
 
                 var buildings = await _adminDal.GetManagedBuildings(adminId);
                 var managedBuildings = new List<AdminManagedBuildingDto>();
+                var payments = await _adminDal.GetRecentPayments(adminId);
 
                 foreach (var building in buildings)
                 {
@@ -278,6 +287,9 @@ namespace Business.Concrete
                     var occupiedApartments = await _adminDal.GetOccupiedApartmentCount(building.Id);
                     var complaints = (await _adminDal.GetActiveComplaints(adminId))
                         .Count(c => c.BuildingId == building.Id);
+
+                    var buildingTenants = await _adminDal.GetBuildingTenants(building.Id);
+                    var buildingPayments = payments.Where(p => buildingTenants.Contains(p.UserId));
 
                     managedBuildings.Add(new AdminManagedBuildingDto
                     {
@@ -288,7 +300,11 @@ namespace Business.Concrete
                         OccupancyRate = totalApartments > 0 ? (decimal)occupiedApartments / totalApartments * 100 : 0,
                         TotalDuesAmount = building.DuesAmount * totalApartments,
                         ActiveComplaints = complaints,
-                        LastMaintenanceDate = building.LastMaintenanceDate
+                        LastMaintenanceDate = building.LastMaintenanceDate,
+                        PendingAmount = (building.DuesAmount * totalApartments) - buildingPayments.Sum(p => p.Amount),
+                        CollectionRate = buildingPayments.Sum(p => p.Amount) / (building.DuesAmount * totalApartments) * 100,
+                        TotalPayments = buildingPayments.Count(),
+                        PendingPayments = buildingPayments.Count(p => !p.IsPaid)
                     });
                 }
 
@@ -327,7 +343,7 @@ namespace Business.Concrete
                     return ApiResponse<bool>.ErrorResult(Messages.AdminNotFound);
 
                 var building = await _buildingDal.GetByIdAsync(buildingId);
-            if (building == null)
+                if (building == null)
                     return ApiResponse<bool>.ErrorResult(Messages.BuildingNotFound);
 
                 if (building.AdminId != adminId)

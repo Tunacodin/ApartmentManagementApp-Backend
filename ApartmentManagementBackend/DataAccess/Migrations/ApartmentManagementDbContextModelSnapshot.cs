@@ -254,9 +254,17 @@ namespace DataAccess.Migrations
                     b.Property<int>("ApartmentId")
                         .HasColumnType("int");
 
-                    b.Property<string>("CardNumber")
+                    b.Property<string>("BankLogoUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CardNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
@@ -272,6 +280,9 @@ namespace DataAccess.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CardNumber")
+                        .IsUnique();
 
                     b.ToTable("CardInfos");
                 });
@@ -421,7 +432,7 @@ namespace DataAccess.Migrations
                     b.Property<int>("ApartmentId")
                         .HasColumnType("int");
 
-                    b.Property<int>("BuildingId")
+                    b.Property<int?>("CardInfoId")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -448,6 +459,10 @@ namespace DataAccess.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApartmentId");
+
+                    b.HasIndex("CardInfoId");
 
                     b.HasIndex("UserId");
 
@@ -581,6 +596,8 @@ namespace DataAccess.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.HasIndex("ApartmentId");
+
                     b.HasDiscriminator().HasValue("tenant");
                 });
 
@@ -628,9 +645,29 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("Entities.Concrete.Payment", b =>
                 {
+                    b.HasOne("Entities.Concrete.Apartment", null)
+                        .WithMany()
+                        .HasForeignKey("ApartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Concrete.CardInfo", null)
+                        .WithMany()
+                        .HasForeignKey("CardInfoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Entities.Concrete.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Entities.Concrete.Tenant", b =>
+                {
+                    b.HasOne("Entities.Concrete.Apartment", null)
+                        .WithMany()
+                        .HasForeignKey("ApartmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

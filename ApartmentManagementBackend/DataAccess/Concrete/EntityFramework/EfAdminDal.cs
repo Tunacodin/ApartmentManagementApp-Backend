@@ -79,13 +79,32 @@ namespace DataAccess.Concrete.EntityFramework
                 .Select(b => b.Id)
                 .ToListAsync();
 
-            var apartments = await _context.Apartments
-                .Where(a => buildings.Contains(a.BuildingId))
-                .Select(a => a.Id)
+            var tenantIds = await _context.Tenants
+                .Where(t => _context.Apartments
+                    .Where(a => buildings.Contains(a.BuildingId))
+                    .Select(a => a.Id)
+                    .Contains(t.ApartmentId))
+                .Select(t => t.Id)
                 .ToListAsync();
 
             return await _context.Payments
-                .Where(p => apartments.Contains(p.ApartmentId))
+                .Where(p => tenantIds.Contains(p.UserId))
+                .Join(_context.Users,
+                    p => p.UserId,
+                    u => u.Id,
+                    (p, u) => new Payment
+                    {
+                        Id = p.Id,
+                        UserId = p.UserId,
+                        CardInfoId = p.CardInfoId,
+                        PaymentType = p.PaymentType,
+                        Amount = p.Amount,
+                        PaymentDate = p.PaymentDate,
+                        DueDate = p.DueDate,
+                        IsPaid = p.IsPaid,
+                        Description = p.Description,
+                        UserFullName = $"{u.FirstName} {u.LastName}"
+                    })
                 .OrderByDescending(p => p.PaymentDate)
                 .Take(count)
                 .ToListAsync();
@@ -126,6 +145,17 @@ namespace DataAccess.Concrete.EntityFramework
         {
             _context.Admins.Update(admin);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<int>> GetBuildingTenants(int buildingId)
+        {
+            return await _context.Tenants
+                .Where(t => _context.Apartments
+                    .Where(a => a.BuildingId == buildingId)
+                    .Select(a => a.Id)
+                    .Contains(t.ApartmentId))
+                .Select(t => t.Id)
+                .ToListAsync();
         }
     }
 }

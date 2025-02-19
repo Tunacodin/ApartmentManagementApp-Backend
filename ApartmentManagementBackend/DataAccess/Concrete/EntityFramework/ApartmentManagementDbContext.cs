@@ -62,6 +62,20 @@ namespace DataAccess.Concrete.EntityFramework
                 .HasForeignKey(a => a.BuildingId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Tenant ve Apartment ilişkisi
+            modelBuilder.Entity<Tenant>()
+                .HasOne<Apartment>()
+                .WithMany()
+                .HasForeignKey(t => t.ApartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Payment ve Apartment ilişkisi
+            modelBuilder.Entity<Payment>()
+                .HasOne<Apartment>()
+                .WithMany()
+                .HasForeignKey(p => p.ApartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Contract>()
                 .HasOne<Tenant>()
                 .WithMany()
@@ -80,6 +94,13 @@ namespace DataAccess.Concrete.EntityFramework
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // CardInfo ve Payment ilişkisi
+            modelBuilder.Entity<Payment>()
+                .HasOne<CardInfo>()
+                .WithMany()
+                .HasForeignKey(p => p.CardInfoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Notification>()
                 .HasOne<Admin>()
                 .WithMany()
@@ -96,6 +117,11 @@ namespace DataAccess.Concrete.EntityFramework
 
             modelBuilder.Entity<Apartment>()
                 .HasIndex(a => new { a.BuildingId, a.UnitNumber })
+                .IsUnique();
+
+            // CardInfo için index
+            modelBuilder.Entity<CardInfo>()
+                .HasIndex(c => new { c.UserId, c.CardNumber })
                 .IsUnique();
 
             // Decimal property'ler için hassasiyet tanımlamaları

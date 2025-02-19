@@ -35,12 +35,14 @@ builder.Services.AddScoped<IOwnerDal, EfOwnerDal>();
 
 // Service registrations
 builder.Services.AddScoped<IUserService, UserManager>();
+builder.Services.AddScoped<IUserProfileService, UserProfileManager>();
 builder.Services.AddScoped<IBuildingService, BuildingManager>();
 builder.Services.AddScoped<ITenantService, TenantManager>();
 builder.Services.AddScoped<INotificationService, NotificationManager>();
 builder.Services.AddScoped<IMeetingService, MeetingManager>();
 builder.Services.AddScoped<IPaymentService, PaymentManager>();
 builder.Services.AddScoped<IOwnerService, OwnerManager>();
+builder.Services.AddScoped<IApartmentService, ApartmentManager>();
 
 builder.Services.AddDbContext<ApartmentManagementDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

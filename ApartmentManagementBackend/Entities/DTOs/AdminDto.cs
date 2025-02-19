@@ -61,6 +61,10 @@ namespace Entities.DTOs
         public decimal TotalDuesAmount { get; set; }
         public int ActiveComplaints { get; set; }
         public DateTime LastMaintenanceDate { get; set; }
+        public decimal PendingAmount { get; set; }
+        public decimal CollectionRate { get; set; }
+        public int TotalPayments { get; set; }
+        public int PendingPayments { get; set; }
     }
 
     // 🔹 Dashboard İstatistikleri DTO'su

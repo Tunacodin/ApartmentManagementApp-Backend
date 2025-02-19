@@ -1,8 +1,10 @@
-﻿using Entities.Concrete;
-using Microsoft.Data.SqlClient;
-using System.Linq.Expressions;
+﻿using Core.DataAccess;
+using Entities.Concrete;
 
-public interface IUserDal:IEntityRepository<User>
+
+namespace DataAccess.Abstract
 {
-  
+    public interface IUserDal : IEntityRepository<User>
+    {
+    }
 }

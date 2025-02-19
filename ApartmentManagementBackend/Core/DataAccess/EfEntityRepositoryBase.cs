@@ -48,5 +48,41 @@ namespace Core.DataAccess
             _context.Set<TEntity>().Update(entity);
             _context.SaveChanges();
         }
+
+        // Async implementations
+        public async Task<TEntity?> GetByIdAsync(int id)
+        {
+            return await _context.Set<TEntity>().FindAsync(id);
+        }
+
+        public async Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> filter)
+        {
+            return await _context.Set<TEntity>().FirstOrDefaultAsync(filter);
+        }
+
+        public async Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null)
+        {
+            return filter != null
+                ? await _context.Set<TEntity>().Where(filter).ToListAsync()
+                : await _context.Set<TEntity>().ToListAsync();
+        }
+
+        public async Task AddAsync(TEntity entity)
+        {
+            await _context.Set<TEntity>().AddAsync(entity);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(TEntity entity)
+        {
+            _context.Set<TEntity>().Update(entity);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(TEntity entity)
+        {
+            _context.Set<TEntity>().Remove(entity);
+            await _context.SaveChangesAsync();
+        }
     }
 }

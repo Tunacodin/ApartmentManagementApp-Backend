@@ -1,14 +1,16 @@
-﻿using Entities.Concrete;
+﻿using Core.Utilities.Results;
+using Entities.Concrete;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Business.Abstract
 {
     public interface ICardInfoService
     {
-        void Add(CardInfo cardInfo);
-        void Update(CardInfo cardInfo);
-        void Delete(CardInfo cardInfo);
-        CardInfo GetById(int cardId);
-        List<CardInfo> GetAllByUserId(int userId);
+        Task<ApiResponse<CardInfo>> AddAsync(CardInfo cardInfo);
+        Task<ApiResponse<CardInfo>> UpdateAsync(CardInfo cardInfo);
+        Task<ApiResponse<bool>> DeleteAsync(CardInfo cardInfo);
+        Task<ApiResponse<CardInfo>> GetByIdAsync(int cardId);
+        Task<ApiResponse<List<CardInfo>>> GetAllByUserIdAsync(int userId);
     }
 }
