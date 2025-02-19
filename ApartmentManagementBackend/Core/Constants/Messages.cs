@@ -3,6 +3,7 @@ namespace Core.Constants
     public static class Messages
     {
         // Common Messages
+        public const string Success = "İşlem başarılı";
         public const string ValidationFailed = "Doğrulama başarısız";
         public const string UnexpectedError = "Beklenmeyen bir hata oluştu";
         public const string IdMismatch = "URL ve istek gövdesindeki ID'ler eşleşmiyor";
@@ -12,6 +13,25 @@ namespace Core.Constants
         public const string Deleted = "Kayıt başarıyla silindi";
         public const string Retrieved = "Kayıt başarıyla getirildi";
         public const string Listed = "Kayıtlar başarıyla listelendi";
+
+        // Admin Messages
+        public const string AdminNotFound = "Yönetici bulunamadı";
+        public const string AdminsListed = "Yöneticiler listelendi";
+        public const string AdminAdded = "Yönetici başarıyla eklendi";
+        public const string AdminUpdated = "Yönetici başarıyla güncellendi";
+        public const string AdminDeleted = "Yönetici başarıyla silindi";
+        public const string AdminRetrieved = "Yönetici bilgileri getirildi";
+        public const string BuildingAssigned = "Bina yöneticiye atandı";
+        public const string BuildingUnassigned = "Bina yöneticiden alındı";
+        public const string ProfileUpdated = "Profil güncellendi";
+        public const string ContactInfoUpdated = "İletişim bilgileri güncellendi";
+        public const string PasswordUpdated = "Şifre güncellendi";
+        public const string InvalidCurrentPassword = "Mevcut şifre hatalı";
+        public const string AdminDashboardRetrieved = "Yönetici paneli bilgileri getirildi";
+        public const string AdminActivitiesListed = "Yönetici aktiviteleri listelendi";
+        public const string AdminFinancialSummaryRetrieved = "Finansal özet bilgileri getirildi";
+        public const string AdminBuildingsListed = "Yönetilen binalar listelendi";
+        public const string AdminStatisticsRetrieved = "Yönetici istatistikleri getirildi";
 
         // User Messages
         public const string UserNotFound = "Kullanıcı bulunamadı";

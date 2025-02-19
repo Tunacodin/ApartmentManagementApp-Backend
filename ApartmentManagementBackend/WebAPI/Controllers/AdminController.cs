@@ -2,6 +2,10 @@
 using Business.Abstract;
 using Entities.Concrete;
 using Microsoft.Extensions.Logging;
+using Core.Constants;
+using Entities.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Core.Utilities.Results;
 
 namespace WebAPI.Controllers
 {
@@ -18,18 +22,180 @@ namespace WebAPI.Controllers
             _logger = logger;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var result = await _adminService.GetAllAsync();
+            return result.Success
+                ? Ok(ApiResponse<List<AdminListDto>>.SuccessResult(Messages.AdminsListed, result.Data))
+                : BadRequest(result);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var result = await _adminService.GetByIdAsync(id);
+            return result.Success
+                ? Ok(ApiResponse<AdminDetailDto>.SuccessResult(Messages.AdminRetrieved, result.Data))
+                : BadRequest(ApiResponse<AdminDetailDto>.ErrorResult(Messages.AdminNotFound));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Add([FromBody] AdminDto adminDto)
+        {
+            var result = await _adminService.AddAsync(adminDto);
+            return result.Success && result.Data != null
+                ? CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, ApiResponse<AdminDto>.SuccessResult(Messages.AdminAdded, result.Data))
+                : BadRequest(ApiResponse<AdminDto>.ErrorResult(Messages.ValidationFailed));
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] AdminDto adminDto)
+        {
+            if (id != adminDto.Id)
+            {
+                return BadRequest(ApiResponse<AdminDto>.ErrorResult(Messages.IdMismatch));
+            }
+
+            var result = await _adminService.UpdateAsync(adminDto);
+            return result.Success
+                ? Ok(ApiResponse<AdminDto>.SuccessResult(Messages.AdminUpdated, result.Data))
+                : BadRequest(result);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var result = await _adminService.DeleteAsync(id);
+            return result.Success
+                ? Ok(ApiResponse<bool>.SuccessResult(Messages.AdminDeleted, true))
+                : BadRequest(result);
+        }
+
+        [HttpGet("dashboard/{adminId}")]
+        public async Task<IActionResult> GetDashboard(int adminId)
+        {
+            var result = await _adminService.GetDashboardAsync(adminId);
+            return result.Success
+                ? Ok(ApiResponse<AdminDashboardDto>.SuccessResult(Messages.Success, result.Data))
+                : BadRequest(result);
+        }
+
+        [HttpGet("{adminId}/buildings")]
+        public async Task<IActionResult> GetManagedBuildings(int adminId)
+        {
+            var result = await _adminService.GetManagedBuildingsAsync(adminId);
+            return result.Success
+                ? Ok(ApiResponse<List<AdminManagedBuildingDto>>.SuccessResult(Messages.BuildingsListed, result.Data))
+                : BadRequest(result);
+        }
+
+        [HttpPost("{adminId}/buildings/{buildingId}/assign")]
+        public async Task<IActionResult> AssignBuildingAsync(int adminId, int buildingId)
+        {
+            var result = await _adminService.AssignBuildingAsync(adminId, buildingId);
+            return result.Success
+                ? Ok(ApiResponse<BuildingAssignmentResultDto>.SuccessResult(Messages.BuildingAssigned,
+                    new BuildingAssignmentResultDto
+                    {
+                        AdminId = adminId,
+                        BuildingId = buildingId,
+                        IsAssigned = true,
+                        AssignmentDate = DateTime.Now
+                    }))
+                : BadRequest(ApiResponse<BuildingAssignmentResultDto>.ErrorResult(Messages.AdminNotFound));
+        }
+
+        [HttpPost("{adminId}/buildings/{buildingId}/unassign")]
+        public async Task<IActionResult> UnassignBuildingAsync(int adminId, int buildingId)
+        {
+            var result = await _adminService.UnassignBuildingAsync(adminId, buildingId);
+            return result.Success
+                ? Ok(ApiResponse<BuildingAssignmentResultDto>.SuccessResult(Messages.BuildingUnassigned,
+                    new BuildingAssignmentResultDto
+                    {
+                        AdminId = adminId,
+                        BuildingId = buildingId,
+                        IsAssigned = false,
+                        AssignmentDate = DateTime.Now
+                    }))
+                : BadRequest(ApiResponse<BuildingAssignmentResultDto>.ErrorResult(Messages.AdminNotFound));
+        }
+
+        [HttpGet("{adminId}/activities")]
+        public async Task<IActionResult> GetRecentActivities(int adminId, [FromQuery] int count = 10)
+        {
+            var result = await _adminService.GetRecentActivitiesAsync(adminId, count);
+            return result.Success
+                ? Ok(ApiResponse<List<RecentActivityDto>>.SuccessResult(Messages.AdminActivitiesListed, result.Data))
+                : BadRequest(ApiResponse<List<RecentActivityDto>>.ErrorResult(Messages.AdminNotFound));
+        }
+
+        [HttpGet("{adminId}/financial-summaries")]
+        public async Task<IActionResult> GetFinancialSummaries(int adminId)
+        {
+            var result = await _adminService.GetFinancialSummariesAsync(adminId);
+            return result.Success
+                ? Ok(ApiResponse<List<FinancialSummaryDto>>.SuccessResult(Messages.AdminFinancialSummaryRetrieved, result.Data))
+                : BadRequest(ApiResponse<List<FinancialSummaryDto>>.ErrorResult(Messages.AdminNotFound));
+        }
+
+        [HttpPut("{adminId}/profile")]
+        public async Task<IActionResult> UpdateProfile(int adminId, [FromBody] UpdateProfileDto profileDto)
+        {
+            var result = await _adminService.UpdateProfileAsync(adminId, profileDto.ProfileImageUrl, profileDto.Description);
+            return result.Success
+                ? Ok(ApiResponse<bool>.SuccessResult(Messages.ProfileUpdated, true))
+                : BadRequest(ApiResponse<bool>.ErrorResult(Messages.AdminNotFound));
+        }
+
+        [HttpPut("{adminId}/password")]
+        public async Task<IActionResult> UpdatePassword(int adminId, [FromBody] UpdatePasswordDto passwordDto)
+        {
+            var result = await _adminService.UpdatePasswordAsync(adminId, passwordDto.CurrentPassword, passwordDto.NewPassword);
+            return result.Success
+                ? Ok(ApiResponse<bool>.SuccessResult(Messages.PasswordUpdated, true))
+                : BadRequest(ApiResponse<bool>.ErrorResult(
+                    result.Message == Messages.InvalidCurrentPassword
+                        ? Messages.InvalidCurrentPassword
+                        : Messages.AdminNotFound));
+        }
+
+        [HttpPut("{adminId}/contact")]
+        public async Task<IActionResult> UpdateContactInfo(int adminId, [FromBody] UpdateContactDto contactDto)
+        {
+            var result = await _adminService.UpdateContactInfoAsync(adminId, contactDto.Email, contactDto.PhoneNumber);
+            return result.Success
+                ? Ok(ApiResponse<bool>.SuccessResult(Messages.ContactInfoUpdated, true))
+                : BadRequest(ApiResponse<bool>.ErrorResult(Messages.AdminNotFound));
+        }
+
+        [HttpGet("{adminId}/statistics")]
+        public async Task<IActionResult> GetStatistics(int adminId)
+        {
+            var statistics = new
+            {
+                TotalResidents = (await _adminService.GetTotalResidentsAsync(adminId)).Data,
+                ActiveComplaints = (await _adminService.GetActiveComplaintsCountAsync(adminId)).Data,
+                PendingPayments = (await _adminService.GetPendingPaymentsCountAsync(adminId)).Data,
+                UpcomingMeetings = (await _adminService.GetUpcomingMeetingsCountAsync(adminId)).Data
+            };
+
+            return Ok(ApiResponse<object>.SuccessResult(Messages.AdminStatisticsRetrieved, statistics));
+        }
+
         [HttpPost("notifications")]
         public IActionResult CreateNotification([FromBody] Notification notification)
         {
             try
             {
                 _adminService.CreateNotification(notification);
-                return Ok("Notification created successfully");
+                return Ok(ApiResponse<bool>.SuccessResult(Messages.NotificationSent, true));
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error creating notification: {ex.Message}");
-                return StatusCode(500, "Error creating notification");
+                return BadRequest(ApiResponse<bool>.ErrorResult(Messages.UnexpectedError));
             }
         }
 
@@ -39,12 +205,12 @@ namespace WebAPI.Controllers
             try
             {
                 _adminService.ScheduleMeeting(meeting);
-                return Ok("Meeting scheduled successfully");
+                return Ok(ApiResponse<bool>.SuccessResult(Messages.MeetingScheduled, true));
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error scheduling meeting: {ex.Message}");
-                return StatusCode(500, "Error scheduling meeting");
+                return BadRequest(ApiResponse<bool>.ErrorResult(Messages.UnexpectedError));
             }
         }
 
@@ -54,12 +220,12 @@ namespace WebAPI.Controllers
             try
             {
                 _adminService.AssignOwnerToApartment(ownerId, apartmentId);
-                return Ok("Owner assigned successfully");
+                return Ok(ApiResponse<bool>.SuccessResult(Messages.OwnerAdded, true));
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error assigning owner: {ex.Message}");
-                return StatusCode(500, "Error assigning owner");
+                return BadRequest(ApiResponse<bool>.ErrorResult(Messages.UnexpectedError));
             }
         }
 
@@ -69,12 +235,12 @@ namespace WebAPI.Controllers
             try
             {
                 _adminService.AssignTenantToApartment(tenantId, apartmentId);
-                return Ok("Tenant assigned successfully");
+                return Ok(ApiResponse<bool>.SuccessResult(Messages.TenantAdded, true));
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error assigning tenant: {ex.Message}");
-                return StatusCode(500, "Error assigning tenant");
+                return BadRequest(ApiResponse<bool>.ErrorResult(Messages.UnexpectedError));
             }
         }
 
@@ -84,12 +250,12 @@ namespace WebAPI.Controllers
             try
             {
                 _adminService.ApproveTenantRequest(requestId);
-                return Ok("Tenant request approved");
+                return Ok(ApiResponse<bool>.SuccessResult(Messages.Success, true));
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error approving tenant request: {ex.Message}");
-                return StatusCode(500, "Error approving request");
+                return BadRequest(ApiResponse<bool>.ErrorResult(Messages.UnexpectedError));
             }
         }
 
@@ -99,12 +265,12 @@ namespace WebAPI.Controllers
             try
             {
                 _adminService.RejectTenantRequest(requestId, reason);
-                return Ok("Tenant request rejected");
+                return Ok(ApiResponse<bool>.SuccessResult(Messages.Success, true));
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error rejecting tenant request: {ex.Message}");
-                return StatusCode(500, "Error rejecting request");
+                return BadRequest(ApiResponse<bool>.ErrorResult(Messages.UnexpectedError));
             }
         }
     }

@@ -41,5 +41,6 @@ namespace Entities.Concrete
         public DateTime CreatedAt { get; set; }
         public string ImageId { get; set; } = string.Empty;
         public bool IsActive { get; set; }
+        public DateTime LastMaintenanceDate { get; set; }
     }
 }

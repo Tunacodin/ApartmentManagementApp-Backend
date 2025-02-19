@@ -5,8 +5,21 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class ApartmentManagementDbContext : DbContext
     {
+        // Design-time için constructor
+        public ApartmentManagementDbContext()
+        {
+        }
+
         public ApartmentManagementDbContext(DbContextOptions<ApartmentManagementDbContext> options)
             : base(options) { }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlServer("Server=LAPTOP-0I24A1AJ\\SQLEXPRESS;Database=ApartmentManagement;Trusted_Connection=True;TrustServerCertificate=True;");
+            }
+        }
 
         public DbSet<User> Users { get; set; }
         public DbSet<Admin> Admins { get; set; }

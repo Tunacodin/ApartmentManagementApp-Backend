@@ -8,7 +8,6 @@ using Business.ValidationRules.FluentValidation;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -24,6 +23,7 @@ builder.Services.AddSwaggerGen();
 
 // Dependency Injection (DI) Konfigürasyonu
 builder.Services.AddScoped<IAdminService, AdminManager>();
+builder.Services.AddScoped<IAdminDal, EfAdminDal>();
 builder.Services.AddScoped<IApartmentDal, EfApartmentDal>();
 builder.Services.AddScoped<IUserDal, EfUserDal>();
 builder.Services.AddScoped<IBuildingDal, EfBuildingDal>();
@@ -50,14 +50,12 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage(); // Hata detaylarını geliştirme ortamında göster
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization();
 
 app.MapControllers();
 

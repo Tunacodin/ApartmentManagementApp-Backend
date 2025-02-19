@@ -284,3 +284,4 @@ C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\b
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\FluentValidation.AspNetCore.dll
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\FluentValidation.DependencyInjectionExtensions.dll
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\Microsoft.AspNetCore.OpenApi.dll
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll

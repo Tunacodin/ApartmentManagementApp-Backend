@@ -9,6 +9,11 @@ namespace Entities.DTOs
         public string Role { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public UserDetailsDto Details { get; set; } = new();
+
+        // Profil bilgileri
+        public string? ProfileImageUrl { get; set; }
+        public string? Description { get; set; }
+        public DateTime? ProfileUpdatedAt { get; set; }
     }
 
     public class UserDetailsDto
@@ -26,5 +31,21 @@ namespace Entities.DTOs
         public DateTime? LeaseStartDate { get; set; }
         public DateTime? LeaseEndDate { get; set; }
         public decimal? MonthlyRent { get; set; }
+    }
+
+    // Profil yönetimi için ayrı DTO
+    public class UserProfileDto
+    {
+        public int UserId { get; set; }
+        public string? ProfileImageUrl { get; set; }
+        public string? Description { get; set; }
+        public DateTime? ProfileUpdatedAt { get; set; }
+    }
+
+    // Profil güncelleme için DTO
+    public class UpdateProfileDto
+    {
+        public string? ProfileImageUrl { get; set; }
+        public string? Description { get; set; }
     }
 }
