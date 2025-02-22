@@ -6,6 +6,8 @@ using Core.Constants;
 using Entities.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Core.Utilities.Results;
+using FluentValidation;
+using Business.ValidationRules.FluentValidation;
 
 namespace WebAPI.Controllers
 {
@@ -20,6 +22,59 @@ namespace WebAPI.Controllers
         {
             _adminService = adminService;
             _logger = logger;
+        }
+
+        [HttpPost("initialize")]
+        public async Task<IActionResult> InitializeFirstAdmin([FromBody] AdminDto adminDto)
+        {
+            try
+            {
+                // Sistemde admin var mı kontrol et
+                var existingAdmins = await _adminService.GetAllAsync();
+                if (existingAdmins.Success && existingAdmins.Data != null && existingAdmins.Data.Any())
+                {
+                    return BadRequest(ApiResponse<string>.ErrorResult("Sistemde zaten admin bulunmaktadır."));
+                }
+
+                // Validasyon
+                var validator = new AdminDtoValidator();
+                var validationResult = await validator.ValidateAsync(adminDto);
+
+                if (!validationResult.IsValid)
+                {
+                    var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+                    var response = new
+                    {
+                        Message = Messages.ValidationFailed,
+                        Errors = errors,
+                        Example = new
+                        {
+                            FullName = "Ahmet Yılmaz",
+                            Email = "ornek@email.com",
+                            PhoneNumber = "05351234567",
+                            Password = "Test123",
+                            ProfileImageUrl = "https://example.com/profile.jpg",
+                            Description = "Sistem yöneticisi"
+                        }
+                    };
+                    return BadRequest(response);
+                }
+
+                // İlk admini ekle
+                adminDto.Role = "admin";
+                adminDto.IsActive = true;
+                var result = await _adminService.AddAsync(adminDto);
+
+                return result.Success && result.Data != null
+                    ? CreatedAtAction(nameof(GetById), new { id = result.Data.Id },
+                        ApiResponse<AdminDto>.SuccessResult("İlk admin başarıyla oluşturuldu", result.Data))
+                    : BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error initializing first admin: {ex.Message}");
+                return BadRequest(ApiResponse<string>.ErrorResult(Messages.UnexpectedError));
+            }
         }
 
         [HttpGet]
@@ -43,10 +98,41 @@ namespace WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] AdminDto adminDto)
         {
-            var result = await _adminService.AddAsync(adminDto);
-            return result.Success && result.Data != null
-                ? CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, ApiResponse<AdminDto>.SuccessResult(Messages.AdminAdded, result.Data))
-                : BadRequest(ApiResponse<AdminDto>.ErrorResult(Messages.ValidationFailed));
+            try
+            {
+                var validator = new AdminDtoValidator();
+                var validationResult = await validator.ValidateAsync(adminDto);
+
+                if (!validationResult.IsValid)
+                {
+                    var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+                    var response = new
+                    {
+                        Message = Messages.ValidationFailed,
+                        Errors = errors,
+                        Example = new
+                        {
+                            FullName = "Ahmet Yılmaz",
+                            Email = "ornek@email.com",
+                            PhoneNumber = "05351234567",
+                            Password = "Test123",
+                            ProfileImageUrl = "https://example.com/profile.jpg",
+                            Description = "Sistem yöneticisi"
+                        }
+                    };
+                    return BadRequest(response);
+                }
+
+                var result = await _adminService.AddAsync(adminDto);
+                return result.Success && result.Data != null
+                    ? CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, ApiResponse<AdminDto>.SuccessResult(Messages.AdminAdded, result.Data))
+                    : BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error adding admin: {ex.Message}");
+                return BadRequest(ApiResponse<AdminDto>.ErrorResult(Messages.UnexpectedError));
+            }
         }
 
         [HttpPut("{id}")]

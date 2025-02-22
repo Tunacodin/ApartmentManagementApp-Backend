@@ -1,9 +1,12 @@
 ﻿using Business.Abstract;
 using DataAccess.Abstract;
 using Entities.Concrete;
-using System;
-using System.Collections.Generic;
+
 using System.Linq.Expressions;
+
+using Core.Utilities.Results;
+using Core.Constants;
+using Entities.DTOs;
 
 namespace Business.Concrete
 {
@@ -59,6 +62,37 @@ namespace Business.Concrete
             }
 
             return null; // Kullanıcı bulunamadıysa veya şifre hatalıysa
+        }
+
+        public async Task<ApiResponse<UserDto>> GetByIdAsync(int userId)
+        {
+            var user = await _userDal.GetByIdAsync(userId);
+            if (user == null)
+                return ApiResponse<UserDto>.ErrorResult(Messages.UserNotFound);
+
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                FullName = $"{user.FirstName} {user.LastName}".Trim(),
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber,
+                Role = user.Role,
+                IsActive = user.IsActive,
+                ProfileImageUrl = user.ProfileImageUrl,
+                Description = user.Description,
+                ProfileUpdatedAt = user.ProfileUpdatedAt
+            };
+
+            return ApiResponse<UserDto>.SuccessResult(Messages.Retrieved, userDto);
+        }
+
+        public async Task<ApiResponse<bool>> IsUserActiveAsync(int userId)
+        {
+            var user = await _userDal.GetByIdAsync(userId);
+            if (user == null)
+                return ApiResponse<bool>.ErrorResult(Messages.UserNotFound);
+
+            return ApiResponse<bool>.SuccessResult(Messages.Retrieved, user.IsActive);
         }
     }
 }

@@ -11,6 +11,7 @@ namespace Entities.Concrete
         public string Description { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public bool IsResolved { get; set; }
+        public bool IsInProgress { get; set; }
         public int? ResolvedByAdminId { get; set; }
         public DateTime? ResolvedAt { get; set; }
         public string CreatedByName { get; set; } = string.Empty;
