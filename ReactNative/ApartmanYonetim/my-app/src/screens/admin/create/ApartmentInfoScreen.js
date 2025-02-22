@@ -26,58 +26,57 @@ import animate from "../../../assets/json/animApartment.json";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DocumentPicker from "expo-document-picker";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_ENDPOINTS, axiosConfig } from '../../../config/apiConfig';
+import * as ImagePicker from 'expo-image-picker';
 
-// API URL'lerini güncelleyelim
-const BASE_URL = "http://172.16.1.155:5001/api";
-const BUILDING_API_URL = `${BASE_URL}/Building`;
-const IMAGE_API_URL = `${BASE_URL}/Image/Add`;
-
-// API yapılandırmasını güncelleyelim
-const api = axios.create({
-  baseURL: BASE_URL,
-  timeout: 30000,
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'multipart/form-data'
-  },
-  transformRequest: [(data, headers) => {
-    if (data instanceof FormData) {
-      headers['Content-Type'] = 'multipart/form-data';
-      return data;
-    }
-    return JSON.stringify(data);
-  }]
+// API URL'lerini güncelle
+const buildingApi = axios.create({
+  baseURL: API_ENDPOINTS.BUILDING,
+  ...axiosConfig
 });
 
-// İstek interceptor'ı ekleyelim
-api.interceptors.request.use(request => {
-  console.log('Starting Request:', {
-    url: request.url,
-    method: request.method,
-    headers: request.headers,
-    data: request.data
-  });
-  return request;
+const apartmentApi = axios.create({
+  baseURL: API_ENDPOINTS.APARTMENT,
+  ...axiosConfig
 });
 
-// Yanıt interceptor'ı ekleyelim
-api.interceptors.response.use(
-  response => {
-    console.log('Response:', {
-      status: response.status,
-      data: response.data
+const imageApi = axios.create({
+  baseURL: API_ENDPOINTS.IMAGE,
+  ...axiosConfig
+});
+
+// API istekleri için hata yönetimi
+const logApiError = (error, context) => {
+  console.log(`\n=================== ${context} HATA DETAYI ===================`);
+  console.error("❌ Hata Türü:", error.name);
+  console.error("❌ Hata Mesajı:", error.message);
+  
+  if (error.response) {
+    // Sunucudan gelen hata
+    console.error(" Sunucu Yanıtı:", {
+      data: error.response.data,
+      status: error.response.status,
+      headers: error.response.headers
     });
-    return response;
-  },
-  error => {
-    console.error('API Error:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status
-    });
-    return Promise.reject(error);
+  } else if (error.request) {
+    // İstek yapıldı ama yanıt alınamadı
+    console.error("📡 İstek Yapıldı Ama Yanıt Yok:", error.request);
+  } else {
+    // İstek oluşturulurken hata oluştu
+    console.error("📡 İstek Hatası:", error.message);
   }
-);
+
+  if (error.config) {
+    console.error("📝 İstek Detayları:", {
+      url: error.config.url,
+      method: error.config.method,
+      headers: error.config.headers,
+      data: error.config.data
+    });
+  }
+
+  console.log("=======================================================\n");
+};
 
 const ApartmentInfoScreen = () => {
   const [apartmentName, setApartmentName] = useState("");
@@ -114,8 +113,8 @@ const ApartmentInfoScreen = () => {
 
   const [selectedType, setSelectedType] = useState('');
   const [selectedUnits, setSelectedUnits] = useState([]);
-  const [bulkRentAmount, setBulkRentAmount] = useState('');
-  const [bulkDepositAmount, setBulkDepositAmount] = useState('');
+  const [bulkRentAmount, setBulkRentAmount] = useState('5000');
+  const [bulkDepositAmount, setBulkDepositAmount] = useState('10000');
   const [showUnitSelector, setShowUnitSelector] = useState(false);
 
   const [currentStep, setCurrentStep] = useState('type');
@@ -155,23 +154,17 @@ const ApartmentInfoScreen = () => {
 
   const scrollViewRef = useRef(null);
 
-  // Yeni state'ler ekleyelim
+  // Varsayılan değerlerle güncelle
   const [buildingFeatures, setBuildingFeatures] = useState({
-    parking: {
-      exists: false,
-      type: null,
-    },
+    parking: { exists: false, type: null },
     elevator: false,
-    park: false,
-    heatingSystem: 'central', // Varsayılan olarak merkezi seçili
-    pool: {
-      exists: false,
-      type: null,
-    },
+    park: true, // Oyun alanı varsayılan olarak true
+    heatingSystem: 'central',
+    pool: { exists: false, type: null },
     gym: false,
     buildingAge: '',
     garden: false,
-    thermalInsulation: false,
+    thermalInsulation: false
   });
 
   // Isıtma sistemi seçenekleri
@@ -370,27 +363,34 @@ const ApartmentInfoScreen = () => {
   const validateForm = () => {
     const missingFields = [];
 
-    if (!apartmentName?.trim()) missingFields.push("Apartman Adı");
-    if (!numberOfFloors) missingFields.push("Kat Sayısı");
-    if (!totalApartments) missingFields.push("Toplam Daire Sayısı");
-    if (!city?.trim()) missingFields.push("Şehir");
-    if (!district?.trim()) missingFields.push("İlçe");
-    if (!neighborhood?.trim()) missingFields.push("Mahalle");
-    if (!street?.trim()) missingFields.push("Sokak");
-    if (!buildingNumber?.trim()) missingFields.push("Bina No");
-    if (!postalCode?.trim()) missingFields.push("Posta Kodu");
-
-    if (selectedImages.length === 0) {
-      missingFields.push("En az bir apartman görseli");
-    }
+    if (!apartmentName.trim()) missingFields.push("- Apartman Adı");
+    if (!numberOfFloors) missingFields.push("- Kat Sayısı");
+    if (!totalApartments) missingFields.push("- Toplam Daire Sayısı");
+    if (!city.trim()) missingFields.push("- Şehir");
+    if (!district.trim()) missingFields.push("- İlçe");
+    if (!neighborhood.trim()) missingFields.push("- Mahalle");
+    if (!street.trim()) missingFields.push("- Sokak");
+    if (!buildingNumber.trim()) missingFields.push("- Bina Numarası");
+    if (!postalCode.trim()) missingFields.push("- Posta Kodu");
+    if (!duesAmount.trim()) missingFields.push("- Aidat Miktarı");
+    if (selectedImages.length === 0) missingFields.push("- En az bir görsel");
 
     if (missingFields.length > 0) {
+      console.log("\n=================== FORM DOĞRULAMA ===================");
+      console.log("❌ Eksik Alanlar:");
+      missingFields.forEach(field => console.log(field));
+      console.log("====================================================\n");
+
       Alert.alert(
         "Eksik Bilgiler",
         `Lütfen aşağıdaki alanları doldurun:\n\n${missingFields.join("\n")}`
       );
       return false;
     }
+
+    console.log("\n=================== FORM DOĞRULAMA ===================");
+    console.log("✅ Tüm alanlar doldurulmuş");
+    console.log("====================================================\n");
 
     return true;
   };
@@ -465,29 +465,40 @@ const ApartmentInfoScreen = () => {
     }
   };
 
+  // Görsel işleme fonksiyonu
+  const processImage = async (image) => {
+    try {
+      // Dosyayı base64'e çevir
+      const response = await fetch(image.uri);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64data = reader.result.split(',')[1];
+          resolve(base64data);
+        };
+        reader.onerror = () => reject(new Error('Base64 dönüşümü başarısız'));
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error("Görsel işleme hatası:", error);
+      throw error;
+    }
+  };
+
   // handleSubmit fonksiyonunu güncelle
   const handleSubmit = async () => {
     if (!validateForm()) {
-      return;
+        return;
     }
 
-    setIsUploading(true);
+    setIsLoading(true);
+    console.log("\n=================== İŞLEM BAŞLADI ===================");
 
     try {
-      // Önce görselleri yükle
-      const uploadedImages = await uploadImages();
-      console.log("Yüklenen görseller:", uploadedImages);
-
-      if (!uploadedImages || uploadedImages.length === 0) {
-        throw new Error("Görseller yüklenemedi");
-      }
-
-      // Apartman bilgilerini hazırla
-      const buildingAge = constructionDate ? 
-        new Date().getFullYear() - constructionDate.getFullYear() : 
-        0;
-
-      const requestBody = {
+        // Prepare the building data as a JSON object with default values
+        const buildingData = {
+             id: 0,
         buildingName: apartmentName.trim(),
         numberOfFloors: parseInt(numberOfFloors),
         totalApartments: parseInt(totalApartments),
@@ -499,79 +510,95 @@ const ApartmentInfoScreen = () => {
         buildingNumber: buildingNumber.trim(),
         postalCode: postalCode.trim(),
         duesAmount: parseFloat(duesAmount || "0"),
-        includedElectric: includedUtilities.electric || false,
-        includedWater: includedUtilities.water || false,
-        includedGas: includedUtilities.gas || false,
-        includedInternet: includedUtilities.internet || false,
+        includedElectric: includedUtilities.electric,
+        includedWater: includedUtilities.water,
+        includedGas: includedUtilities.gas,
+        includedInternet: includedUtilities.internet,
+        parkingType: buildingFeatures.parking.exists ? buildingFeatures.parking.type : "Yok",
+        hasElevator: buildingFeatures.elevator,
+        hasPlayground: buildingFeatures.park,
+        heatingType: buildingFeatures.heatingSystem,
+        poolType: buildingFeatures.pool.exists ? buildingFeatures.pool.type : "Yok",
+        hasGym: buildingFeatures.gym,
+        buildingAge: parseInt(buildingFeatures.buildingAge) || 0,
+        hasGarden: buildingFeatures.garden,
+        hasThermalInsulation: buildingFeatures.thermalInsulation,
         adminId: 1,
-        parkingType: buildingFeatures.parking.exists ? 
-          buildingFeatures.parking.type : 'Yok',
-        hasElevator: buildingFeatures.elevator || false,
-        hasPlayground: buildingFeatures.park || false,
-        heatingType: buildingFeatures.heatingSystem || 'Merkezi',
-        poolType: buildingFeatures.pool.exists ? 
-          buildingFeatures.pool.type : 'Yok',
-        hasGym: buildingFeatures.gym || false,
-        buildingAge: buildingAge,
-        hasGarden: buildingFeatures.garden || false,
-        hasThermalInsulation: buildingFeatures.thermalInsulation || false,
-        imageId: uploadedImages[0].id // Backend tek görsel ID'si bekliyorsa
-        // imageIds: uploadedImages.map(img => img.id) // Backend çoklu görsel ID'si bekliyorsa
-      };
-
-      console.log("API'ye gönderilecek veriler:", requestBody);
-
-      // Apartman bilgilerini kaydet
-      const apartmentResponse = await api.post(BUILDING_API_URL, requestBody);
-
-      console.log("Apartman kaydetme yanıtı:", apartmentResponse.data);
-
-      if (apartmentResponse.data) {
-        // Daire bilgileri için state'leri hazırla
-        setApartmentUnits(Array.from(
-          { length: parseInt(totalApartments) },
-          (_, index) => ({
-            unitNumber: index + 1,
-            floor: undefined,
-            rentAmount: '',
-            depositAmount: '',
-            type: '',
-            hasBalcony: false,
-            notes: '',
-          })
-        ));
+        createdAt: new Date().toISOString(),
+        isActive: true,
+        lastMaintenanceDate: new Date().toISOString(),
+            imageId: null, // Default value indicating no image uploaded
+            imageUrl: null, // Default value indicating no image uploaded
+            isActive: true, // Default value
         
-        setSelectedApartment(apartmentResponse.data);
-        setShowForm(false);
-        setShowApartmentDetails(true);
-        setCurrentStep('type');
+        };
 
-        Alert.alert(
-          "Başarılı", 
-          "Apartman bilgileri kaydedildi. Şimdi daire bilgilerini girebilirsiniz."
-        );
-      }
+        // Image handling section (commented out)
+        /*
+        if (selectedImages.length > 0) {
+            const imageFile = {
+                uri: selectedImages[0].uri,
+                type: 'image/jpeg', // Adjust based on your image type
+                name: `building_${Date.now()}.jpg`
+            };
+            buildingData.imageId = imageFile.name; // Set imageId to the name of the image
+            buildingData.imageUrl = imageFile.uri; // Set imageUrl to the URI of the image
+        }
+        */
+
+        // Send the request as JSON
+        const response = await axios.post('https://your-api-endpoint', buildingData, {
+            headers: {
+                'Content-Type': 'application/json', // Set to application/json
+            }
+        });
+
+        console.log("✅ Building kaydı başarılı:", response.data);
+        // Handle success response
+
     } catch (error) {
-      console.error("Form gönderme hatası:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        validationErrors: error.response?.data?.errors
-      });
-
-      let errorMessage = "Apartman bilgileri kaydedilirken bir hata oluştu.";
-      
-      if (error.response?.data?.errors) {
-        const validationErrors = Object.entries(error.response.data.errors)
-          .map(([key, value]) => `${key}: ${value.join(', ')}`)
-          .join('\n');
-        errorMessage += `\n\nValidasyon hataları:\n${validationErrors}`;
-      }
-
-      Alert.alert("Hata", errorMessage);
+        console.log("\n=================== HATA OLUŞTU ===================");
+        console.error("❌ Hata detayı:", error);
+        logApiError(error, "KAYIT");
     } finally {
-      setIsUploading(false);
+        setIsLoading(false);
+        console.log("=================== İŞLEM TAMAMLANDI ===================\n");
     }
+};
+
+  // Form verilerini sıfırlama fonksiyonu
+  const resetForm = () => {
+    setApartmentName("");
+    setNumberOfFloors(0);
+    setTotalApartments("");
+    setCity("");
+    setDistrict("");
+    setNeighborhood("");
+    setStreet("");
+    setBuildingNumber("");
+    setPostalCode("");
+    setDuesAmount("");
+    setIncludedUtilities({
+      electric: false,
+      water: false,
+      gas: false,
+      internet: false
+    });
+    setBuildingFeatures({
+      parking: { exists: false, type: null },
+      elevator: false,
+      park: true, // Oyun alanı varsayılan olarak true kalacak
+      heatingSystem: 'central',
+      pool: { exists: false, type: null },
+      gym: false,
+      buildingAge: '',
+      garden: false,
+      thermalInsulation: false
+    });
+    setSelectedImages([]);
+    setApartmentUnits([]);
+    setBulkRentAmount('5000'); // Varsayılan kira miktarı
+    setBulkDepositAmount('10000'); // Varsayılan depozito miktarı
   };
 
   const handleAddApartmentDetails = (apartment) => {
@@ -1016,14 +1043,16 @@ const ApartmentInfoScreen = () => {
 
       {renderImageUpload()}
 
-      <PaperButton
-        mode="contained"
+      <TouchableOpacity 
+        style={[styles.submitButton, isLoading && styles.disabledButton]}
         onPress={handleSubmit}
-        style={styles.submitButton}
-        labelStyle={styles.submitButtonLabel}
-      >
-        Kaydet
-      </PaperButton>
+        disabled={isLoading}>
+        {isLoading ? (
+          <ActivityIndicator color={colors.white} />
+        ) : (
+          <Text style={styles.submitButtonLabel}>Kaydet</Text>
+        )}
+      </TouchableOpacity>
     </View>
   );
 
@@ -2345,36 +2374,6 @@ const ApartmentInfoScreen = () => {
     setShowApartmentDetails(false);
   };
 
-  // resetForm fonksiyonunu ekleyin
-  const resetForm = () => {
-    setApartmentName('');
-    setNumberOfFloors('');
-    setTotalApartments('');
-    setCity('');
-    setDistrict('');
-    setNeighborhood('');
-    setStreet('');
-    setBuildingNumber('');
-    setPostalCode('');
-    setDuesAmount('');
-    setIncludedUtilities({
-      electric: false,
-      water: false,
-      gas: false,
-      internet: false
-    });
-    setSelectedApartment(null);
-    setApartmentUnits([]);
-    setCompletionStatus({
-      type: false,
-      floor: false,
-      balcony: false,
-      rent: false,
-      deposit: false,
-      notes: false
-    });
-  };
-
   const handleDeleteApartment = (index) => {
     Alert.alert(
       "Apartmanı Sil",
@@ -2406,27 +2405,23 @@ const ApartmentInfoScreen = () => {
   // Görsel seçme işlemini güncelle
   const pickImage = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: 'image/*',
-        multiple: true // Çoklu seçim için
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
       });
-      
-      console.log("Picker Result:", result);
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const newImages = result.assets.map(asset => ({
-          id: Date.now().toString() + Math.random().toString(),
-          uri: asset.uri,
-          type: asset.mimeType,
-          name: asset.name,
-          size: asset.size
-        }));
-        
-        setSelectedImages(prevImages => [...prevImages, ...newImages]);
+      if (!result.canceled) {
+        setSelectedImages([{
+          uri: result.assets[0].uri,
+          type: 'image/jpeg',
+          name: `building_${Date.now()}.jpg`
+        }]);
       }
     } catch (error) {
-      console.error("Error picking images:", error);
-      Alert.alert("Hata", "Görseller seçilirken bir hata oluştu.");
+      console.error('Görsel seçme hatası:', error);
+      Alert.alert('Hata', 'Görsel seçilirken bir hata oluştu');
     }
   };
 
@@ -2454,28 +2449,33 @@ const ApartmentInfoScreen = () => {
           name: fileName
         });
 
+        // URL yapısını düzelt
         const config = {
           method: 'POST',
-          url: `${IMAGE_API_URL}?fileName=${encodeURIComponent(fileName)}`,
+          url: `${API_ENDPOINTS.IMAGE}/upload`, // /upload endpoint'i
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-          data: formData,
-          timeout: 60000,
+          data: formData
         };
+
+        console.log(" Görsel yükleme isteği:", {
+          url: config.url,
+          fileName: fileName
+        });
 
         const response = await axios(config);
         
-        if (response.data && response.data.imageId) {
+        if (response.data) {
           uploadedImages.push({
-            id: response.data.imageId,
-            uri: image.uri,
+            id: response.data.imageId || "",
+            url: response.data.imageUrl || "",
             fileName: fileName
           });
         }
       } catch (error) {
-        console.error("Görsel yükleme hatası:", error);
-        throw error;
+        logApiError(error, "GÖRSEL YÜKLEME");
+        throw new Error(`${image.name || 'Görsel'} yüklenirken hata oluştu: ${error.message}`);
       }
     }
     
@@ -2496,6 +2496,9 @@ const ApartmentInfoScreen = () => {
       console.error('Apartman bilgileri sıfırlanırken hata:', error);
     }
   };
+
+  // State tanımlamalarına ekleyin
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <SafeAreaView style={styles.safeArea}>

@@ -18,27 +18,56 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.evin",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Konum bilgilerinize erişmek istiyoruz.",
-        "NSLocationAlwaysUsageDescription": "Konum bilgilerinize erişmek istiyoruz."
-      }
+        "NSLocationAlwaysUsageDescription": "Konum bilgilerinize erişmek istiyoruz.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSExceptionDomains": {
+            "ngrok-free.app": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSIncludesSubdomains": true
+            }
+          }
+        }
+      },
+      "allowsArbitraryLoads": true
     },
-
     "android": {
+      "package": "com.yourcompany.evin",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
-      ]
+        "ACCESS_COARSE_LOCATION",
+        "INTERNET"
+      ],
+      "networkSecurityConfig": {
+        "cleartextTrafficPermitted": true,
+        "debug": {
+          "certificates": [
+            "system",
+            "user"
+          ],
+          "cleartextTrafficPermitted": true
+        }
+      },
+      "usesCleartextTraffic": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    },
+    "owner": "your-expo-username"
   }
 }

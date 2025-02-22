@@ -15,6 +15,13 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import colors from '../../styles/colors';
 import { BlurView } from 'expo-blur';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_ENDPOINTS, axiosConfig } from '../../config/apiConfig';
+import axios from 'axios';
+
+const loginApi = axios.create({
+  baseURL: API_ENDPOINTS.AUTH,
+  ...axiosConfig
+});
 
 const LoginScreen = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
@@ -23,7 +30,7 @@ const LoginScreen = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
   const role = route.params?.role || 'admin';
 
-  const API_URL = "http://172.16.1.155:5001/api/User/login";
+  const API_URL = API_ENDPOINTS.USER + "/login";
 
   const validateForm = () => {
     if (!email.trim() || !password.trim()) {

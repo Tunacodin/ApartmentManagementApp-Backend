@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -15,43 +15,42 @@ import LottieView from "lottie-react-native";
 import { TextInput as PaperInput } from "react-native-paper";
 import colors from "../../../styles/colors";
 import animate from "../../../assets/json/animInformation.json";
-import axios from "axios";
-import Icon from "react-native-vector-icons/Ionicons";
-import { auth } from "../../../../firebase";
-import { 
-  createUserWithEmailAndPassword, 
-  sendEmailVerification, 
-  onAuthStateChanged,
-  reload 
-} from "firebase/auth";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import axios from "axios";
+import { API_ENDPOINTS, axiosConfig } from '../../../config/apiConfig';
 
-const API_URL = "http://172.16.1.155:5001/api/User";
-
-
+// Axios instance oluştur
 const api = axios.create({
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  },
-  validateStatus: function (status) {
-    return status >= 200 && status < 300;
-  }
+  baseURL: API_ENDPOINTS.ADMIN,
+  ...axiosConfig
 });
 
+// Axios interceptors ekle
 api.interceptors.request.use(request => {
-  console.log('Starting Request:', request.url);
+  console.log('Starting Request:', request);
   return request;
+}, error => {
+  console.log('Request Error:', error);
+  return Promise.reject(error);
 });
 
 api.interceptors.response.use(
   response => {
-    console.log('Response:', response.data);
+    console.log('Response:', response);
     return response;
   },
   error => {
-    console.log('Error:', error);
+    if (error.response) {
+      // Sunucudan yanıt geldi ama başarısız
+      console.log('Error Response:', error.response.data);
+      console.log('Error Status:', error.response.status);
+    } else if (error.request) {
+      // İstek yapıldı ama yanıt gelmedi
+      console.log('Error Request:', error.request);
+    } else {
+      // İstek oluşturulurken hata oluştu
+      console.log('Error Message:', error.message);
+    }
     return Promise.reject(error);
   }
 );
@@ -61,145 +60,86 @@ const AdminInfoScreen = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [createdAt, setCreatedAt] = useState(new Date().toISOString());
-  const [emailVerified, setEmailVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [password, setPassword] = useState("");
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        await reload(user);
-        setEmailVerified(user.emailVerified);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const checkEmailVerification = async () => {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        await reload(user);
-        setEmailVerified(user.emailVerified);
-        
-        if (user.emailVerified) {
-          return true;
-        } else {
-          Alert.alert("Uyarı", "Lütfen email adresinize gelen linke tıklayıp sayfayı yeniledikten sonra tekrar deneyin.");
-          return false;
-        }
-      }
-      return false;
-    } catch (error) {
-      console.error("Email verification check error:", error);
+  const validateForm = () => {
+    if (!firstName || !lastName || !email || !phone || !password) {
+      Alert.alert("Hata", "Lütfen tüm alanları doldurunuz.");
       return false;
     }
-  };
 
-  const sendVerificationCode = async () => {
-    try {
-      setIsLoading(true);
-
-      // Email formatını kontrol et
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailPattern.test(email)) {
-        Alert.alert("Hata", "Lütfen geçerli bir e-posta adresi girin.");
-        return;
-      }
-
-      // Önce geçici bir hesap oluştur
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Doğrulama emaili gönder
-      await sendEmailVerification(user);
-      
-      Alert.alert(
-        "Başarılı", 
-        "E-posta adresinize do��rulama linki gönderildi. Lütfen e-postanızı kontrol edin ve linke tıklayarak hesabınızı doğrulayın."
-      );
-
-    } catch (error) {
-      console.error("Doğrulama hatası:", error);
-      
-      if (error.code === 'auth/email-already-in-use') {
-        Alert.alert("Hata", "Bu e-posta adresi zaten kullanımda.");
-      } else {
-        Alert.alert("Hata", "Doğrulama işlemi başarısız oldu.");
-      }
-    } finally {
-      setIsLoading(false);
+    // Email formatı kontrolü
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      Alert.alert("Hata", "Lütfen geçerli bir e-posta adresi girin.");
+      return false;
     }
+
+    return true;
   };
 
   const handleSubmit = async () => {
-    if (!firstName || !lastName || !email || !phone || !password) {
-      Alert.alert("Hata", "Lütfen tüm alanları doldurunuz.");
+    // Form verilerini detaylı logla
+    console.log("==================== FORM VERİLERİ ====================");
+    console.log("Ad:", firstName);
+    console.log("Soyad:", lastName);
+    console.log("Email:", email);
+    console.log("Telefon:", phone);
+    console.log("Şifre:", password ? "********" : "Boş");
+    console.log("====================================================");
+    
+    if (!validateForm()) {
+      console.log("❌ Form doğrulama başarısız");
       return;
     }
 
-    const isVerified = await checkEmailVerification();
-    if (!isVerified) {
-      return;
-    }
+    setIsLoading(true);
 
     try {
-      setIsLoading(true);
-      
       const userData = {
-        name: firstName,
-        lastname: lastName,
-        password: password,
-        email: email,
-        phoneNumber: phone,
+        id: 0,
+        fullName: `${firstName} ${lastName}`,
+        email: email.trim(),
+        phoneNumber: phone.trim(),
         role: "admin",
-        createdAt: new Date().toISOString()
+        isActive: true,
+        profileImageUrl: "https://example.com/default-profile.jpg",
+        description: "Yeni yönetici hesabı",
+        password: password
       };
 
-      console.log('Gönderilen veri:', userData);
+      // API isteği detaylarını logla
+      console.log("\n=================== API İSTEĞİ ===================");
+      console.log("📍 Endpoint:", API_ENDPOINTS.ADMIN);
+      console.log("📦 Gönderilen Veriler:", JSON.stringify(userData, null, 2));
+      console.log("===================================================\n");
 
-      const response = await api.post(API_URL, userData);
+      const response = await api.post('', userData);
 
-      console.log('API Yanıtı:', response.data);
+      console.log("\n=================== API YANITI ===================");
+      console.log("✅ Durum Kodu:", response.status);
+      console.log("📄 Yanıt Verisi:", JSON.stringify(response.data, null, 2));
+      console.log("==================================================\n");
 
-      if (response.data === "User added successfully." || response.status === 200) {
+      if (response.status === 200 || response.status === 201) {
         setIsSubmitted(true);
         Alert.alert("Başarılı", "Yönetici bilgileri kaydedildi.");
       }
     } catch (error) {
-      console.error("API Hatası:", {
-        message: error.message,
-        code: error.code,
-        response: error.response?.data,
-        request: error.request
-      });
-
-      if (error.code === 'ECONNABORTED') {
-        Alert.alert(
-          "Bağlantı Zaman Aşımı",
-          "İstek zaman aşımına uğradı. İnternet bağlantınızı kontrol edip tekrar deneyin."
-        );
-      } else if (error.response) {
-        Alert.alert("Hata", error.response.data.message || "Yönetici bilgileri kaydedilemedi.");
-      } else if (error.request) {
-        Alert.alert(
-          "Bağlantı Hatası", 
-          "Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin."
-        );
-      } else {
-        Alert.alert("Hata", "Bir hata oluştu. Lütfen tekrar deneyin.");
+      console.log("\n=================== HATA DETAYI ===================");
+      console.error("❌ Hata Türü:", error.name);
+      console.error("❌ Hata Mesajı:", error.message);
+      if (error.response) {
+        console.error("❌ Sunucu Yanıtı:", error.response.data);
+        console.error("❌ Durum Kodu:", error.response.status);
       }
+      console.log("===================================================\n");
+
+      Alert.alert("Hata", "Yönetici bilgileri kaydedilirken bir hata oluştu.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const refreshVerificationStatus = async () => {
-    const isVerified = await checkEmailVerification();
-    if (isVerified) {
-      Alert.alert("Başarılı", "Email doğrulaması tamamlandı!");
     }
   };
 
@@ -271,22 +211,10 @@ const AdminInfoScreen = () => {
                 label="E-posta"
                 value={email}
                 onChangeText={setEmail}
-                style={[styles.input, { flex: 0.7 }]}
+                style={styles.input}
                 outlineColor={colors.darkGray}
                 activeOutlineColor={colors.primary}
               />
-              <TouchableOpacity
-                style={[styles.button, { flex: 0.15 }]}
-                onPress={sendVerificationCode}
-              >
-                <Icon name="send" size={20} color={colors.primary} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, { flex: 0.15 }]}
-                onPress={refreshVerificationStatus}
-              >
-                <Icon name="refresh" size={20} color={colors.primary} />
-              </TouchableOpacity>
             </View>
 
             <View style={styles.inputContainer}>
@@ -331,17 +259,21 @@ const AdminInfoScreen = () => {
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                isSubmitted && styles.submittedButton
+                isSubmitted && styles.submittedButton,
+                (!isFormValid || isLoading) && styles.disabledButton
               ]}
               onPress={handleSubmit}
               disabled={!isFormValid || isLoading || isSubmitted}
             >
-              <Text style={[styles.submitButtonText, { color: colors.white }]}>
+              <Text style={[
+                styles.submitButtonText,
+                (!isFormValid || isLoading) && styles.disabledButtonText
+              ]}>
                 {isLoading 
                   ? "Gönderiliyor..." 
                   : isSubmitted 
                     ? "Kaydedildi (1/4)" 
-                    : `Kaydet `
+                    : "Kaydet"
                 }
               </Text>
             </TouchableOpacity>
@@ -396,13 +328,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 10,
   },
-  button: {
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 5,
-  },
   submitButton: {
     backgroundColor: colors.primary,
     padding: 15,
@@ -429,6 +354,13 @@ const styles = StyleSheet.create({
   },
   submittedButton: {
     backgroundColor: colors.success,
+  },
+  disabledButton: {
+    backgroundColor: colors.gray,
+    opacity: 0.7,
+  },
+  disabledButtonText: {
+    color: colors.darkGray,
   },
 });
 

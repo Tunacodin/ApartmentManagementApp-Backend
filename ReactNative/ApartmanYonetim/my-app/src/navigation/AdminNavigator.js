@@ -4,10 +4,11 @@ import { createStackNavigator } from '@react-navigation/stack';
 import AdminNavigationWrapper from './AdminNavigatorWrapper';
 import NavigationWithProgress from '../components/NavigationWithProgress';
 import { View } from 'react-native';
+import AdminHome from '../screens/admin/dashboard/AdminHome';
 
 const Stack = createStackNavigator();
 
-export default function AdminNavigator() {
+function AdminNavigator() {
   const [currentStep, setCurrentStep] = useState(0);
 
   const handleNext = () => {
@@ -23,16 +24,43 @@ export default function AdminNavigator() {
   };
 
   return (
-    <View style={{flex:1}}>
-      <AdminNavigationWrapper currentStep={currentStep} />
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        key: 'admin_stack',
+      }}
+    >
+      <Stack.Screen 
+        name="AdminHome"
+        component={AdminHome}
+        options={{
+          key: 'admin_home_screen'
+        }}
+      />
+      <Stack.Screen 
+        name="AdminNavigation"
+        component={AdminNavigationWrapper}
+        options={{
+          key: 'admin_navigation_screen'
+        }}
+      />
       {currentStep < 3 && (
-        <NavigationWithProgress 
-          currentStep={currentStep} 
-          totalSteps={4}
-          onNext={handleNext}
-          onPrevious={handlePrevious}
+        <Stack.Screen 
+          name="NavigationWithProgress"
+          component={NavigationWithProgress}
+          options={{
+            key: 'navigation_with_progress_screen'
+          }}
+          initialParams={{
+            currentStep,
+            totalSteps: 4,
+            onNext: handleNext,
+            onPrevious: handlePrevious
+          }}
         />
       )}
-    </View>
+    </Stack.Navigator>
   );
 }
+
+export default AdminNavigator;
