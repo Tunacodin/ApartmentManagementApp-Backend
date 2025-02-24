@@ -1,5 +1,8 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Core.Utilities.Results;
 using Entities.Concrete;
+using Entities.DTOs;
 
 namespace Business.Abstract
 {
@@ -12,5 +15,12 @@ namespace Business.Abstract
         List<Meeting> GetByBuildingId(int buildingId);
         List<Meeting> GetUpcoming();
         void CancelMeeting(int meetingId, string reason);
+        Task<ApiResponse<List<MeetingDetailDto>>> GetBuildingMeetingsAsync(int buildingId);
+        Task<ApiResponse<MeetingDetailDto>> GetMeetingDetailAsync(int meetingId);
+        Task<ApiResponse<List<MeetingDetailDto>>> GetUpcomingMeetingsAsync(int buildingId);
+        Task<ApiResponse<Meeting>> CreateMeetingAsync(Meeting meeting);
+        Task<ApiResponse<bool>> CancelMeetingAsync(int meetingId, string reason);
+        Task<ApiResponse<bool>> DeleteMeetingAsync(int meetingId);
+        Task<ApiResponse<int>> GetUpcomingMeetingsCountAsync(int buildingId);
     }
 }

@@ -184,6 +184,86 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "WebAPI.Controllers.AdminReportsController",
+    "Method": "GetComplaintAnalytics",
+    "RelativePath": "api/admin/{adminId}/reports/complaints",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminReportsController",
+    "Method": "GetMeetingStatistics",
+    "RelativePath": "api/admin/{adminId}/reports/meetings",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminReportsController",
+    "Method": "GetMonthlyIncome",
+    "RelativePath": "api/admin/{adminId}/reports/monthly-income",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminReportsController",
+    "Method": "GetOccupancyRates",
+    "RelativePath": "api/admin/{adminId}/reports/occupancy",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminReportsController",
+    "Method": "GetPaymentStatistics",
+    "RelativePath": "api/admin/{adminId}/reports/payment-stats",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "WebAPI.Controllers.AdminController",
     "Method": "GetStatistics",
     "RelativePath": "api/Admin/{adminId}/statistics",
@@ -305,6 +385,22 @@
       {
         "Name": "adminId",
         "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminController",
+    "Method": "InitializeFirstAdmin",
+    "RelativePath": "api/Admin/initialize",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminDto",
+        "Type": "Entities.DTOs.AdminDto",
         "IsRequired": true
       }
     ],
@@ -498,17 +594,7 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.List\u00601[[Entities.Concrete.Building, Entities, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
     "ContainingType": "WebAPI.Controllers.BuildingsController",
@@ -519,25 +605,164 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "building",
-        "Type": "Entities.Concrete.Building",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.BuildingsController",
-    "Method": "Update",
-    "RelativePath": "api/Buildings",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
+        "Name": "Id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
       {
-        "Name": "building",
-        "Type": "Entities.Concrete.Building",
-        "IsRequired": true
+        "Name": "BuildingName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "NumberOfFloors",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "TotalApartments",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "OccupancyRate",
+        "Type": "System.Decimal",
+        "IsRequired": false
+      },
+      {
+        "Name": "City",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "District",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Neighborhood",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Street",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "BuildingNumber",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PostalCode",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "DuesAmount",
+        "Type": "System.Decimal",
+        "IsRequired": false
+      },
+      {
+        "Name": "IncludedElectric",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "IncludedWater",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "IncludedGas",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "IncludedInternet",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "ParkingType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasElevator",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasPlayground",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "HeatingType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PoolType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasGym",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "BuildingAge",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasGarden",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasThermalInsulation",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "AdminId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "CreatedAt",
+        "Type": "System.DateTime",
+        "IsRequired": false
+      },
+      {
+        "Name": "ImageId",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "ImageUrl",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "IsActive",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "LastMaintenanceDate",
+        "Type": "System.DateTime",
+        "IsRequired": false
+      },
+      {
+        "Name": "image",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
@@ -556,17 +781,183 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.BuildingsController",
+    "Method": "Update",
+    "RelativePath": "api/Buildings/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
       {
-        "Type": "Entities.Concrete.Building",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "Id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "BuildingName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "NumberOfFloors",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "TotalApartments",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "OccupancyRate",
+        "Type": "System.Decimal",
+        "IsRequired": false
+      },
+      {
+        "Name": "City",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "District",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Neighborhood",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Street",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "BuildingNumber",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PostalCode",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "DuesAmount",
+        "Type": "System.Decimal",
+        "IsRequired": false
+      },
+      {
+        "Name": "IncludedElectric",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "IncludedWater",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "IncludedGas",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "IncludedInternet",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "ParkingType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasElevator",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasPlayground",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "HeatingType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PoolType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasGym",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "BuildingAge",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasGarden",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasThermalInsulation",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "AdminId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "CreatedAt",
+        "Type": "System.DateTime",
+        "IsRequired": false
+      },
+      {
+        "Name": "ImageId",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "ImageUrl",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "IsActive",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "LastMaintenanceDate",
+        "Type": "System.DateTime",
+        "IsRequired": false
+      },
+      {
+        "Name": "image",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
       }
-    ]
+    ],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "WebAPI.Controllers.BuildingsController",
@@ -636,6 +1027,362 @@
     "ContainingType": "WebAPI.Controllers.CardInfoController",
     "Method": "GetAllByUserId",
     "RelativePath": "api/CardInfo/user/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ComplaintController",
+    "Method": "Create",
+    "RelativePath": "api/Complaint",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "complaint",
+        "Type": "Entities.Concrete.Complaint",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ComplaintController",
+    "Method": "GetById",
+    "RelativePath": "api/Complaint/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ComplaintController",
+    "Method": "Delete",
+    "RelativePath": "api/Complaint/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ComplaintController",
+    "Method": "Resolve",
+    "RelativePath": "api/Complaint/{id}/resolve",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ComplaintController",
+    "Method": "GetBuildingComplaints",
+    "RelativePath": "api/Complaint/building/{buildingId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "buildingId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ComplaintController",
+    "Method": "GetActiveComplaintsCount",
+    "RelativePath": "api/Complaint/building/{buildingId}/active/count",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "buildingId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ComplaintController",
+    "Method": "GetUserComplaints",
+    "RelativePath": "api/Complaint/user/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.MeetingController",
+    "Method": "Create",
+    "RelativePath": "api/Meeting",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "meeting",
+        "Type": "Entities.Concrete.Meeting",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.MeetingController",
+    "Method": "GetById",
+    "RelativePath": "api/Meeting/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.MeetingController",
+    "Method": "Delete",
+    "RelativePath": "api/Meeting/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.MeetingController",
+    "Method": "Cancel",
+    "RelativePath": "api/Meeting/{id}/cancel",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "reason",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.MeetingController",
+    "Method": "GetBuildingMeetings",
+    "RelativePath": "api/Meeting/building/{buildingId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "buildingId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.MeetingController",
+    "Method": "GetUpcomingMeetings",
+    "RelativePath": "api/Meeting/building/{buildingId}/upcoming",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "buildingId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.MeetingController",
+    "Method": "GetUpcomingMeetingsCount",
+    "RelativePath": "api/Meeting/building/{buildingId}/upcoming/count",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "buildingId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.NotificationController",
+    "Method": "Create",
+    "RelativePath": "api/Notification",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "notification",
+        "Type": "Entities.Concrete.Notification",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.NotificationController",
+    "Method": "Delete",
+    "RelativePath": "api/Notification/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.NotificationController",
+    "Method": "MarkAsRead",
+    "RelativePath": "api/Notification/{notificationId}/read",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "notificationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.NotificationController",
+    "Method": "GetUserNotifications",
+    "RelativePath": "api/Notification/user/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.NotificationController",
+    "Method": "MarkAllAsRead",
+    "RelativePath": "api/Notification/user/{userId}/read-all",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.NotificationController",
+    "Method": "GetUnreadNotifications",
+    "RelativePath": "api/Notification/user/{userId}/unread",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.NotificationController",
+    "Method": "GetUnreadCount",
+    "RelativePath": "api/Notification/user/{userId}/unread/count",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,

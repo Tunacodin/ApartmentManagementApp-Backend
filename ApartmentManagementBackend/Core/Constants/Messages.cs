@@ -64,6 +64,8 @@ namespace Core.Constants
         public const string BuildingAdded = "Bina başarıyla eklendi";
         public const string BuildingUpdated = "Bina bilgileri güncellendi";
         public const string BuildingDeleted = "Bina kaydı silindi";
+        public const string BuildingRetrieved = "Bina bilgileri getirildi";
+        public const string BuildingImageUpdated = "Bina resmi güncellendi";
 
         // Apartment Messages
         public const string ApartmentNotFound = "Daire bulunamadı";
@@ -99,6 +101,8 @@ namespace Core.Constants
         public const string ComplaintDeleted = "Şikayet kaydı silindi";
         public const string ComplaintResolved = "Şikayet çözüldü";
         public const string ComplaintInProcess = "Şikayet işleme alındı";
+        public const string ComplaintCreated = "Yeni şikayet kaydı oluşturuldu";
+        public const string ComplaintRetrieved = "Şikayet detayları getirildi";
 
         // Notification Messages
         public const string NotificationNotFound = "Bildirim bulunamadı";
@@ -107,6 +111,9 @@ namespace Core.Constants
         public const string NotificationUpdated = "Bildirim güncellendi";
         public const string NotificationDeleted = "Bildirim silindi";
         public const string NotificationSent = "Bildirim gönderildi";
+        public const string NotificationMarkedAsRead = "Bildirim okundu olarak işaretlendi";
+        public const string AllNotificationsMarkedAsRead = "Tüm bildirimler okundu olarak işaretlendi";
+        public const string NotificationCreated = "Yeni bildirim oluşturuldu";
 
         // Security Messages
         public const string SecurityNotFound = "Güvenlik görevlisi bulunamadı";

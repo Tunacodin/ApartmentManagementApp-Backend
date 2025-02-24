@@ -14,6 +14,8 @@ namespace Entities.DTOs
         public bool IsActive { get; set; } = true;
         public string? ProfileImageUrl { get; set; }
         public string? Description { get; set; }
+
+        public string Password { get; set; } = string.Empty;
     }
 
     // 🔹 Admin Liste DTO'su (Genel Liste Görünümü İçin)

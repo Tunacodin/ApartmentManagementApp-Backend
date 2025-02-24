@@ -7,6 +7,7 @@ using Core.Constants;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Business.Concrete
 {
@@ -19,6 +20,7 @@ namespace Business.Concrete
         private readonly INotificationDal _notificationDal;
         private readonly IMeetingDal _meetingDal;
         private readonly IAdminDal _adminDal;
+        private readonly ILogger<AdminManager> _logger;
 
         public AdminManager(
             IUserDal userDal,
@@ -27,7 +29,8 @@ namespace Business.Concrete
             IApartmentDal apartmentDal,
             INotificationDal notificationDal,
             IMeetingDal meetingDal,
-            IAdminDal adminDal)
+            IAdminDal adminDal,
+            ILogger<AdminManager> logger)
         {
             _userDal = userDal;
             _buildingDal = buildingDal;
@@ -36,6 +39,7 @@ namespace Business.Concrete
             _notificationDal = notificationDal;
             _meetingDal = meetingDal;
             _adminDal = adminDal;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<AdminDetailDto>> GetByIdAsync(int id)
@@ -101,7 +105,7 @@ namespace Business.Concrete
         {
             return await Task.Run(() =>
             {
-                var admins = _userDal.GetAll(u => u.Role == "admin");
+                var admins = _userDal.GetAll(u => u.Role == "admin") ?? new List<User>();
                 var adminDtos = admins.Select(a => new AdminListDto
                 {
                     Id = a.Id,
@@ -570,28 +574,32 @@ namespace Business.Concrete
 
         public async Task<ApiResponse<AdminDto>> AddAsync(AdminDto adminDto)
         {
-            return await Task.Run(() =>
+            try
             {
-                if (adminDto == null)
-                    return ApiResponse<AdminDto>.ErrorResult(Messages.ValidationFailed);
-
                 var admin = new Admin
                 {
                     FirstName = adminDto.FullName.Split(' ')[0],
                     LastName = string.Join(" ", adminDto.FullName.Split(' ').Skip(1)),
                     Email = adminDto.Email,
                     PhoneNumber = adminDto.PhoneNumber,
-                    Role = "admin",
+                    Role = adminDto.Role,
                     IsActive = adminDto.IsActive,
                     ProfileImageUrl = adminDto.ProfileImageUrl,
                     Description = adminDto.Description,
+                    Password = adminDto.Password,
                     CreatedAt = DateTime.Now
                 };
 
-                _adminDal.Add(admin);
+                await _userDal.AddAsync(admin);
                 adminDto.Id = admin.Id;
+
                 return ApiResponse<AdminDto>.SuccessResult(Messages.AdminAdded, adminDto);
-            });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error adding admin: {ex.Message}");
+                return ApiResponse<AdminDto>.ErrorResult(Messages.UnexpectedError);
+            }
         }
     }
 }
