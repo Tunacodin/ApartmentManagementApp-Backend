@@ -1,27 +1,32 @@
 // Base URL'i tanımla
-export const API_BASE_URL = "https://d1f5-78-187-59-29.ngrok-free.app/api";
+export const API_BASE_URL = "https://530f-78-187-59-29.ngrok-free.app/api";
 
 // Endpoint'leri kategorilere ayırarak tanımla
 export const API_ENDPOINTS = {
     // Admin endpoints
     ADMIN: {
         BASE: `${API_BASE_URL}/Admin`,
-        DASHBOARD: (adminId) => `${API_BASE_URL}/admin/dashboard/${adminId}`,
-        STATISTICS: (adminId) => `${API_BASE_URL}/admin/${adminId}/statistics`,
-        ACTIVITIES: (adminId) => `${API_BASE_URL}/admin/${adminId}/activities`,
-        FINANCIAL_SUMMARIES: (adminId) => `${API_BASE_URL}/admin/${adminId}/financial-summaries`,
-        BUILDINGS: (adminId) => `${API_BASE_URL}/admin/${adminId}/buildings`,
-        UPDATE_PROFILE: (adminId) => `${API_BASE_URL}/admin/${adminId}/profile`,
-        UPDATE_PASSWORD: (adminId) => `${API_BASE_URL}/admin/${adminId}/password`,
-        UPDATE_CONTACT: (adminId) => `${API_BASE_URL}/admin/${adminId}/contact`,
-        
-        // Reports
-        REPORTS: {
-            PAYMENT_STATS: (adminId) => `${API_BASE_URL}/admin/${adminId}/reports/payment-stats`,
-            COMPLAINTS: (adminId) => `${API_BASE_URL}/admin/${adminId}/reports/complaints`,
-            OCCUPANCY: (adminId) => `${API_BASE_URL}/admin/${adminId}/reports/occupancy`,
-            MEETINGS: (adminId) => `${API_BASE_URL}/admin/${adminId}/reports/meetings`
-        }
+        GET_ALL: `${API_BASE_URL}/Admin`,
+        CREATE: `${API_BASE_URL}/Admin`,
+        DETAIL: (adminId) => `${API_BASE_URL}/Admin/${adminId}`,
+        UPDATE: (adminId) => `${API_BASE_URL}/Admin/${adminId}`,
+        DELETE: (adminId) => `${API_BASE_URL}/Admin/${adminId}`,
+        DASHBOARD: (adminId) => `${API_BASE_URL}/Admin/dashboard/${adminId}`,
+        BUILDINGS: (adminId) => `${API_BASE_URL}/Admin/${adminId}/buildings`,
+        ASSIGN_BUILDING: (adminId, buildingId) => `${API_BASE_URL}/Admin/${adminId}/buildings/${buildingId}/assign`,
+        UNASSIGN_BUILDING: (adminId, buildingId) => `${API_BASE_URL}/Admin/${adminId}/buildings/${buildingId}/unassign`,
+        ACTIVITIES: (adminId) => `${API_BASE_URL}/Admin/${adminId}/activities`,
+        FINANCIAL_SUMMARIES: (adminId) => `${API_BASE_URL}/Admin/${adminId}/financial-summaries`,
+        UPDATE_PROFILE: (adminId) => `${API_BASE_URL}/Admin/${adminId}/profile`,
+        UPDATE_PASSWORD: (adminId) => `${API_BASE_URL}/Admin/${adminId}/password`,
+        UPDATE_CONTACT: (adminId) => `${API_BASE_URL}/Admin/${adminId}/contact`,
+        STATISTICS: (adminId) => `${API_BASE_URL}/Admin/${adminId}/statistics`,
+        NOTIFICATIONS: `${API_BASE_URL}/Admin/notifications`,
+        MEETINGS: `${API_BASE_URL}/Admin/meetings`,
+        ASSIGN_OWNER: (apartmentId, ownerId) => `${API_BASE_URL}/Admin/apartments/${apartmentId}/owner/${ownerId}`,
+        ASSIGN_TENANT: (apartmentId, tenantId) => `${API_BASE_URL}/Admin/apartments/${apartmentId}/tenant/${tenantId}`,
+        APPROVE_TENANT_REQUEST: (requestId) => `${API_BASE_URL}/Admin/tenant-requests/${requestId}/approve`,
+        REJECT_TENANT_REQUEST: (requestId) => `${API_BASE_URL}/Admin/tenant-requests/${requestId}/reject`
     },
 
     // Building endpoints
@@ -71,7 +76,22 @@ export const API_ENDPOINTS = {
     // User endpoints
     USER: {
         BASE: `${API_BASE_URL}/User`,
-        DETAIL: (id) => `${API_BASE_URL}/User/${id}`
+        LOGIN: `${API_BASE_URL}/User/login`,
+        GET_ALL: `${API_BASE_URL}/User`,
+        CREATE: `${API_BASE_URL}/User`,
+        DETAIL: (userId) => `${API_BASE_URL}/User/${userId}`,
+        UPDATE: (userId) => `${API_BASE_URL}/User/${userId}`,
+        DELETE: (userId) => `${API_BASE_URL}/User/${userId}`
+    },
+
+    // UserProfile endpoints
+    USER_PROFILE: {
+        DETAIL: (userId) => `${API_BASE_URL}/UserProfile/${userId}`,
+        UPDATE: (userId) => `${API_BASE_URL}/UserProfile/${userId}`,
+        UPDATE_PROFILE_IMAGE: (userId) => `${API_BASE_URL}/UserProfile/${userId}/profile-image`,
+        DELETE_PROFILE_IMAGE: (userId) => `${API_BASE_URL}/UserProfile/${userId}/profile-image`,
+        UPDATE_DESCRIPTION: (userId) => `${API_BASE_URL}/UserProfile/${userId}/description`,
+        UPDATE_DISPLAY_NAME: (userId) => `${API_BASE_URL}/UserProfile/${userId}/display-name`
     },
 
     // Tenant endpoints

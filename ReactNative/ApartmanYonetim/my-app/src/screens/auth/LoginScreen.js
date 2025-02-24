@@ -18,8 +18,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_ENDPOINTS, axiosConfig } from '../../config/apiConfig';
 import axios from 'axios';
 
+
+const baseUrl = API_ENDPOINTS.USER;
+
 const loginApi = axios.create({
-  baseURL: API_ENDPOINTS.AUTH,
+  baseURL: API_ENDPOINTS.USER.LOGIN,
   ...axiosConfig
 });
 
@@ -29,8 +32,6 @@ const LoginScreen = ({ navigation, route }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const role = route.params?.role || 'admin';
-
-  const API_URL = API_ENDPOINTS.USER + "/login";
 
   const validateForm = () => {
     if (!email.trim() || !password.trim()) {
@@ -44,10 +45,10 @@ const LoginScreen = ({ navigation, route }) => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    console.log('Login attempt started:', {
+    console.log('Giriş denemesi başladı:', {
       email: email.trim(),
       timestamp: new Date().toISOString(),
-      apiUrl: API_URL
+      apiUrl: API_ENDPOINTS.USER.LOGIN
     });
 
     try {
@@ -56,69 +57,41 @@ const LoginScreen = ({ navigation, route }) => {
         password: password
       };
 
-      console.log('Sending request to server:', {
-        url: API_URL,
+      console.log('Sunucuya istek gönderiliyor:', {
+        url: API_ENDPOINTS.USER.LOGIN,
         method: 'POST',
         body: loginDto
       });
 
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(loginDto),
-      });
+      const response = await loginApi.post('', loginDto);
 
-      console.log('Server response received:', {
+      console.log('Sunucu yanıtı alındı:', {
         status: response.status,
-        statusText: response.statusText,
-        url: response.url,
+        data: response.data,
         timestamp: new Date().toISOString()
       });
 
-      if (response.status === 404) {
-        throw new Error('API endpoint bulunamadı. URL: ' + API_URL);
-      }
-
-      const rawResponse = await response.text();
-      console.log('Raw response:', rawResponse);
-
-      let data;
-      try {
-        data = rawResponse ? JSON.parse(rawResponse) : null;
-        console.log('Parsed response data:', data);
-      } catch (parseError) {
-        console.error('JSON Parse Error:', {
-          error: parseError,
-          rawResponse,
-          timestamp: new Date().toISOString()
-        });
-        throw new Error('Sunucu yanıtı işlenemedi');
-      }
-
-      if (response.status === 200 && data) {
-        console.log('Login successful:', {
-          userId: data.userId,
-          email: data.email,
-          role: data.role
+      if (response.status === 200) {
+        console.log('Giriş başarılı:', {
+          userId: response.data.userId,
+          email: response.data.email,
+          role: response.data.role
         });
 
         await AsyncStorage.multiSet([
-          ['userId', data.userId.toString()],
-          ['userEmail', data.email],
-          ['userRole', data.role]
+          ['userId', response.data.userId.toString()],
+          ['userEmail', response.data.email],
+          ['userRole', response.data.role]
         ]);
 
         Alert.alert(
-          'Başarılı', 
-          data.message || 'Giriş başarılı!',
+          'Başarılı',
+          response.data.message || 'Giriş başarılı!',
           [
             {
               text: 'Tamam',
               onPress: () => {
-                if (data.role === 'admin') {
+                if (response.data.role === 'admin') {
                   navigation.reset({
                     index: 0,
                     routes: [{ name: 'AdminDashboard' }],
@@ -132,24 +105,17 @@ const LoginScreen = ({ navigation, route }) => {
         );
       } else if (response.status === 401) {
         Alert.alert('Hata', 'Geçersiz e-posta veya şifre');
-      } else if (response.status === 400) {
-        Alert.alert('Hata', data || 'E-posta ve şifre gereklidir');
       } else {
-        Alert.alert('Hata', data?.message || 'Bir hata oluştu');
+        Alert.alert('Hata', response.data?.message || 'Bir hata oluştu');
       }
     } catch (error) {
-      console.error('Login error:', {
+      console.error('Giriş hatası:', {
         message: error.message,
-        url: API_URL,
+        url: API_ENDPOINTS.USER.LOGIN,
         timestamp: new Date().toISOString()
       });
 
-      if (error.message.includes('404')) {
-        Alert.alert(
-          'Sistem Hatası',
-          'API endpoint bulunamadı. Lütfen sistem yöneticisi ile iletişime geçin.'
-        );
-      } else if (error.message.includes('Network request failed')) {
+      if (error.message.includes('Network Error')) {
         Alert.alert(
           'Bağlantı Hatası',
           'Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.'
