@@ -8,5 +8,9 @@ namespace DataAccess.Abstract
     {
         Task<List<MonthlyIncomeDto>> GetMonthlyIncomeAsync(int adminId);
         Task<PaymentStatisticsDto> GetPaymentStatisticsAsync(int adminId);
+        Task<BuildingPaymentStatisticsDto> GetBuildingPaymentStatisticsAsync(int buildingId);
+        Task<List<TopDebtorDto>> GetTopDebtorsAsync(int adminId, int count);
+        Task<List<TopPayerDto>> GetTopPayersAsync(int adminId, int count);
+        Task<List<MonthlyCollectionRateDto>> GetMonthlyCollectionRatesAsync(int adminId);
     }
 }

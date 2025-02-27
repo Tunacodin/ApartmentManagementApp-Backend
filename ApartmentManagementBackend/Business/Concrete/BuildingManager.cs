@@ -4,9 +4,7 @@ using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+
 
 namespace Business.Concrete
 {
@@ -105,7 +103,8 @@ namespace Business.Concrete
         {
             try
             {
-                return _buildingDal.GetAll();
+                var buildings = _buildingDal.GetAll();
+                return buildings ?? new List<Building>();
             }
             catch (Exception ex)
             {

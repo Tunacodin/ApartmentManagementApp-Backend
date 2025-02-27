@@ -25,15 +25,45 @@ namespace DataAccess.Concrete.EntityFramework
 
         public async Task<OccupancyRatesDto> GetOccupancyRatesAsync(int adminId)
         {
-            return await _context.Buildings
+            var buildings = await _context.Buildings
                 .Where(b => b.AdminId == adminId)
-                .Select(b => new OccupancyRatesDto
+                .ToListAsync();
+
+            if (!buildings.Any())
+                return new OccupancyRatesDto();
+
+            var totalApartments = buildings.Sum(b => b.TotalApartments);
+            
+            var buildingOccupancies = new List<BuildingOccupancyDto>();
+            
+            foreach (var building in buildings)
+            {
+                var occupiedCount = await _context.Apartments
+                    .CountAsync(a => a.BuildingId == building.Id && a.IsOccupied);
+                    
+                buildingOccupancies.Add(new BuildingOccupancyDto
                 {
-                    TotalApartments = b.TotalApartments,
-                    OccupiedApartments = _context.Apartments.Count(a => a.BuildingId == b.Id && a.Status == "Occupied"),
-                    OccupancyRate = (decimal)_context.Apartments.Count(a => a.BuildingId == b.Id && a.Status == "Occupied") / b.TotalApartments * 100
-                })
-                .FirstOrDefaultAsync() ?? new OccupancyRatesDto();
+                    BuildingId = building.Id,
+                    BuildingName = building.BuildingName,
+                    TotalApartments = building.TotalApartments,
+                    OccupiedApartments = occupiedCount,
+                    OccupancyRate = building.TotalApartments > 0 
+                        ? ((decimal)occupiedCount / building.TotalApartments) * 100 
+                        : 0
+                });
+            }
+
+            var totalOccupied = buildingOccupancies.Sum(b => b.OccupiedApartments);
+
+            return new OccupancyRatesDto
+            {
+                TotalApartments = totalApartments,
+                OccupiedApartments = totalOccupied,
+                OccupancyRate = totalApartments > 0 
+                    ? ((decimal)totalOccupied / totalApartments) * 100 
+                    : 0,
+                BuildingOccupancies = buildingOccupancies
+            };
         }
     }
 }

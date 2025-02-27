@@ -16,12 +16,6 @@ C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\Dat
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\refint\DataAccess.dll
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.pdb
 C:\Users\Tuna\source\repos\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\ref\DataAccess.dll
-C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.csproj.AssemblyReference.cache
-C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.AssemblyInfoInputs.cache
-C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.AssemblyInfo.cs
-C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.csproj.CoreCompileInputs.cache
-C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.sourcelink.json
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\bin\Debug\net8.0\DataAccess.deps.json
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\bin\Debug\net8.0\DataAccess.runtimeconfig.json
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\bin\Debug\net8.0\DataAccess.dll
@@ -30,6 +24,12 @@ C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAcce
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\bin\Debug\net8.0\Entities.dll
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\bin\Debug\net8.0\Core.pdb
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\bin\Debug\net8.0\Entities.pdb
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.csproj.AssemblyReference.cache
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.AssemblyInfoInputs.cache
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.AssemblyInfo.cs
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.csproj.CoreCompileInputs.cache
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.sourcelink.json
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.csproj.Up2Date
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\DataAccess.dll
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\DataAccess\obj\Debug\net8.0\refint\DataAccess.dll

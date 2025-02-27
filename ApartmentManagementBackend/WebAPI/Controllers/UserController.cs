@@ -2,6 +2,7 @@
 using Core.DTOs;
 using Entities.Concrete;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace WebAPI.Controllers
 {
@@ -10,37 +11,61 @@ namespace WebAPI.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly ILogger<UserController> _logger;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, ILogger<UserController> logger)
         {
             _userService = userService;
+            _logger = logger;
         }
 
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginDto loginDto)
         {
-            if (loginDto == null || string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrWhiteSpace(loginDto.Password))
+            try 
             {
-                return BadRequest("Email and Password are required.");
-            }
+                if (loginDto == null || string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrWhiteSpace(loginDto.Password))
+                {
+                    _logger.LogWarning("Boş kimlik bilgileriyle giriş denemesi yapıldı");
+                    return BadRequest("Email ve Şifre gereklidir.");
+                }
 
-            var user = _userService.ValidateUser(loginDto.Email, loginDto.Password);
-
-            if (user == null)
-            {
-                return Unauthorized("Invalid email or password.");
-            }
-
-            return Ok(new
-            {
-                Message = "Login successful",
-                UserId = user.Id,
+                _logger.LogInformation("Kullanıcı girişi deneniyor: {Email}", loginDto.Email);
                 
-                Email = user.Email,
-                Role = user.Role // Backend role bilgisi döner.
-            });
-        }
+                var user = _userService.ValidateUser(loginDto.Email, loginDto.Password);
 
+                if (user == null)
+                {
+                    _logger.LogWarning("Başarısız giriş denemesi - Kullanıcı: {Email}", loginDto.Email);
+                    return Unauthorized("Geçersiz email veya şifre.");
+                }
+
+                var adminId = user.Role == "admin" ? user.Id : (int?)null;
+                _logger.LogInformation(
+                    "Başarılı giriş - Kullanıcı: {Email}, Rol: {Role}, KullanıcıId: {UserId}, AdminId: {AdminId}",
+                    user.Email,
+                    user.Role,
+                    user.Id,
+                    adminId
+                );
+
+                var response = new
+                {
+                    Message = "Login successful",
+                    UserId = user.Id,
+                    Email = user.Email,
+                    Role = user.Role,
+                    AdminId = adminId
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Giriş işlemi sırasında hata oluştu: {Message}", ex.Message);
+                return StatusCode(500, "Giriş sırasında bir hata oluştu");
+            }
+        }
 
         // Get all users
         [HttpGet]

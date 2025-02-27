@@ -78,7 +78,7 @@ namespace WebAPI.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = await _adminService.GetAllAsync();
-            return result.Success
+            return result.Success && result.Data != null
                 ? Ok(ApiResponse<List<AdminListDto>>.SuccessResult(Messages.AdminsListed, result.Data))
                 : BadRequest(result);
         }
@@ -87,7 +87,7 @@ namespace WebAPI.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _adminService.GetByIdAsync(id);
-            return result.Success
+            return result.Success && result.Data != null
                 ? Ok(ApiResponse<AdminDetailDto>.SuccessResult(Messages.AdminRetrieved, result.Data))
                 : BadRequest(ApiResponse<AdminDetailDto>.ErrorResult(Messages.AdminNotFound));
         }
@@ -141,7 +141,7 @@ namespace WebAPI.Controllers
             }
 
             var result = await _adminService.UpdateAsync(adminDto);
-            return result.Success
+            return result.Success && result.Data != null
                 ? Ok(ApiResponse<AdminDto>.SuccessResult(Messages.AdminUpdated, result.Data))
                 : BadRequest(result);
         }
@@ -159,7 +159,7 @@ namespace WebAPI.Controllers
         public async Task<IActionResult> GetDashboard(int adminId)
         {
             var result = await _adminService.GetDashboardAsync(adminId);
-            return result.Success
+            return result.Success && result.Data != null
                 ? Ok(ApiResponse<AdminDashboardDto>.SuccessResult(Messages.Success, result.Data))
                 : BadRequest(result);
         }
@@ -168,7 +168,7 @@ namespace WebAPI.Controllers
         public async Task<IActionResult> GetManagedBuildings(int adminId)
         {
             var result = await _adminService.GetManagedBuildingsAsync(adminId);
-            return result.Success
+            return result.Success && result.Data != null
                 ? Ok(ApiResponse<List<AdminManagedBuildingDto>>.SuccessResult(Messages.BuildingsListed, result.Data))
                 : BadRequest(result);
         }
@@ -209,7 +209,7 @@ namespace WebAPI.Controllers
         public async Task<IActionResult> GetRecentActivities(int adminId, [FromQuery] int count = 10)
         {
             var result = await _adminService.GetRecentActivitiesAsync(adminId, count);
-            return result.Success
+            return result.Success && result.Data != null
                 ? Ok(ApiResponse<List<RecentActivityDto>>.SuccessResult(Messages.AdminActivitiesListed, result.Data))
                 : BadRequest(ApiResponse<List<RecentActivityDto>>.ErrorResult(Messages.AdminNotFound));
         }
@@ -218,7 +218,7 @@ namespace WebAPI.Controllers
         public async Task<IActionResult> GetFinancialSummaries(int adminId)
         {
             var result = await _adminService.GetFinancialSummariesAsync(adminId);
-            return result.Success
+            return result.Success && result.Data != null
                 ? Ok(ApiResponse<List<FinancialSummaryDto>>.SuccessResult(Messages.AdminFinancialSummaryRetrieved, result.Data))
                 : BadRequest(ApiResponse<List<FinancialSummaryDto>>.ErrorResult(Messages.AdminNotFound));
         }

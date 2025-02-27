@@ -5,6 +5,7 @@ using Entities.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Transactions;
 
 namespace Business.Concrete
 {
@@ -26,20 +27,41 @@ namespace Business.Concrete
         public void Add(Tenant tenant)
         {
             if (tenant == null)
-            {
-                throw new ArgumentNullException(nameof(tenant), "Tenant cannot be null.");
-            }
-
-            // İş mantığı: Kiracının aidat ve kira bilgisi pozitif olmalı
-
+                throw new ArgumentNullException(nameof(tenant));
 
             if (tenant.MonthlyRent <= 0 || tenant.MonthlyDues <= 0)
-            {
                 throw new ArgumentException("MonthlyRent and MonthlyDues must be greater than zero.");
+
+            using (var transaction = new TransactionScope())
+            {
+                try
+                {
+                    // 1. Kiracıyı ekle
+                    _tenantDal.Add(tenant);
+
+                    // 2. Daire durumunu güncelle
+                    var apartment = _apartmentDal.Get(a => a.Id == tenant.ApartmentId);
+                    if (apartment != null)
+                    {
+                        apartment.IsOccupied = true;
+                        apartment.Status = "occupied"; // Daire durumunu güncelle
+                        _apartmentDal.Update(apartment);
+
+                        // 3. Bina doluluk oranını güncelle
+                        UpdateBuildingOccupancyRate(apartment.BuildingId);
+
+                        // 4. Otomatik ödeme kayıtları oluştur
+                        CreateInitialPaymentRecords(tenant);
+                    }
+
+                    transaction.Complete();
+                }
+                catch
+                {
+                    transaction.Dispose();
+                    throw;
+                }
             }
-
-            _tenantDal.Add(tenant);
-
         }
 
         public void AddFromDto(TenantDto tenantDto)
@@ -111,11 +133,38 @@ namespace Business.Concrete
         {
             var tenant = _tenantDal.Get(t => t.Id == id);
             if (tenant == null)
-            {
                 throw new KeyNotFoundException($"Tenant with ID {id} not found.");
-            }
 
-            _tenantDal.Delete(tenant);
+            using (var transaction = new TransactionScope())
+            {
+                try
+                {
+                    // 1. Gelecek ödemeleri iptal et
+                    CancelFuturePayments(tenant.Id);
+
+                    // 2. Kiracıyı sil
+                    _tenantDal.Delete(tenant);
+
+                    // 3. Daire durumunu güncelle
+                    var apartment = _apartmentDal.Get(a => a.Id == tenant.ApartmentId);
+                    if (apartment != null)
+                    {
+                        apartment.IsOccupied = false;
+                        apartment.Status = "available"; // Daire durumunu güncelle
+                        _apartmentDal.Update(apartment);
+
+                        // 4. Bina doluluk oranını güncelle
+                        UpdateBuildingOccupancyRate(apartment.BuildingId);
+                    }
+
+                    transaction.Complete();
+                }
+                catch
+                {
+                    transaction.Dispose();
+                    throw;
+                }
+            }
         }
 
         public Tenant? GetById(int id)
@@ -298,6 +347,73 @@ namespace Business.Concrete
             if (tenant == null) return null;
 
             return MapToTenantDetailDto(tenant);
+        }
+
+        private void UpdateBuildingOccupancyRate(int buildingId)
+        {
+            var building = _buildingDal.Get(b => b.Id == buildingId);
+            if (building == null) return;
+
+            // Binadaki toplam daire sayısını al
+            var totalApartments = building.TotalApartments;
+            if (totalApartments == 0) return;
+
+            // Binadaki dolu daire sayısını hesapla
+            var apartments = _apartmentDal.GetAll(a => a.BuildingId == buildingId && a.IsOccupied);
+            var occupiedApartments = apartments?.Count ?? 0;
+
+            // Doluluk oranını hesapla ve güncelle
+            building.OccupancyRate = ((decimal)occupiedApartments / totalApartments) * 100;
+            _buildingDal.Update(building);
+        }
+
+        private void CreateInitialPaymentRecords(Tenant tenant)
+        {
+            // Kiracının başlangıç tarihinden itibaren 12 aylık ödeme kaydı oluştur
+            for (int i = 0; i < 12; i++)
+            {
+                // Kira ödemesi
+                var rentPayment = new Payment
+                {
+                    UserId = tenant.Id,
+                    ApartmentId = tenant.ApartmentId,
+                    PaymentType = "rent",
+                    Amount = tenant.MonthlyRent,
+                    DueDate = tenant.LeaseStartDate.AddMonths(i),
+                    IsPaid = false,
+                    Description = $"{tenant.LeaseStartDate.AddMonths(i).ToString("MMMM yyyy")} Kira Ödemesi"
+                };
+                _paymentDal.Add(rentPayment);
+
+                // Aidat ödemesi
+                var duesPayment = new Payment
+                {
+                    UserId = tenant.Id,
+                    ApartmentId = tenant.ApartmentId,
+                    PaymentType = "dues",
+                    Amount = tenant.MonthlyDues,
+                    DueDate = tenant.LeaseStartDate.AddMonths(i),
+                    IsPaid = false,
+                    Description = $"{tenant.LeaseStartDate.AddMonths(i).ToString("MMMM yyyy")} Aidat Ödemesi"
+                };
+                _paymentDal.Add(duesPayment);
+            }
+        }
+
+        private void CancelFuturePayments(int tenantId)
+        {
+            // Gelecek tarihli ödenmemiş ödemeleri iptal et
+            var futurePayments = _paymentDal.GetAll(p => 
+                p.UserId == tenantId && 
+                p.DueDate > DateTime.Now && 
+                !p.IsPaid);
+
+            if (futurePayments == null) return;
+
+            foreach (var payment in futurePayments)
+            {
+                _paymentDal.Delete(payment);
+            }   
         }
     }
 }

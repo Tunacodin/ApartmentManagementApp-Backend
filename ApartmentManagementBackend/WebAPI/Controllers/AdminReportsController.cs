@@ -29,7 +29,7 @@ namespace WebAPI.Controllers
                 
                 if (adminId <= 0)
                 {
-                    return BadRequest(ApiResponse<object>.ErrorResult("Geçersiz admin ID"));
+                    return BadRequest(ApiResponse<object>.ErrorResult(Messages.InvalidAdminId));
                 }
 
                 var result = await _adminReportsService.GetMonthlyIncomeAsync(adminId);
@@ -55,6 +55,13 @@ namespace WebAPI.Controllers
             try
             {
                 _logger.LogInformation($"Getting payment statistics for admin {adminId}");
+                
+                if (adminId <= 0)
+                {
+                    _logger.LogWarning($"Invalid admin ID: {adminId}");
+                    return BadRequest(ApiResponse<object>.ErrorResult(Messages.InvalidAdminId));
+                }
+
                 var result = await _adminReportsService.GetPaymentStatisticsAsync(adminId);
                 
                 if (!result.Success)
@@ -63,12 +70,13 @@ namespace WebAPI.Controllers
                     return BadRequest(result);
                 }
 
-                return Ok(ApiResponse<PaymentStatisticsDto>.SuccessResult("Ödeme istatistikleri başarıyla getirildi", result.Data));
+                _logger.LogInformation($"Successfully retrieved payment statistics for admin {adminId}");
+                return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting payment statistics for admin {AdminId}", adminId);
-                return StatusCode(500, ApiResponse<object>.ErrorResult("Beklenmeyen bir hata oluştu"));
+                return StatusCode(500, ApiResponse<object>.ErrorResult(Messages.UnexpectedError));
             }
         }
 
@@ -80,13 +88,13 @@ namespace WebAPI.Controllers
                 _logger.LogInformation($"Getting complaint analytics for admin {adminId}");
                 var result = await _adminReportsService.GetComplaintAnalyticsAsync(adminId);
                 
-                if (!result.Success)
+                if (!result.Success || result.Data == null)
                 {
                     _logger.LogWarning($"Failed to get complaint analytics for admin {adminId}: {result.Message}");
                     return BadRequest(result);
                 }
 
-                return Ok(ApiResponse<ComplaintAnalyticsDto>.SuccessResult("Şikayet analizi başarıyla getirildi", result.Data));
+                return Ok(ApiResponse<ComplaintAnalyticsDto>.SuccessResult(Messages.ComplaintAnalyticsRetrieved, result.Data));
             }
             catch (Exception ex)
             {
@@ -103,13 +111,13 @@ namespace WebAPI.Controllers
                 _logger.LogInformation($"Getting occupancy rates for admin {adminId}");
                 var result = await _adminReportsService.GetOccupancyRatesAsync(adminId);
                 
-                if (!result.Success)
+                if (!result.Success || result.Data == null)
                 {
                     _logger.LogWarning($"Failed to get occupancy rates for admin {adminId}: {result.Message}");
-                    return BadRequest(result);
+                    return BadRequest(result);      
                 }
 
-                return Ok(ApiResponse<OccupancyRatesDto>.SuccessResult("Doluluk oranları başarıyla getirildi", result.Data));
+                return Ok(ApiResponse<OccupancyRatesDto>.SuccessResult(Messages.OccupancyRatesRetrieved, result.Data));
             }
             catch (Exception ex)
             {
@@ -126,18 +134,48 @@ namespace WebAPI.Controllers
                 _logger.LogInformation($"Getting meeting statistics for admin {adminId}");
                 var result = await _adminReportsService.GetMeetingStatisticsAsync(adminId);
                 
-                if (!result.Success)
+                if (!result.Success || result.Data == null)
                 {
                     _logger.LogWarning($"Failed to get meeting statistics for admin {adminId}: {result.Message}");
                     return BadRequest(result);
                 }
 
-                return Ok(ApiResponse<MeetingStatisticsDto>.SuccessResult("Toplantı istatistikleri başarıyla getirildi", result.Data));
+                return Ok(ApiResponse<MeetingStatisticsDto>.SuccessResult(Messages.MeetingStatisticsRetrieved, result.Data));
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error getting meeting statistics for admin {adminId}: {ex.Message}");
                 return StatusCode(500, ApiResponse<string>.ErrorResult(Messages.UnexpectedError));
+            }
+        }
+
+        [HttpGet("detailed-payment-statistics/{adminId}")]
+        public async Task<IActionResult> GetDetailedPaymentStatistics([FromRoute] int adminId)
+        {
+            try
+            {
+                if (adminId <= 0)
+                {
+                    _logger.LogWarning("Geçersiz AdminId: {AdminId}", adminId);
+                    return BadRequest(ApiResponse<object>.ErrorResult(Messages.InvalidAdminId));
+                }
+
+                _logger.LogInformation("Admin {adminId} için detaylı ödeme istatistikleri alınıyor", adminId);
+                
+                var result = await _adminReportsService.GetDetailedPaymentStatisticsAsync(adminId);
+                
+                if (!result.Success)
+                {
+                    _logger.LogError("Detaylı ödeme istatistikleri alınamadı. Hata: {Message}", result.Message);
+                    return BadRequest(result);
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Detaylı ödeme istatistikleri alınırken hata oluştu: {Message}", ex.Message);
+                return StatusCode(500, ApiResponse<object>.ErrorResult($"Detaylı hata: {ex.Message}"));
             }
         }
     }

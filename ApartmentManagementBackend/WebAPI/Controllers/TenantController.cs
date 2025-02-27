@@ -74,7 +74,7 @@ namespace WebAPI.Controllers
             if (!validationResult.IsValid)
             {
                 var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-                return BadRequest(ApiResponse<List<string>>.ErrorResult(Messages.ValidationFailed, errors));
+                return BadRequest(ApiResponse<List<string>>.ErrorResult(Messages.ValidationFailed));
             }
 
             _tenantService.AddFromDto(tenantDto);
@@ -94,7 +94,7 @@ namespace WebAPI.Controllers
             if (!validationResult.IsValid)
             {
                 var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-                return BadRequest(ApiResponse<List<string>>.ErrorResult(Messages.ValidationFailed, errors));
+                return BadRequest(ApiResponse<List<string>>.ErrorResult(Messages.ValidationFailed));
             }
 
             _tenantService.UpdateFromDto(tenantDto);
@@ -105,7 +105,7 @@ namespace WebAPI.Controllers
         public IActionResult Delete(int id)
         {
             _tenantService.Delete(id);
-            return Ok(ApiResponse<string>.SuccessResult(Messages.TenantDeleted));
+            return Ok(ApiResponse<string>.SuccessResult(Messages.TenantDeleted, "Tenant deleted successfully"));
         }
     }
 }

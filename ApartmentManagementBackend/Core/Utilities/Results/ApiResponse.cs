@@ -4,27 +4,19 @@ namespace Core.Utilities.Results
     {
         public T? Data { get; set; }
         public bool Success { get; set; }
-        public string Message { get; set; } = string.Empty;
-        public List<string> Errors { get; set; } = new();
+        public string Message { get; set; }
 
-        public static ApiResponse<T> SuccessResult(string message, T? data = default)
+        private ApiResponse(bool success, string message, T? data)
         {
-            return new ApiResponse<T>
-            {
-                Success = true,
-                Message = message,
-                Data = data
-            };
+            Success = success;
+            Message = message;
+            Data = data;
         }
 
-        public static ApiResponse<T> ErrorResult(string message, List<string>? errors = null)
-        {
-            return new ApiResponse<T>
-            {
-                Success = false,
-                Message = message,
-                Errors = errors ?? new List<string>()
-            };
-        }
+        public static ApiResponse<T> SuccessResult(string message, T data) 
+            => new ApiResponse<T>(true, message, data);
+
+        public static ApiResponse<T> ErrorResult(string message) 
+            => new ApiResponse<T>(false, message, default);
     }
 }

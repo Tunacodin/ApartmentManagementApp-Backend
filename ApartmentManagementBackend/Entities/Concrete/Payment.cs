@@ -17,5 +17,9 @@ namespace Entities.Concrete
         public bool IsPaid { get; set; }
         public string? Description { get; set; }
         public string UserFullName { get; set; } = string.Empty;
+
+        public int? DelayedDays { get; set; }
+        public decimal? DelayPenaltyAmount { get; set; }
+        public decimal? TotalAmount { get; set; }
     }
 }

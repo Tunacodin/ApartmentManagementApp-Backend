@@ -2,7 +2,7 @@ namespace Entities.Enums
 {
     public enum PaymentType
     {
-        rent,   // Kira ödemesi
-        aidat   // Aidat ödemesi
+        Rent = 1,
+        Dues = 2
     }
 }

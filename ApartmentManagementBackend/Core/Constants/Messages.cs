@@ -83,6 +83,9 @@ namespace Core.Constants
         public const string PaymentDeleted = "Ödeme kaydı silindi";
         public const string PaymentFailed = "Ödeme işlemi başarısız";
         public const string PaymentSuccessful = "Ödeme işlemi başarılı";
+        public const string PaymentDelayed = "Ödeme gecikti, ceza hesaplandı";
+        public const string PaymentOnTime = "Ödeme zamanında yapıldı";
+        public const string PaymentCancelled = "Ödeme iptal edildi";
 
         // Meeting Messages
         public const string MeetingNotFound = "Toplantı bulunamadı";
@@ -125,11 +128,35 @@ namespace Core.Constants
 
         // Contract Messages
         public const string ContractNotFound = "Sözleşme bulunamadı";
+        public const string ContractRetrieved = "Sözleşme bilgileri getirildi";
         public const string ContractsListed = "Sözleşmeler listelendi";
-        public const string ContractAdded = "Sözleşme başarıyla eklendi";
+        public const string ContractAdded = "Sözleşme eklendi";
         public const string ContractUpdated = "Sözleşme güncellendi";
         public const string ContractDeleted = "Sözleşme silindi";
+        public const string ContractSummaryRetrieved = "Sözleşme özeti getirildi";
         public const string ContractExpired = "Sözleşme süresi doldu";
+        public const string ContractActive = "Sözleşme aktif";
+        public const string ContractInactive = "Sözleşme pasif";
+        public const string ContractCancelled = "Sözleşme iptal edildi";
+        public const string ContractNotStarted = "Sözleşme henüz başlamadı";
+        public const string ContractExpiringSoon = "Sözleşme yakında sona erecek";
         public const string ContractRenewed = "Sözleşme yenilendi";
+        public const string ContractValidationError = "Sözleşme bilgileri geçersiz";
+        public const string ContractDatesInvalid = "Sözleşme tarihleri geçersiz";
+        public const string ContractAmountInvalid = "Sözleşme tutarı geçersiz";
+        public const string ContractFileRequired = "Sözleşme dosyası gerekli";
+        public const string ContractFileUploaded = "Sözleşme dosyası yüklendi";
+        public const string ContractFileDeleted = "Sözleşme dosyası silindi";
+
+        // Report related messages
+        public const string PaymentStatisticsRetrieved = "Ödeme istatistikleri başarıyla getirildi";
+        public const string ComplaintAnalyticsRetrieved = "Şikayet analizi başarıyla getirildi";
+        public const string OccupancyRatesRetrieved = "Doluluk oranları başarıyla getirildi";
+        public const string MeetingStatisticsRetrieved = "Toplantı istatistikleri başarıyla getirildi";
+        public const string InvalidAdminId = "Geçersiz admin ID";
+
+        // Newly added message
+        public const string BuildingsNotFound = "Yöneticiye ait bina bulunamadı";
+        public const string DetailedPaymentStatisticsRetrieved = "Detaylı ödeme istatistikleri başarıyla getirildi";
     }
 }

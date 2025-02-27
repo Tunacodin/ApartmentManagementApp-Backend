@@ -10,5 +10,6 @@ namespace Business.Abstract
         Task<ApiResponse<ComplaintAnalyticsDto>> GetComplaintAnalyticsAsync(int adminId);
         Task<ApiResponse<OccupancyRatesDto>> GetOccupancyRatesAsync(int adminId);
         Task<ApiResponse<MeetingStatisticsDto>> GetMeetingStatisticsAsync(int adminId);
+        Task<ApiResponse<PaymentDetailedStatisticsDto>> GetDetailedPaymentStatisticsAsync(int adminId);
     }
 }

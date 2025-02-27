@@ -48,7 +48,7 @@ namespace WebAPI.Middleware
             _logger.LogWarning("Validation error occurred: {Message}", exception.Message);
             var errors = exception.Errors.Select(e => e.ErrorMessage).ToList();
             return (StatusCodes.Status400BadRequest,
-                   ApiResponse<object>.ErrorResult(Messages.ValidationFailed, errors));
+                   ApiResponse<object>.ErrorResult(Messages.ValidationFailed));
         }
 
         private (int StatusCode, ApiResponse<object>) HandleNotFoundException(KeyNotFoundException exception)

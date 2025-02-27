@@ -445,6 +445,22 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.AdminReportsController",
+    "Method": "GetDetailedPaymentStatistics",
+    "RelativePath": "api/AdminReports/detailed-payment-statistics/{adminId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminReportsController",
     "Method": "GetMonthlyIncome",
     "RelativePath": "api/AdminReports/monthly-income/{adminId}",
     "HttpMethod": "GET",
@@ -1152,6 +1168,38 @@
         "Name": "userId",
         "Type": "System.Int32",
         "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ContractController",
+    "Method": "GetContractSummary",
+    "RelativePath": "api/Contract/{id}/summary",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ContractController",
+    "Method": "GetExpiringContracts",
+    "RelativePath": "api/Contract/expiring",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "monthsThreshold",
+        "Type": "System.Int32",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []

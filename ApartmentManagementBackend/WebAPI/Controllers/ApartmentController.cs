@@ -119,7 +119,7 @@ namespace WebAPI.Controllers
                 if (!validationResult.IsValid)
                 {
                     var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-                    return BadRequest(ApiResponse<ApartmentDto>.ErrorResult(Messages.ValidationFailed, errors));
+                    return BadRequest(ApiResponse<ApartmentDto>.ErrorResult(Messages.ValidationFailed));
                 }
 
                 var result = await _apartmentService.AddAsync(apartmentDto);
@@ -151,7 +151,7 @@ namespace WebAPI.Controllers
                 if (!validationResult.IsValid)
                 {
                     var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-                    return BadRequest(ApiResponse<ApartmentDto>.ErrorResult(Messages.ValidationFailed, errors));
+                    return BadRequest(ApiResponse<ApartmentDto>.ErrorResult(Messages.ValidationFailed));
                 }
 
                 var result = await _apartmentService.UpdateAsync(apartmentDto);

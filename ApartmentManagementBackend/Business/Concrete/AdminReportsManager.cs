@@ -3,6 +3,7 @@ using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.DTOs.Reports;
 using Microsoft.Extensions.Logging;
+using Core.Constants;
 
 namespace Business.Concrete
 {
@@ -34,7 +35,7 @@ namespace Business.Concrete
             {
                 _logger.LogInformation($"Getting buildings for admin {adminId}");
                 var buildings = await _buildingDal.GetAllAsync(b => b.AdminId == adminId);
-                
+
                 if (!buildings.Any())
                 {
                     _logger.LogWarning($"No buildings found for admin {adminId}");
@@ -43,7 +44,7 @@ namespace Business.Concrete
 
                 _logger.LogInformation($"Found {buildings.Count} buildings for admin {adminId}");
                 var result = await _paymentDal.GetMonthlyIncomeAsync(adminId);
-                
+
                 if (result == null)
                 {
                     _logger.LogWarning($"No payment data found for admin {adminId}");
@@ -64,29 +65,30 @@ namespace Business.Concrete
         {
             try
             {
+                if (adminId <= 0)
+                {
+                    _logger.LogWarning($"Invalid admin ID: {adminId}");
+                    return ApiResponse<PaymentStatisticsDto>.ErrorResult(Messages.InvalidAdminId);
+                }
+
                 _logger.LogInformation($"Getting payment statistics for admin {adminId}");
-                
+
                 var buildings = await _buildingDal.GetAllAsync(b => b.AdminId == adminId);
                 if (!buildings.Any())
                 {
                     _logger.LogWarning($"No buildings found for admin {adminId}");
-                    return ApiResponse<PaymentStatisticsDto>.ErrorResult($"Admin ID {adminId} için bina bulunamadı");
+                    return ApiResponse<PaymentStatisticsDto>.ErrorResult(Messages.BuildingsNotFound);
                 }
 
                 var result = await _paymentDal.GetPaymentStatisticsAsync(adminId);
-                if (result == null)
-                {
-                    _logger.LogWarning($"No payment statistics found for admin {adminId}");
-                    return ApiResponse<PaymentStatisticsDto>.ErrorResult("Ödeme istatistikleri bulunamadı");
-                }
-
+                
                 _logger.LogInformation($"Successfully retrieved payment statistics for admin {adminId}");
-                return ApiResponse<PaymentStatisticsDto>.SuccessResult("Ödeme istatistikleri başarıyla getirildi", result);
+                return ApiResponse<PaymentStatisticsDto>.SuccessResult(Messages.PaymentStatisticsRetrieved, result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in GetPaymentStatisticsAsync for admin {AdminId}. Error: {Message}", adminId, ex.Message);
-                return ApiResponse<PaymentStatisticsDto>.ErrorResult($"Hata detayı: {ex.Message}");
+                _logger.LogError(ex, "Error in GetPaymentStatisticsAsync for admin {AdminId}", adminId);
+                return ApiResponse<PaymentStatisticsDto>.ErrorResult(Messages.UnexpectedError);
             }
         }
 
@@ -95,7 +97,7 @@ namespace Business.Concrete
             try
             {
                 _logger.LogInformation($"Getting complaint analytics for admin {adminId}");
-                
+
                 var buildings = await _buildingDal.GetAllAsync(b => b.AdminId == adminId);
                 if (!buildings.Any())
                 {
@@ -124,13 +126,27 @@ namespace Business.Concrete
         {
             try
             {
+                var buildings = await _buildingDal.GetAllAsync(b => b.AdminId == adminId);
+                if (!buildings.Any())
+                {
+                    _logger.LogWarning($"No buildings found for admin {adminId}");
+                    return ApiResponse<OccupancyRatesDto>.ErrorResult($"Admin ID {adminId} için bina bulunamadı");
+                }
+
                 var result = await _buildingDal.GetOccupancyRatesAsync(adminId);
-                return ApiResponse<OccupancyRatesDto>.SuccessResult("Doluluk oranları başarıyla getirildi", result);
+                if (result == null)
+                {
+                    _logger.LogWarning($"No occupancy data found for admin {adminId}");
+                    return ApiResponse<OccupancyRatesDto>.ErrorResult("Doluluk oranı verisi bulunamadı");
+                }
+
+                _logger.LogInformation($"Successfully retrieved occupancy rates for admin {adminId}");
+                return ApiResponse<OccupancyRatesDto>.SuccessResult(Messages.OccupancyRatesRetrieved, result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting occupancy rates for admin {AdminId}", adminId);
-                return ApiResponse<OccupancyRatesDto>.ErrorResult("Beklenmeyen bir hata oluştu");
+                return ApiResponse<OccupancyRatesDto>.ErrorResult(Messages.UnexpectedError);
             }
         }
 
@@ -139,7 +155,7 @@ namespace Business.Concrete
             try
             {
                 _logger.LogInformation($"Getting meeting statistics for admin {adminId}");
-                
+
                 var buildings = await _buildingDal.GetAllAsync(b => b.AdminId == adminId);
                 if (!buildings.Any())
                 {
@@ -164,6 +180,60 @@ namespace Business.Concrete
             }
         }
 
+        public async Task<ApiResponse<PaymentDetailedStatisticsDto>> GetDetailedPaymentStatisticsAsync(int adminId)
+        {
+            try
+            {
+                _logger.LogInformation("Admin {adminId} için detaylı ödeme istatistikleri başlatılıyor", adminId);
+                var detailedStats = new PaymentDetailedStatisticsDto();
+
+                var buildings = await _buildingDal.GetAllAsync(b => b.AdminId == adminId);
+
+                if (!buildings.Any())
+                {
+                    _logger.LogWarning("Admin {adminId} için bina bulunamadı", adminId);
+                    return ApiResponse<PaymentDetailedStatisticsDto>.ErrorResult(Messages.BuildingsNotFound);
+                }
+
+                try
+                {
+                    _logger.LogInformation("Bina istatistikleri alınıyor...");
+                    foreach (var building in buildings)
+                    {
+                        var buildingStats = await _paymentDal.GetBuildingPaymentStatisticsAsync(building.Id);
+                        detailedStats.BuildingStatistics.Add(buildingStats);
+                    }
+
+                    _logger.LogInformation("En çok borcu olanlar listesi alınıyor...");
+                    detailedStats.TopDebtors = await _paymentDal.GetTopDebtorsAsync(adminId, 10);
+
+                    _logger.LogInformation("En çok ödeme yapanlar listesi alınıyor...");
+                    detailedStats.TopPayers = await _paymentDal.GetTopPayersAsync(adminId, 10);
+
+                    _logger.LogInformation("Aylık tahsilat oranları alınıyor...");
+                    detailedStats.MonthlyCollectionRates = await _paymentDal.GetMonthlyCollectionRatesAsync(adminId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Detaylı istatistikler toplanırken hata oluştu: {Message}", ex.Message);
+                    throw;
+                }
+
+                _logger.LogInformation("Admin {adminId} için detaylı ödeme istatistikleri başarıyla tamamlandı", adminId);
+                return ApiResponse<PaymentDetailedStatisticsDto>.SuccessResult(
+                    Messages.DetailedPaymentStatisticsRetrieved, 
+                    detailedStats);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Detaylı hata: {Message}, Stack: {Stack}", 
+                    ex.Message, 
+                    ex.StackTrace);
+                return ApiResponse<PaymentDetailedStatisticsDto>.ErrorResult(
+                    $"Detaylı hata: {ex.Message}");
+            }
+        }
+
         // Diğer metodların implementasyonları...
     }
-} 
+}
