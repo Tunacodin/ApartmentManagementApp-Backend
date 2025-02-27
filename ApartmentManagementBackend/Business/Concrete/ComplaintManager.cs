@@ -69,7 +69,7 @@ namespace Business.Concrete
             try
             {
                 complaint.CreatedAt = DateTime.Now;
-                complaint.IsResolved = false;
+                complaint.Status = 0;
                 await _complaintDal.AddAsync(complaint);
                 return ApiResponse<Complaint>.SuccessResult(Messages.ComplaintCreated, complaint);
             }
@@ -88,7 +88,7 @@ namespace Business.Concrete
                 if (complaint == null)
                     return ApiResponse<bool>.ErrorResult(Messages.ComplaintNotFound);
 
-                complaint.IsResolved = true;
+                complaint.Status = 1;
                 complaint.ResolvedAt = DateTime.Now;
                 complaint.ResolvedByAdminId = adminId;
                 await _complaintDal.UpdateAsync(complaint);

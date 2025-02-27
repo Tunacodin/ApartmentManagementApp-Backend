@@ -19,13 +19,12 @@ namespace DataAccess.Concrete.EntityFramework
                 .CountAsync(a => a.BuildingId == adminId);
             var occupiedUnits = await _context.Apartments
                 .CountAsync(a => a.BuildingId == adminId && a.IsOccupied);
-            
+
             return new OccupancyRatesDto
             {
-                TotalUnits = totalUnits,
-                OccupiedUnits = occupiedUnits,
-                VacantUnits = totalUnits - occupiedUnits,
-                Percentage = totalUnits > 0 ? (double)occupiedUnits / totalUnits * 100 : 0
+                TotalApartments = totalUnits,
+                OccupiedApartments = occupiedUnits,
+                OccupancyRate = totalUnits > 0 ? (decimal)occupiedUnits / totalUnits * 100 : 0
             };
         }
     }

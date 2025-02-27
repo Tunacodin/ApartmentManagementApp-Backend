@@ -156,7 +156,7 @@ namespace Business.Concrete
                         Description = c.Description ?? string.Empty,
                         ActivityDate = c.CreatedAt,
                         RelatedUserName = c.CreatedByName ?? string.Empty,
-                        Status = c.IsResolved ? "Resolved" : "Pending"
+                        Status = c.Status == 1 ? "Resolved" : "Pending"
                     }).ToList(),
                     FinancialSummaries = managedBuildings.Select(async b =>
                     {
@@ -204,7 +204,7 @@ namespace Business.Concrete
                     Description = c.Description ?? string.Empty,
                     ActivityDate = c.CreatedAt,
                     RelatedUserName = c.CreatedByName ?? string.Empty,
-                    Status = c.IsResolved ? "Resolved" : "Pending"
+                    Status = c.Status == 1 ? "Resolved" : "Pending"
                 }));
 
                 // Ödemelerden aktivite oluştur

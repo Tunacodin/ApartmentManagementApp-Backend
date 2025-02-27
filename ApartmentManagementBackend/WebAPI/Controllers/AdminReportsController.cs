@@ -7,26 +7,32 @@ using Entities.DTOs.Reports;
 
 namespace WebAPI.Controllers
 {
-    [Route("api/admin")]
+    [Route("api/[controller]")]
     [ApiController]
     public class AdminReportsController : ControllerBase
     {
-        private readonly IAdminReportService _reportService;
+        private readonly IAdminReportsService _adminReportsService;
         private readonly ILogger<AdminReportsController> _logger;
 
-        public AdminReportsController(IAdminReportService reportService, ILogger<AdminReportsController> logger)
+        public AdminReportsController(IAdminReportsService adminReportsService, ILogger<AdminReportsController> logger)
         {
-            _reportService = reportService;
+            _adminReportsService = adminReportsService;
             _logger = logger;
         }
 
-        [HttpGet("{adminId}/reports/monthly-income")]
+        [HttpGet("monthly-income/{adminId}")]
         public async Task<IActionResult> GetMonthlyIncome(int adminId)
         {
             try
             {
                 _logger.LogInformation($"Getting monthly income report for admin {adminId}");
-                var result = await _reportService.GetMonthlyIncomeAsync(adminId);
+                
+                if (adminId <= 0)
+                {
+                    return BadRequest(ApiResponse<object>.ErrorResult("Geçersiz admin ID"));
+                }
+
+                var result = await _adminReportsService.GetMonthlyIncomeAsync(adminId);
                 
                 if (!result.Success)
                 {
@@ -34,22 +40,22 @@ namespace WebAPI.Controllers
                     return BadRequest(result);
                 }
 
-                return Ok(ApiResponse<List<MonthlyIncomeDto>>.SuccessResult("Aylık gelir raporu başarıyla getirildi", result.Data));
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error getting monthly income for admin {adminId}: {ex.Message}");
-                return StatusCode(500, ApiResponse<string>.ErrorResult(Messages.UnexpectedError));
+                _logger.LogError(ex, "Error getting monthly income for admin {AdminId}", adminId);
+                return StatusCode(500, ApiResponse<object>.ErrorResult($"Beklenmeyen bir hata oluştu: {ex.Message}"));
             }
         }
 
-        [HttpGet("{adminId}/reports/payment-stats")]
+        [HttpGet("payment-statistics/{adminId}")]
         public async Task<IActionResult> GetPaymentStatistics(int adminId)
         {
             try
             {
                 _logger.LogInformation($"Getting payment statistics for admin {adminId}");
-                var result = await _reportService.GetPaymentStatisticsAsync(adminId);
+                var result = await _adminReportsService.GetPaymentStatisticsAsync(adminId);
                 
                 if (!result.Success)
                 {
@@ -61,8 +67,8 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error getting payment statistics for admin {adminId}: {ex.Message}");
-                return StatusCode(500, ApiResponse<string>.ErrorResult(Messages.UnexpectedError));
+                _logger.LogError(ex, "Error getting payment statistics for admin {AdminId}", adminId);
+                return StatusCode(500, ApiResponse<object>.ErrorResult("Beklenmeyen bir hata oluştu"));
             }
         }
 
@@ -72,7 +78,7 @@ namespace WebAPI.Controllers
             try
             {
                 _logger.LogInformation($"Getting complaint analytics for admin {adminId}");
-                var result = await _reportService.GetComplaintAnalyticsAsync(adminId);
+                var result = await _adminReportsService.GetComplaintAnalyticsAsync(adminId);
                 
                 if (!result.Success)
                 {
@@ -95,7 +101,7 @@ namespace WebAPI.Controllers
             try
             {
                 _logger.LogInformation($"Getting occupancy rates for admin {adminId}");
-                var result = await _reportService.GetOccupancyRatesAsync(adminId);
+                var result = await _adminReportsService.GetOccupancyRatesAsync(adminId);
                 
                 if (!result.Success)
                 {
@@ -118,7 +124,7 @@ namespace WebAPI.Controllers
             try
             {
                 _logger.LogInformation($"Getting meeting statistics for admin {adminId}");
-                var result = await _reportService.GetMeetingStatisticsAsync(adminId);
+                var result = await _adminReportsService.GetMeetingStatisticsAsync(adminId);
                 
                 if (!result.Success)
                 {

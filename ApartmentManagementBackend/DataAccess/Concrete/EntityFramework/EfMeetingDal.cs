@@ -100,20 +100,37 @@ namespace DataAccess.Concrete.EntityFramework
 
         public async Task<MeetingStatisticsDto> GetMeetingStatisticsAsync(int adminId)
         {
-            var total = await _context.Meetings.CountAsync();
-            var completed = await _context.Meetings.CountAsync(m => m.MeetingDate < DateTime.Now);
-            
-            return new MeetingStatisticsDto
+            try
             {
-                TotalMeetings = total,
-                CompletedMeetings = completed,
-                UpcomingMeetings = total - completed,
-                AttendanceRate = await _context.Meetings
-                    .Where(m => m.MeetingDate < DateTime.Now)
-                    .Select(m => m.AttendanceRate)
-                    .DefaultIfEmpty()
-                    .AverageAsync()
-            };
+                var buildings = await _context.Buildings
+                    .Where(b => b.AdminId == adminId)
+                    .Select(b => b.Id)
+                    .ToListAsync();
+
+                if (!buildings.Any())
+                {
+                    return new MeetingStatisticsDto();
+                }
+
+                var meetings = await _context.Meetings
+                    .Where(m => buildings.Contains(m.BuildingId))
+                    .ToListAsync();
+
+                var total = meetings.Count;
+                var completed = meetings.Count(m => m.MeetingDate < DateTime.Now);
+
+                return new MeetingStatisticsDto
+                {
+                    Total = total,
+                    Completed = completed,
+                    UpcomingMeetings = total - completed,
+                    AttendanceRate = 0 // Şimdilik sabit değer, daha sonra MeetingAttendance tablosundan hesaplanabilir
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting meeting statistics: {ex.Message}", ex);
+            }
         }
     }
 }

@@ -85,9 +85,6 @@ C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleU
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\ConsoleUI.AssemblyInfo.cs
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\ConsoleUI.csproj.CoreCompileInputs.cache
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\ConsoleUI.sourcelink.json
-C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\ConsoleUI.dll
-C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\refint\ConsoleUI.dll
-C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\ConsoleUI.pdb
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\ConsoleUI.exe
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\ConsoleUI.deps.json
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\ConsoleUI.runtimeconfig.json
@@ -95,6 +92,7 @@ C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleU
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\ConsoleUI.pdb
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\Azure.Core.dll
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\Azure.Identity.dll
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\FluentValidation.dll
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
@@ -158,6 +156,8 @@ C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleU
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\DataAccess.pdb
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\Entities.pdb
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\ConsoleUI.csproj.Up2Date
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\ConsoleUI.dll
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\refint\ConsoleUI.dll
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\ConsoleUI.pdb
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\ConsoleUI.genruntimeconfig.cache
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\obj\Debug\net8.0\ref\ConsoleUI.dll
-C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\ConsoleUI\bin\Debug\net8.0\FluentValidation.dll

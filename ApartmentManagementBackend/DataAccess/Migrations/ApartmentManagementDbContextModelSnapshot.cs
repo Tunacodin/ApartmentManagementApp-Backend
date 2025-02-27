@@ -552,6 +552,9 @@ namespace DataAccess.Migrations
                 {
                     b.HasBaseType("Entities.Concrete.User");
 
+                    b.Property<int>("AdminId")
+                        .HasColumnType("int");
+
                     b.HasDiscriminator().HasValue("admin");
                 });
 

@@ -49,12 +49,12 @@ namespace Entities.DTOs
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; }
-        public TenantInfoDto? CurrentTenant { get; set; }
-        public List<PaymentSummaryDto> RecentPayments { get; set; } = new();
+        public ApartmentTenantDto? CurrentTenant { get; set; }
+        public List<ApartmentPaymentDto> RecentPayments { get; set; } = new();
     }
 
     // 🔹 Kiracı Bilgi DTO'su
-    public class TenantInfoDto
+    public class ApartmentTenantDto
     {
         public int TenantId { get; set; }
         public string FullName { get; set; } = string.Empty;
@@ -64,8 +64,8 @@ namespace Entities.DTOs
         public DateTime? LeaseEndDate { get; set; }
     }
 
-    // 🔹 Ödeme Özet DTO'su
-    public class PaymentSummaryDto
+    // 🔹 Ödeme DTO'su
+    public class ApartmentPaymentDto
     {
         public int PaymentId { get; set; }
         public string PaymentType { get; set; } = string.Empty;

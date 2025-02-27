@@ -140,7 +140,7 @@ namespace Business.Concrete
                     Status = apartment.Status,
                     CreatedAt = apartment.CreatedAt,
                     IsActive = apartment.IsActive,
-                    CurrentTenant = tenant != null ? new TenantInfoDto
+                    CurrentTenant = tenant != null ? new ApartmentTenantDto
                     {
                         TenantId = tenant.Id,
                         FullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
@@ -149,14 +149,14 @@ namespace Business.Concrete
                         LeaseStartDate = tenant.LeaseStartDate,
                         LeaseEndDate = tenant.LeaseEndDate
                     } : null,
-                    RecentPayments = payments?.Select(p => new PaymentSummaryDto
+                    RecentPayments = payments?.Select(p => new ApartmentPaymentDto
                     {
                         PaymentId = p.Id,
                         PaymentType = p.PaymentType,
                         Amount = p.Amount,
                         PaymentDate = p.PaymentDate,
                         IsPaid = p.IsPaid
-                    }).ToList() ?? new List<PaymentSummaryDto>()
+                    }).ToList() ?? new List<ApartmentPaymentDto>()
                 };
 
                 return ApiResponse<ApartmentDetailDto>.SuccessResult(Messages.Retrieved, apartmentDto);

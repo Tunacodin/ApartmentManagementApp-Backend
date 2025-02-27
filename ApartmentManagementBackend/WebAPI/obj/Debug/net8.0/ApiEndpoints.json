@@ -184,86 +184,6 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "WebAPI.Controllers.AdminReportsController",
-    "Method": "GetComplaintAnalytics",
-    "RelativePath": "api/admin/{adminId}/reports/complaints",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "adminId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminReportsController",
-    "Method": "GetMeetingStatistics",
-    "RelativePath": "api/admin/{adminId}/reports/meetings",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "adminId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminReportsController",
-    "Method": "GetMonthlyIncome",
-    "RelativePath": "api/admin/{adminId}/reports/monthly-income",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "adminId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminReportsController",
-    "Method": "GetOccupancyRates",
-    "RelativePath": "api/admin/{adminId}/reports/occupancy",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "adminId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminReportsController",
-    "Method": "GetPaymentStatistics",
-    "RelativePath": "api/admin/{adminId}/reports/payment-stats",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "adminId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
     "ContainingType": "WebAPI.Controllers.AdminController",
     "Method": "GetStatistics",
     "RelativePath": "api/Admin/{adminId}/statistics",
@@ -470,6 +390,86 @@
       {
         "Name": "reason",
         "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminReportsController",
+    "Method": "GetComplaintAnalytics",
+    "RelativePath": "api/AdminReports/{adminId}/reports/complaints",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminReportsController",
+    "Method": "GetMeetingStatistics",
+    "RelativePath": "api/AdminReports/{adminId}/reports/meetings",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminReportsController",
+    "Method": "GetOccupancyRates",
+    "RelativePath": "api/AdminReports/{adminId}/reports/occupancy",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminReportsController",
+    "Method": "GetMonthlyIncome",
+    "RelativePath": "api/AdminReports/monthly-income/{adminId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminReportsController",
+    "Method": "GetPaymentStatistics",
+    "RelativePath": "api/AdminReports/payment-statistics/{adminId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
         "IsRequired": true
       }
     ],

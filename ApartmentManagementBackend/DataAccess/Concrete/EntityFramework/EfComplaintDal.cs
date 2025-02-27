@@ -26,7 +26,7 @@ namespace DataAccess.Concrete.EntityFramework
                         Subject = c.Subject,
                         Description = c.Description,
                         CreatedAt = c.CreatedAt,
-                        IsResolved = c.IsResolved,
+                        IsResolved = c.Status == 1,
                         ResolvedAt = c.ResolvedAt,
                         CreatedByName = $"{u.FirstName} {u.LastName}",
                         BuildingId = c.BuildingId
@@ -50,7 +50,7 @@ namespace DataAccess.Concrete.EntityFramework
                         Subject = c.Subject,
                         Description = c.Description,
                         CreatedAt = c.CreatedAt,
-                        IsResolved = c.IsResolved,
+                        IsResolved = c.Status == 1,
                         ResolvedAt = c.ResolvedAt,
                         CreatedByName = $"{u.FirstName} {u.LastName}",
                         BuildingId = c.BuildingId
@@ -70,7 +70,7 @@ namespace DataAccess.Concrete.EntityFramework
                     Subject = c.Subject,
                     Description = c.Description,
                     CreatedAt = c.CreatedAt,
-                    IsResolved = c.IsResolved,
+                    IsResolved = c.Status == 1,
                     ResolvedAt = c.ResolvedAt,
                     CreatedByName = c.CreatedByName ?? string.Empty,
                     BuildingId = c.BuildingId
@@ -84,31 +84,71 @@ namespace DataAccess.Concrete.EntityFramework
         public async Task<int> GetActiveComplaintsCountAsync(int buildingId)
         {
             return await _context.Complaints
-                .CountAsync(c => c.BuildingId == buildingId && !c.IsResolved);
+                .CountAsync(c => c.BuildingId == buildingId && c.Status != 1);
         }
 
         public async Task<ComplaintAnalyticsDto> GetComplaintAnalyticsAsync(int adminId)
         {
-            // Önce yöneticinin sorumlu olduğu binaları al
-            var buildingIds = await _context.Buildings
-                .Where(b => b.AdminId == adminId)
-                .Select(b => b.Id)
-                .ToListAsync();
-
-            // Şikayetleri yöneticinin binalarına göre filtrele
-            var complaints = _context.Complaints.Where(c => buildingIds.Contains(c.BuildingId));
-
-            return new ComplaintAnalyticsDto
+            try
             {
-                Open = await complaints.CountAsync(c => !c.IsResolved && !c.IsInProgress),
-                InProgress = await complaints.CountAsync(c => !c.IsResolved && c.IsInProgress),
-                Resolved = await complaints.CountAsync(c => c.IsResolved),
-                AverageResolutionTime = await complaints
-                    .Where(c => c.IsResolved && c.ResolvedAt.HasValue)
-                    .Select(c => (c.ResolvedAt!.Value - c.CreatedAt).TotalHours)
-                    .DefaultIfEmpty(0)
-                    .AverageAsync()
-            };
+                var buildingIds = await _context.Buildings
+                    .Where(b => b.AdminId == adminId)
+                    .Select(b => b.Id)
+                    .ToListAsync();
+
+                if (!buildingIds.Any())
+                {
+                    return new ComplaintAnalyticsDto();
+                }
+
+                var complaints = await _context.Complaints
+                    .Where(c => buildingIds.Contains(c.BuildingId))
+                    .ToListAsync();
+
+                var result = new ComplaintAnalyticsDto
+                {
+                    Total = complaints.Count,
+                    Open = complaints.Count(c => c.Status == null),
+                    InProgress = complaints.Count(c => c.Status == 0),
+                    Resolved = complaints.Count(c => c.Status == 1),
+                    AverageResolutionTime = complaints
+                        .Where(c => c.Status == 1 && c.ResolvedAt.HasValue)
+                        .Select(c => (c.ResolvedAt!.Value - c.CreatedAt).TotalHours)
+                        .DefaultIfEmpty(0)
+                        .Average()
+                };
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting complaint analytics: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<List<ComplaintDetailDto>> GetActiveComplaintsAsync(int adminId)
+        {
+            return await _context.Complaints
+                .Where(c => _context.Buildings
+                    .Where(b => b.AdminId == adminId)
+                    .Select(b => b.Id)
+                    .Contains(c.BuildingId) && c.Status != 1)
+                .Join(_context.Users,
+                    c => c.UserId,
+                    u => u.Id,
+                    (c, u) => new ComplaintDetailDto
+                    {
+                        Id = c.Id,
+                        Subject = c.Subject,
+                        Description = c.Description,
+                        CreatedAt = c.CreatedAt,
+                        IsResolved = c.Status == 1,
+                        ResolvedAt = c.ResolvedAt,
+                        CreatedByName = $"{u.FirstName} {u.LastName}",
+                        BuildingId = c.BuildingId
+                    })
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
         }
     }
-} 
+}

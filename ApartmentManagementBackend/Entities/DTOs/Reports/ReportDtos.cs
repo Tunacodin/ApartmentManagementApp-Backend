@@ -2,8 +2,11 @@ namespace Entities.DTOs.Reports
 {
     public class MonthlyIncomeDto
     {
-        public string Month { get; set; }
-        public decimal Amount { get; set; }
+        public int Year { get; set; }
+        public int Month { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal PaidAmount { get; set; }
+        public decimal UnpaidAmount { get; set; }
     }
 
     public class PaymentStatisticsDto
@@ -17,6 +20,7 @@ namespace Entities.DTOs.Reports
 
     public class ComplaintAnalyticsDto
     {
+        public int Total { get; set; }
         public int Open { get; set; }
         public int InProgress { get; set; }
         public int Resolved { get; set; }
@@ -25,17 +29,16 @@ namespace Entities.DTOs.Reports
 
     public class OccupancyRatesDto
     {
-        public int TotalUnits { get; set; }
-        public int OccupiedUnits { get; set; }
-        public int VacantUnits { get; set; }
-        public double Percentage { get; set; }
+        public int TotalApartments { get; set; }
+        public int OccupiedApartments { get; set; }
+        public decimal OccupancyRate { get; set; }
     }
 
     public class MeetingStatisticsDto
     {
-        public int TotalMeetings { get; set; }
+        public int Total { get; set; }
+        public int Completed { get; set; }
         public int UpcomingMeetings { get; set; }
-        public int CompletedMeetings { get; set; }
         public double AttendanceRate { get; set; }
     }
 } 

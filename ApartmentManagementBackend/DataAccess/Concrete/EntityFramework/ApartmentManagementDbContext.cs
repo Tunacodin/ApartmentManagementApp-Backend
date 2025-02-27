@@ -157,9 +157,7 @@ namespace DataAccess.Concrete.EntityFramework
                 .Property(t => t.MonthlyDues)
                 .HasPrecision(18, 2);
 
-            modelBuilder.Entity<Tenant>()
-                .Property(t => t.MonthlyRent)
-                .HasPrecision(18, 2);
+           
         }
     }
 }

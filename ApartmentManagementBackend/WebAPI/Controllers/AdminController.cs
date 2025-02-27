@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Business.Abstract;
 using Entities.Concrete;
-using Microsoft.Extensions.Logging;
 using Core.Constants;
 using Entities.DTOs;
-using Microsoft.AspNetCore.Authorization;
 using Core.Utilities.Results;
-using FluentValidation;
 using Business.ValidationRules.FluentValidation;
 
 namespace WebAPI.Controllers

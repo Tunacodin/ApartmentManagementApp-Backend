@@ -118,7 +118,7 @@ namespace DataAccess.Concrete.EntityFramework
                 .ToListAsync();
 
             return await _context.Complaints
-                .Where(c => buildings.Contains(c.BuildingId) && !c.IsResolved)
+                .Where(c => buildings.Contains(c.BuildingId) && c.Status != 1)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
         }
@@ -136,12 +136,12 @@ namespace DataAccess.Concrete.EntityFramework
                 .ToListAsync();
         }
 
-        public async Task<Admin?> GetByIdAsync(int id)
+        public new async Task<Admin?> GetByIdAsync(int id)
         {
             return await _context.Admins.FindAsync(id);
         }
 
-        public async Task UpdateAsync(Admin admin)
+        public new async Task UpdateAsync(Admin admin)
         {
             _context.Admins.Update(admin);
             await _context.SaveChangesAsync();

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 
 namespace Core.DataAccess
 {
@@ -57,14 +58,36 @@ namespace Core.DataAccess
 
         public async Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> filter)
         {
-            return await _context.Set<TEntity>().FirstOrDefaultAsync(filter);
+            try
+            {
+                return await _context.Set<TEntity>().FirstOrDefaultAsync(filter);
+            }
+            catch (InvalidOperationException ex) when (ex.InnerException is SqlException sqlEx && 
+                                                      sqlEx.Message.Contains("Invalid column name"))
+            {
+                Console.WriteLine($"Database schema mismatch: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null)
         {
-            return filter != null
-                ? await _context.Set<TEntity>().Where(filter).ToListAsync()
-                : await _context.Set<TEntity>().ToListAsync();
+            try
+            {
+                return filter != null
+                    ? await _context.Set<TEntity>().Where(filter).ToListAsync()
+                    : await _context.Set<TEntity>().ToListAsync();
+            }
+            catch (InvalidOperationException ex) when (ex.InnerException is SqlException sqlEx && 
+                                                      (sqlEx.Message.Contains("Invalid column name") || 
+                                                       sqlEx.Message.Contains("doesn't exist")))
+            {
+                // Log the error
+                Console.WriteLine($"Database schema mismatch: {ex.Message}");
+                
+                // Return empty list as fallback
+                return new List<TEntity>();
+            }
         }
 
         public async Task AddAsync(TEntity entity)

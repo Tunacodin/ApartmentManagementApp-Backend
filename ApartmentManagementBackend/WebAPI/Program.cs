@@ -42,6 +42,8 @@ builder.Services.AddScoped<IMeetingService, MeetingManager>();
 builder.Services.AddScoped<IPaymentService, PaymentManager>();
 builder.Services.AddScoped<IOwnerService, OwnerManager>();
 builder.Services.AddScoped<IApartmentService, ApartmentManager>();
+builder.Services.AddScoped<IAdminReportsService, AdminReportsManager>();
+builder.Services.AddScoped<IComplaintDal, EfComplaintDal>();
 
 // DbContext Configuration
 builder.Services.AddDbContext<ApartmentManagementDbContext>(options =>

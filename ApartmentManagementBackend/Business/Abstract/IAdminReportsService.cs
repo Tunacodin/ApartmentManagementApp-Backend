@@ -3,7 +3,7 @@ using Entities.DTOs.Reports;
 
 namespace Business.Abstract
 {
-    public interface IAdminReportService
+    public interface IAdminReportsService
     {
         Task<ApiResponse<List<MonthlyIncomeDto>>> GetMonthlyIncomeAsync(int adminId);
         Task<ApiResponse<PaymentStatisticsDto>> GetPaymentStatisticsAsync(int adminId);
@@ -11,4 +11,4 @@ namespace Business.Abstract
         Task<ApiResponse<OccupancyRatesDto>> GetOccupancyRatesAsync(int adminId);
         Task<ApiResponse<MeetingStatisticsDto>> GetMeetingStatisticsAsync(int adminId);
     }
-} 
+}

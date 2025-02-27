@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApartmentManagementDbContext))]
-    [Migration("20250222105728_AddReportingFields")]
-    partial class AddReportingFields
+    [Migration("20250225162624_addAdminIdToUsers")]
+    partial class addAdminIdToUsers
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -554,6 +554,9 @@ namespace DataAccess.Migrations
             modelBuilder.Entity("Entities.Concrete.Admin", b =>
                 {
                     b.HasBaseType("Entities.Concrete.User");
+
+                    b.Property<int>("AdminId")
+                        .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("admin");
                 });
