@@ -32,6 +32,10 @@ builder.Services.AddScoped<INotificationDal, EfNotificationDal>();
 builder.Services.AddScoped<IMeetingDal, EfMeetingDal>();
 builder.Services.AddScoped<IPaymentDal, EfPaymentDal>();
 builder.Services.AddScoped<IOwnerDal, EfOwnerDal>();
+builder.Services.AddScoped<IComplaintDal, EfComplaintDal>();
+builder.Services.AddScoped<IComplaintService, ComplaintManager>();
+builder.Services.AddScoped<ISurveyDal, EfSurveyDal>();
+builder.Services.AddScoped<ISurveyService, SurveyManager>();
 
 builder.Services.AddScoped<IUserService, UserManager>();
 builder.Services.AddScoped<IUserProfileService, UserProfileManager>();
@@ -43,7 +47,6 @@ builder.Services.AddScoped<IPaymentService, PaymentManager>();
 builder.Services.AddScoped<IOwnerService, OwnerManager>();
 builder.Services.AddScoped<IApartmentService, ApartmentManager>();
 builder.Services.AddScoped<IAdminReportsService, AdminReportsManager>();
-builder.Services.AddScoped<IComplaintDal, EfComplaintDal>();
 
 // DbContext Configuration
 builder.Services.AddDbContext<ApartmentManagementDbContext>(options =>

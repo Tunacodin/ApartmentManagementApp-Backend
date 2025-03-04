@@ -21,8 +21,41 @@ namespace WebAPI.Controllers
         [HttpGet("building/{buildingId}")]
         public async Task<IActionResult> GetBuildingComplaints(int buildingId)
         {
-            var result = await _complaintService.GetBuildingComplaintsAsync(buildingId);
-            return result.Success ? Ok(result) : BadRequest(result);
+            try
+            {
+                _logger.LogInformation("Getting complaints for building {BuildingId}", buildingId);
+
+                if (buildingId <= 0)
+                {
+                    _logger.LogWarning("Invalid buildingId: {BuildingId}", buildingId);
+                    return BadRequest("Invalid building ID");
+                }
+
+                var result = await _complaintService.GetBuildingComplaintsAsync(buildingId);
+
+                if (result == null)
+                {
+                    _logger.LogWarning("Result is null for building {BuildingId}", buildingId);
+                    return StatusCode(500, "Internal server error - null result");
+                }
+
+                if (!result.Success)
+                {
+                    _logger.LogWarning("Unsuccessful result for building {BuildingId}. Message: {Message}", buildingId, result.Message);
+                    return BadRequest(result);
+                }
+
+                _logger.LogInformation("Successfully retrieved {Count} complaints for building {BuildingId}",
+                    result.Data?.Count ?? 0, buildingId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting complaints for building {BuildingId}. Error: {Message}",
+                    buildingId, ex.Message);
+                return StatusCode(500, new { message = "Internal server error", error = ex.Message });
+            }
         }
 
         [HttpGet("{id}")]
@@ -42,10 +75,52 @@ namespace WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Complaint complaint)
         {
-            var result = await _complaintService.CreateComplaintAsync(complaint);
-            if (result.Data == null) return StatusCode(500, "Complaint data is null");
+            try
+            {
+                if (complaint == null)
+                {
+                    return BadRequest("Complaint data cannot be null");
+                }
 
-            return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result);
+                if (complaint.BuildingId <= 0)
+                {
+                    return BadRequest("Invalid BuildingId");
+                }
+
+                if (complaint.UserId <= 0)
+                {
+                    return BadRequest("Invalid UserId");
+                }
+
+                if (string.IsNullOrEmpty(complaint.Subject))
+                {
+                    return BadRequest("Subject is required");
+                }
+
+                if (string.IsNullOrEmpty(complaint.Description))
+                {
+                    return BadRequest("Description is required");
+                }
+
+                var result = await _complaintService.CreateComplaintAsync(complaint);
+                if (!result.Success)
+                {
+                    return BadRequest(result);
+                }
+
+                if (result.Data == null)
+                {
+                    return StatusCode(500, "Failed to create complaint");
+                }
+
+                _logger.LogInformation($"Complaint created successfully. ID: {result.Data.Id}");
+                return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error creating complaint: {ex.Message}");
+                return StatusCode(500, new { message = "Internal server error while creating complaint", error = ex.Message });
+            }
         }
 
         [HttpPost("{id}/resolve")]
@@ -69,4 +144,4 @@ namespace WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
     }
-} 
+}

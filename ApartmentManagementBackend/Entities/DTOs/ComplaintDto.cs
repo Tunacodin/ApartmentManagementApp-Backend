@@ -19,15 +19,15 @@ namespace Entities.DTOs
     public class ComplaintDetailDto
     {
         public int Id { get; set; }
+        public int UserId { get; set; }
+        public int BuildingId { get; set; }
         public string Subject { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
-        public bool IsResolved { get; set; }
-        public bool IsInProgress { get; set; }
-        public string CreatedByName { get; set; } = string.Empty;
+        public int? Status { get; set; }
+        public int? ResolvedByAdminId { get; set; }
         public DateTime? ResolvedAt { get; set; }
-        public int BuildingId { get; set; }
-        public string? ResolvedByAdminName { get; set; }
+        public string CreatedByName { get; set; } = string.Empty;
     }
 
     // Şikayet Oluşturma DTO'su (Yeni şikayet oluşturma için)
@@ -60,4 +60,4 @@ namespace Entities.DTOs
         public int? ResolvedByAdminId { get; set; }
         public string? ResolutionNotes { get; set; }
     }
-} 
+}

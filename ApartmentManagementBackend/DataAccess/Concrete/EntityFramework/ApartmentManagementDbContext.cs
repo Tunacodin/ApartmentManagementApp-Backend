@@ -5,13 +5,10 @@ namespace DataAccess.Concrete.EntityFramework
 {
     public class ApartmentManagementDbContext : DbContext
     {
-        // Design-time için constructor
-        public ApartmentManagementDbContext()
+        public ApartmentManagementDbContext(DbContextOptions<ApartmentManagementDbContext> options)
+            : base(options)
         {
         }
-
-        public ApartmentManagementDbContext(DbContextOptions<ApartmentManagementDbContext> options)
-            : base(options) { }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -34,6 +31,7 @@ namespace DataAccess.Concrete.EntityFramework
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Meeting> Meetings { get; set; }
         public DbSet<Complaint> Complaints { get; set; }
+        public DbSet<Survey> Surveys { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -157,7 +155,17 @@ namespace DataAccess.Concrete.EntityFramework
                 .Property(t => t.MonthlyDues)
                 .HasPrecision(18, 2);
 
-           
+            modelBuilder.Entity<Survey>()
+                .HasOne<Building>()
+                .WithMany()
+                .HasForeignKey(s => s.BuildingId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Survey>()
+                .HasOne<Admin>()
+                .WithMany()
+                .HasForeignKey(s => s.CreatedByAdminId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
