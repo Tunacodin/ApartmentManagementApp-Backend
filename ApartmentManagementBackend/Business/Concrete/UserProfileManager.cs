@@ -2,6 +2,7 @@ using Business.Abstract;
 using Core.Constants;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
+using Entities.Concrete;
 using Entities.DTOs;
 
 namespace Business.Concrete
@@ -31,8 +32,42 @@ namespace Business.Concrete
                 IsActive = user.IsActive,
                 ProfileImageUrl = user.ProfileImageUrl,
                 Description = user.Description,
-                ProfileUpdatedAt = user.ProfileUpdatedAt
+                ProfileUpdatedAt = user.ProfileUpdatedAt,
+                Details = new UserDetailsDto()
             };
+
+            // Only populate relevant details based on user role
+            switch (user.Role?.ToLower())
+            {
+                case "owner":
+                    var owner = user as Owner;
+                    if (owner != null)
+                    {
+                        profileDto.Details.IBAN = owner.IBAN;
+                        profileDto.Details.BankName = owner.BankName;
+                    }
+                    break;
+
+                case "tenant":
+                    var tenant = user as Tenant;
+                    if (tenant != null)
+                    {
+                        profileDto.Details.ApartmentId = tenant.ApartmentId;
+                        profileDto.Details.LeaseStartDate = tenant.LeaseStartDate;
+                        profileDto.Details.LeaseEndDate = tenant.LeaseEndDate;
+                        profileDto.Details.MonthlyRent = tenant.MonthlyRent;
+                    }
+                    break;
+
+                case "security":
+                    var security = user as Security;
+                    if (security != null)
+                    {
+                        profileDto.Details.BuildingId = security.BuildingId;
+                        profileDto.Details.ShiftHours = security.ShiftHours;
+                    }
+                    break;
+            }
 
             return ApiResponse<UserDto>.SuccessResult(Messages.Success, profileDto);
         }

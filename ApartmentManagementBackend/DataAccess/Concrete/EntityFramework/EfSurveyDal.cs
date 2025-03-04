@@ -89,7 +89,6 @@ namespace DataAccess.Concrete.EntityFramework
             {
                 var survey = await _context.Surveys
                     .Where(s => s.Id == surveyId)
-                    .Include(s => s.BuildingId)
                     .FirstOrDefaultAsync();
 
                 if (survey == null)
