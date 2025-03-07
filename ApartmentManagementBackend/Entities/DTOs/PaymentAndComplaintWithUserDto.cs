@@ -1,0 +1,29 @@
+namespace Entities.DTOs
+{
+    public class PaymentWithUserDto
+    {
+        public int Id { get; set; }
+        public string PaymentType { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime PaymentDate { get; set; }
+        public int BuildingId { get; set; }
+        public int ApartmentId { get; set; }
+        public int UserId { get; set; }
+        public bool IsPaid { get; set; }
+        public string UserFullName { get; set; }
+        public string ProfileImageUrl { get; set; }
+    }
+
+    public class ComplaintWithUserDto
+    {
+        public int Id { get; set; }
+        public string Subject { get; set; }
+        public string Description { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public int BuildingId { get; set; }
+        public int UserId { get; set; }
+        public int Status { get; set; }
+        public string CreatedByName { get; set; }
+        public string ProfileImageUrl { get; set; }
+    }
+}

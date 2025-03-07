@@ -41,5 +41,22 @@ namespace Business.Abstract
         void AssignTenantToApartment(int tenantId, int apartmentId);
         void ApproveTenantRequest(int requestId);
         void RejectTenantRequest(int requestId, string reason);
+
+        // Yeni dashboard metodları
+        Task<ApiResponse<EnhancedDashboardDto>> GetEnhancedDashboardAsync(int adminId, DashboardFilterDto filter);
+        Task<ApiResponse<DashboardSummaryDto>> GetDashboardSummaryAsync(int adminId);
+        Task<ApiResponse<FinancialOverviewDto>> GetFinancialOverviewAsync(int adminId, DashboardFilterDto filter);
+        Task<ApiResponse<List<DashboardActivityDto>>> GetFilteredActivitiesAsync(int adminId, DashboardFilterDto filter);
+
+        void DeleteTenant(int tenantId);
+
+        // Yeni dashboard metodları
+        Task<ApiResponse<int>> GetBuildingApartmentCountAsync(int buildingId);
+        Task<ApiResponse<int>> GetEmptyApartmentsCountAsync(int adminId);
+        Task<ApiResponse<List<ComplaintWithUserDto>>> GetLastComplaintsAsync(int adminId, int count = 5);
+        Task<ApiResponse<List<PaymentWithUserDto>>> GetLastPaymentsAsync(int adminId, int count = 5);
+        Task<ApiResponse<decimal>> GetMonthlyIncomeAsync(int adminId, DateTime startDate, DateTime endDate);
+        Task<ApiResponse<(Building building, int complaintCount)>> GetMostComplainedBuildingAsync(int adminId);
+        Task<ApiResponse<List<string>>> GetCommonComplaintsAsync(int buildingId, int count = 3);
     }
 }

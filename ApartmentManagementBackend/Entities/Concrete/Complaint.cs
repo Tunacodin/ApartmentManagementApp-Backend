@@ -14,5 +14,7 @@ namespace Entities.Concrete
         public DateTime? ResolvedAt { get; set; }
         public string CreatedByName { get; set; } = string.Empty;
         public int? Status { get; set; }
+
+        
     }
 }

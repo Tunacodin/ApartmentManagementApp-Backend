@@ -16,5 +16,7 @@ namespace Entities.Concrete
         public decimal MonthlyRent { get; set; }
         public decimal MonthlyDues { get; set; }
         public DateTime? LastPaymentDate { get; set; }
+
+        
     }
 }

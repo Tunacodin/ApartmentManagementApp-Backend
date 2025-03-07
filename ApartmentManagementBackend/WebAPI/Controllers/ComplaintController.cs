@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Business.Abstract;
 using Entities.Concrete;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace WebAPI.Controllers
 {
@@ -10,11 +12,16 @@ namespace WebAPI.Controllers
     public class ComplaintController : ControllerBase
     {
         private readonly IComplaintService _complaintService;
+        private readonly INotificationService _notificationService;
         private readonly ILogger<ComplaintController> _logger;
 
-        public ComplaintController(IComplaintService complaintService, ILogger<ComplaintController> logger)
+        public ComplaintController(
+            IComplaintService complaintService,
+            INotificationService notificationService,
+            ILogger<ComplaintController> logger)
         {
             _complaintService = complaintService;
+            _notificationService = notificationService;
             _logger = logger;
         }
 
@@ -126,8 +133,42 @@ namespace WebAPI.Controllers
         [HttpPost("{id}/resolve")]
         public async Task<IActionResult> Resolve(int id, [FromQuery] int adminId)
         {
-            var result = await _complaintService.ResolveComplaintAsync(id, adminId);
-            return result.Success ? Ok(result) : BadRequest(result);
+            try
+            {
+                // Get complaint details first to access the subject and userId
+                var complaintDetail = await _complaintService.GetComplaintDetailAsync(id);
+                if (!complaintDetail.Success)
+                {
+                    return BadRequest(complaintDetail);
+                }
+
+                // Resolve the complaint
+                var result = await _complaintService.ResolveComplaintAsync(id, adminId);
+                if (!result.Success)
+                {
+                    return BadRequest(result);
+                }
+
+                // Create and send notification to the tenant
+                var notification = new Notification
+                {
+                    Title = "Şikayet İşleme Alındı",
+                    Message = $"{complaintDetail.Data.Subject} şikayetiniz işleme alındı",
+                    UserId = complaintDetail.Data.UserId,
+                    CreatedByAdminId = adminId,
+                    CreatedAt = DateTime.Now,
+                    IsRead = false
+                };
+
+                await _notificationService.CreateNotificationAsync(notification);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error resolving complaint: {ex.Message}");
+                return StatusCode(500, new { message = "Internal server error while resolving complaint", error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]

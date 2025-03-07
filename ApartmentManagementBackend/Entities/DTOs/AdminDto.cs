@@ -127,4 +127,128 @@ namespace Entities.DTOs
         public bool IsAssigned { get; set; }
         public DateTime AssignmentDate { get; set; }
     }
+
+    // 🔹 Gelişmiş Dashboard DTO'su
+    public class EnhancedDashboardDto
+    {
+        // Genel İstatistikler
+        public int TotalBuildings { get; set; }
+        public int TotalTenants { get; set; }
+        public int TotalApartments { get; set; }
+        public int EmptyApartments { get; set; }
+
+        // Son Aktiviteler
+        public List<PaymentActivityDto> RecentPayments { get; set; } = new();
+        public List<ComplaintActivityDto> RecentComplaints { get; set; } = new();
+
+        // Finansal Özet
+        public decimal MonthlyIncome { get; set; }
+
+        // En Problemli Bina
+        public MostComplainedBuildingDto MostComplainedBuilding { get; set; } = new();
+
+        // Dashboard Özeti ve Detayları
+        public DashboardSummaryDto Summary { get; set; } = new();
+        public FinancialOverviewDto FinancialOverview { get; set; } = new();
+        public List<DashboardActivityDto> RecentActivities { get; set; } = new();
+        public PaginationMetadata Pagination { get; set; } = new();
+    }
+
+    // 🔹 Ödeme Aktivite DTO'su
+    public class PaymentActivityDto
+    {
+        public int Id { get; set; }
+        public string PaymentType { get; set; } = string.Empty; // Dues, Rent
+        public decimal Amount { get; set; }
+        public DateTime PaymentDate { get; set; }
+        public string ApartmentNumber { get; set; } = string.Empty;
+        public string BuildingName { get; set; } = string.Empty;
+        public string PayerName { get; set; } = string.Empty;
+        public bool IsPaid { get; set; }
+        public string ProfileImageUrl { get; set; } = string.Empty;
+    }
+
+    // 🔹 Şikayet Aktivite DTO'su
+    public class ComplaintActivityDto
+    {
+        public int Id { get; set; }
+        public string Subject { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public string ApartmentNumber { get; set; } = string.Empty;
+        public string BuildingName { get; set; } = string.Empty;
+        public string ComplainerName { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string ProfileImageUrl { get; set; } = string.Empty;
+    }
+
+    // 🔹 En Çok Şikayet Alan Bina DTO'su
+    public class MostComplainedBuildingDto
+    {
+        public int BuildingId { get; set; }
+        public string BuildingName { get; set; } = string.Empty;
+        public int ComplaintCount { get; set; }
+        public List<string> CommonComplaints { get; set; } = new();
+        public DateTime LastComplaintDate { get; set; }
+    }
+
+    // 🔹 Dashboard Özet DTO'su
+    public class DashboardSummaryDto
+    {
+        public int TotalBuildings { get; set; }
+        public int TotalTenants { get; set; }
+        public int TotalComplaints { get; set; }
+        public int PendingPayments { get; set; }
+        public int UpcomingMeetings { get; set; }
+    }
+
+    // 🔹 Finansal Genel Bakış DTO'su
+    public class FinancialOverviewDto
+    {
+        public decimal MonthlyTotalIncome { get; set; }
+        public decimal MonthlyExpectedIncome { get; set; }
+        public decimal MonthlyCollectedAmount { get; set; }
+        public decimal CollectionRate { get; set; }
+        public Dictionary<string, decimal> MonthlyBreakdown { get; set; } = new();
+    }
+
+    // 🔹 Dashboard Aktivite DTO'su
+    public class DashboardActivityDto
+    {
+        public int Id { get; set; }
+        public string ActivityType { get; set; } = string.Empty; // Complaint, Payment, Meeting, etc.
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime ActivityDate { get; set; }
+        public string RelatedEntity { get; set; } = string.Empty; // Apartment number, building name, etc.
+        public string Status { get; set; } = string.Empty;
+        public decimal? Amount { get; set; }
+        public string UserFullName { get; set; } = string.Empty;
+        public string ProfileImageUrl { get; set; } = string.Empty;
+    }
+
+    // 🔹 Sayfalama Metadata DTO'su
+    public class PaginationMetadata
+    {
+        public int CurrentPage { get; set; }
+        public int TotalPages { get; set; }
+        public int PageSize { get; set; }
+        public int TotalCount { get; set; }
+        public bool HasPrevious => CurrentPage > 1;
+        public bool HasNext => CurrentPage < TotalPages;
+    }
+
+    // 🔹 Dashboard Filtreleme DTO'su
+    public class DashboardFilterDto
+    {
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string TimeFrame { get; set; } = "weekly"; // daily, weekly, monthly, yearly
+        public string? ActivityType { get; set; }
+        public int? BuildingId { get; set; }
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+        public string SortBy { get; set; } = "date";
+        public string SortDirection { get; set; } = "desc";
+    }
 }

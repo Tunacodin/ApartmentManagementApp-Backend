@@ -601,5 +601,333 @@ namespace Business.Concrete
                 return ApiResponse<AdminDto>.ErrorResult(Messages.UnexpectedError);
             }
         }
+
+        public async Task<ApiResponse<EnhancedDashboardDto>> GetEnhancedDashboardAsync(int adminId, DashboardFilterDto filter)
+        {
+            try
+            {
+                var admin = await _adminDal.GetByIdAsync(adminId);
+                if (admin == null)
+                    return ApiResponse<EnhancedDashboardDto>.ErrorResult(Messages.AdminNotFound);
+
+                // Özet bilgileri al
+                var summary = await GetDashboardSummaryAsync(adminId);
+                if (!summary.Success)
+                    return ApiResponse<EnhancedDashboardDto>.ErrorResult(summary.Message);
+
+                // Finansal genel bakış bilgilerini al
+                var financialOverview = await GetFinancialOverviewAsync(adminId, filter);
+                if (!financialOverview.Success)
+                    return ApiResponse<EnhancedDashboardDto>.ErrorResult(financialOverview.Message);
+
+                // Aktiviteleri al
+                var activities = await GetFilteredActivitiesAsync(adminId, filter);
+                if (!activities.Success)
+                    return ApiResponse<EnhancedDashboardDto>.ErrorResult(activities.Message);
+
+                // Sayfalama bilgilerini hesapla
+                var totalItems = activities.Data.Count;
+                var totalPages = (int)Math.Ceiling(totalItems / (double)filter.PageSize);
+                var paginatedActivities = activities.Data
+                    .Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize)
+                    .ToList();
+
+                var dashboard = new EnhancedDashboardDto
+                {
+                    Summary = summary.Data,
+                    FinancialOverview = financialOverview.Data,
+                    RecentActivities = paginatedActivities,
+                    Pagination = new PaginationMetadata
+                    {
+                        CurrentPage = filter.PageNumber,
+                        PageSize = filter.PageSize,
+                        TotalCount = totalItems,
+                        TotalPages = totalPages
+                    }
+                };
+
+                return ApiResponse<EnhancedDashboardDto>.SuccessResult(Messages.Success, dashboard);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting enhanced dashboard: {ex.Message}");
+                return ApiResponse<EnhancedDashboardDto>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<DashboardSummaryDto>> GetDashboardSummaryAsync(int adminId)
+        {
+            try
+            {
+                var admin = await _adminDal.GetByIdAsync(adminId);
+                if (admin == null)
+                    return ApiResponse<DashboardSummaryDto>.ErrorResult(Messages.AdminNotFound);
+
+                var buildings = await _adminDal.GetManagedBuildings(adminId);
+                var tenants = await _adminDal.GetTotalResidentsCount(adminId);
+                var complaints = (await _adminDal.GetActiveComplaints(adminId)).Count;
+                var payments = await _adminDal.GetRecentPayments(adminId);
+                var meetings = (await _adminDal.GetUpcomingMeetings(adminId)).Count;
+
+                var summary = new DashboardSummaryDto
+                {
+                    TotalBuildings = buildings.Count,
+                    TotalTenants = tenants,
+                    TotalComplaints = complaints,
+                    PendingPayments = payments.Count(p => !p.IsPaid),
+                    UpcomingMeetings = meetings
+                };
+
+                return ApiResponse<DashboardSummaryDto>.SuccessResult(Messages.Success, summary);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting dashboard summary: {ex.Message}");
+                return ApiResponse<DashboardSummaryDto>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<FinancialOverviewDto>> GetFinancialOverviewAsync(int adminId, DashboardFilterDto filter)
+        {
+            try
+            {
+                var admin = await _adminDal.GetByIdAsync(adminId);
+                if (admin == null)
+                    return ApiResponse<FinancialOverviewDto>.ErrorResult(Messages.AdminNotFound);
+
+                var buildings = await _adminDal.GetManagedBuildings(adminId);
+                var payments = await _adminDal.GetRecentPayments(adminId);
+
+                // Filtre uygula
+                payments = payments.Where(p =>
+                    p.PaymentDate >= filter.StartDate &&
+                    p.PaymentDate <= filter.EndDate).ToList();
+
+                decimal totalExpected = 0;
+                decimal totalCollected = 0;
+                decimal totalPending = 0;
+
+                foreach (var payment in payments)
+                {
+                    if (payment.IsPaid)
+                    {
+                        totalCollected += payment.Amount;
+                    }
+                    else
+                    {
+                        totalPending += payment.Amount;
+                    }
+                    totalExpected += payment.Amount;
+                }
+
+                var overview = new FinancialOverviewDto
+                {
+                    MonthlyExpectedIncome = totalExpected,
+                    MonthlyCollectedAmount = totalCollected,
+                    MonthlyTotalIncome = totalCollected,
+                    CollectionRate = totalCollected > 0 ? (totalCollected / totalExpected * 100) : 0
+                };
+
+                return ApiResponse<FinancialOverviewDto>.SuccessResult(Messages.Success, overview);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting financial overview: {ex.Message}");
+                return ApiResponse<FinancialOverviewDto>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<List<DashboardActivityDto>>> GetFilteredActivitiesAsync(int adminId, DashboardFilterDto filter)
+        {
+            try
+            {
+                // Varsayılan filtre ayarları
+                filter ??= new DashboardFilterDto
+                {
+                    StartDate = DateTime.Now.Date.AddDays(-7), // Başlangıç günü (1 hafta önce)
+                    EndDate = DateTime.Now.Date.AddDays(1).AddSeconds(-1), // Bugünün sonu
+                    PageSize = 5, // Sadece 5 aktivite
+                    PageNumber = 1,
+                    SortDirection = "desc" // En yeniden eskiye
+                };
+
+                var admin = await _adminDal.GetByIdAsync(adminId);
+                if (admin == null)
+                    return ApiResponse<List<DashboardActivityDto>>.ErrorResult(Messages.AdminNotFound);
+
+                var activities = new List<DashboardActivityDto>();
+
+                // Şikayetleri getir
+                var complaints = await _adminDal.GetComplaintsByDateRange(adminId, filter.StartDate.Value, filter.EndDate.Value);
+                foreach (var complaint in complaints)
+                {
+                    activities.Add(new DashboardActivityDto
+                    {
+                        Id = complaint.Id,
+                        ActivityType = "Complaint",
+                        Title = "Şikayet",
+                        Description = complaint.Description ?? string.Empty,
+                        ActivityDate = complaint.CreatedAt,
+                        RelatedEntity = $"Kullanıcı {complaint.UserId}",
+                        Status = complaint.Status == 1 ? "Çözüldü" : "Bekliyor",
+                        UserFullName = complaint.CreatedByName ?? string.Empty
+                    });
+                }
+
+                // Ödemeleri getir
+                var payments = await _adminDal.GetPaymentsByDateRange(adminId, filter.StartDate.Value, filter.EndDate.Value);
+                foreach (var payment in payments)
+                {
+                    activities.Add(new DashboardActivityDto
+                    {
+                        Id = payment.Id,
+                        ActivityType = "Payment",
+                        Title = payment.PaymentType == "Dues" ? "Aidat Ödemesi" : "Kira Ödemesi",
+                        Description = $"{payment.Amount:C2} tutarında ödeme",
+                        ActivityDate = payment.PaymentDate,
+                        RelatedEntity = $"Daire {payment.UserId}",
+                        Status = payment.IsPaid ? "Ödendi" : "Bekliyor",
+                        Amount = payment.Amount,
+                        UserFullName = payment.UserFullName ?? string.Empty
+                    });
+                }
+
+                // Toplantıları getir
+                var meetings = await _adminDal.GetMeetingsByDateRange(adminId, filter.StartDate.Value, filter.EndDate.Value);
+                foreach (var meeting in meetings)
+                {
+                    activities.Add(new DashboardActivityDto
+                    {
+                        Id = meeting.Id,
+                        ActivityType = "Meeting",
+                        Title = "Toplantı",
+                        Description = meeting.Description ?? string.Empty,
+                        ActivityDate = meeting.MeetingDate,
+                        RelatedEntity = meeting.Location ?? string.Empty,
+                        Status = meeting.MeetingDate > DateTime.Now ? "Planlandı" : "Tamamlandı",
+                        UserFullName = meeting.OrganizedByName ?? string.Empty
+                    });
+                }
+
+                // Sıralama (varsayılan olarak en yeniden en eskiye)
+                activities = activities.OrderByDescending(a => a.ActivityDate).ToList();
+
+                // Sadece istenen sayıda aktiviteyi al
+                activities = activities.Take(filter.PageSize).ToList();
+
+                if (!activities.Any())
+                {
+                    _logger.LogWarning($"No activities found for admin {adminId} between {filter.StartDate:d} - {filter.EndDate:d}");
+                }
+
+                return ApiResponse<List<DashboardActivityDto>>.SuccessResult(
+                    Messages.Success,
+                    activities);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting filtered activities: {ex.Message}");
+                return ApiResponse<List<DashboardActivityDto>>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<int>> GetBuildingApartmentCountAsync(int buildingId)
+        {
+            try
+            {
+                var count = await _adminDal.GetBuildingApartmentCount(buildingId);
+                return ApiResponse<int>.SuccessResult(Messages.Success, count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting building apartment count: {ex.Message}");
+                return ApiResponse<int>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<int>> GetEmptyApartmentsCountAsync(int adminId)
+        {
+            try
+            {
+                var count = await _adminDal.GetEmptyApartmentsCount(adminId);
+                return ApiResponse<int>.SuccessResult(Messages.Success, count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting empty apartments count: {ex.Message}");
+                return ApiResponse<int>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<List<PaymentWithUserDto>>> GetLastPaymentsAsync(int adminId, int count = 5)
+        {
+            try
+            {
+                var payments = await _adminDal.GetLastPayments(adminId, count);
+                return ApiResponse<List<PaymentWithUserDto>>.SuccessResult(Messages.Success, payments);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting last payments: {ex.Message}");
+                return ApiResponse<List<PaymentWithUserDto>>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<List<ComplaintWithUserDto>>> GetLastComplaintsAsync(int adminId, int count = 5)
+        {
+            try
+            {
+                var complaints = await _adminDal.GetLastComplaints(adminId, count);
+                return ApiResponse<List<ComplaintWithUserDto>>.SuccessResult(Messages.Success, complaints);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting last complaints: {ex.Message}");
+                return ApiResponse<List<ComplaintWithUserDto>>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<decimal>> GetMonthlyIncomeAsync(int adminId, DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                var income = await _adminDal.GetMonthlyIncome(adminId, startDate, endDate);
+                return ApiResponse<decimal>.SuccessResult(Messages.Success, income);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting monthly income: {ex.Message}");
+                return ApiResponse<decimal>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<(Building building, int complaintCount)>> GetMostComplainedBuildingAsync(int adminId)
+        {
+            try
+            {
+                var result = await _adminDal.GetMostComplainedBuilding(adminId);
+                return ApiResponse<(Building building, int complaintCount)>.SuccessResult(Messages.Success, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting most complained building: {ex.Message}");
+                return ApiResponse<(Building building, int complaintCount)>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<List<string>>> GetCommonComplaintsAsync(int buildingId, int count = 3)
+        {
+            try
+            {
+                var complaints = await _adminDal.GetCommonComplaints(buildingId, count);
+                return ApiResponse<List<string>>.SuccessResult(Messages.Success, complaints);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting common complaints: {ex.Message}");
+                return ApiResponse<List<string>>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
     }
 }

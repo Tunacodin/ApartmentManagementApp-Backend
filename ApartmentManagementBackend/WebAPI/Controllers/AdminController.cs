@@ -356,5 +356,230 @@ namespace WebAPI.Controllers
                 return BadRequest(ApiResponse<bool>.ErrorResult(Messages.UnexpectedError));
             }
         }
+
+        [HttpGet("enhanced-dashboard/{adminId}")]
+        public async Task<IActionResult> GetEnhancedDashboard(int adminId)
+        {
+            try
+            {
+                var admin = await _adminService.GetByIdAsync(adminId);
+                if (admin == null || !admin.Success)
+                    return BadRequest(ApiResponse<string>.ErrorResult(Messages.AdminNotFound));
+
+                // Ay başı ve sonu
+                var startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                var endDate = startDate.AddMonths(1).AddDays(-1);
+
+                // Temel istatistikler
+                var buildings = await _adminService.GetManagedBuildingsAsync(adminId);
+                var totalTenants = await _adminService.GetTotalResidentsAsync(adminId);
+                var emptyApartmentsResult = await _adminService.GetEmptyApartmentsCountAsync(adminId);
+                var recentPayments = await _adminService.GetLastPaymentsAsync(adminId);
+                var recentComplaints = await _adminService.GetLastComplaintsAsync(adminId);
+                var monthlyIncome = await _adminService.GetMonthlyIncomeAsync(adminId, startDate, endDate);
+                var mostComplainedBuildingResult = await _adminService.GetMostComplainedBuildingAsync(adminId);
+                var (building, complaintCount) = mostComplainedBuildingResult.Data;
+                var commonComplaintsResult = building != null
+                    ? await _adminService.GetCommonComplaintsAsync(building.Id)
+                    : ApiResponse<List<string>>.SuccessResult("No complaints", new List<string>());
+
+                var dashboard = new EnhancedDashboardDto
+                {
+                    TotalBuildings = buildings.Data?.Count ?? 0,
+                    TotalTenants = totalTenants.Success ? totalTenants.Data : 0,
+                    TotalApartments = buildings.Data?.Sum(b => b.TotalApartments) ?? 0,
+                    EmptyApartments = emptyApartmentsResult.Success ? emptyApartmentsResult.Data : 0,
+                    MonthlyIncome = monthlyIncome.Success ? monthlyIncome.Data : 0,
+
+                    RecentPayments = recentPayments.Data?.Select(p => new PaymentActivityDto
+                    {
+                        Id = p.Id,
+                        PaymentType = p.PaymentType,
+                        Amount = p.Amount,
+                        PaymentDate = p.PaymentDate,
+                        ApartmentNumber = $"Daire {p.ApartmentId}",
+                        BuildingName = buildings.Data?.FirstOrDefault(b => b.BuildingId == p.BuildingId)?.BuildingName ?? string.Empty,
+                        PayerName = p.UserFullName ?? string.Empty,
+                        IsPaid = p.IsPaid,
+                        ProfileImageUrl = p.ProfileImageUrl
+                    }).ToList() ?? new List<PaymentActivityDto>(),
+
+                    RecentComplaints = recentComplaints.Data?.Select(c => new ComplaintActivityDto
+                    {
+                        Id = c.Id,
+                        Subject = c.Subject,
+                        Description = c.Description,
+                        CreatedAt = c.CreatedAt,
+                        ApartmentNumber = $"Daire {c.UserId}",
+                        BuildingName = buildings.Data?.FirstOrDefault(b => b.BuildingId == c.BuildingId)?.BuildingName ?? string.Empty,
+                        ComplainerName = c.CreatedByName ?? string.Empty,
+                        Status = c.Status == 1 ? "Çözüldü" : "Bekliyor",
+                        ProfileImageUrl = c.ProfileImageUrl
+                    }).ToList() ?? new List<ComplaintActivityDto>(),
+
+                    MostComplainedBuilding = building != null ? new MostComplainedBuildingDto
+                    {
+                        BuildingId = building.Id,
+                        BuildingName = building.BuildingName,
+                        ComplaintCount = complaintCount,
+                        CommonComplaints = commonComplaintsResult.Data ?? new List<string>(),
+                        LastComplaintDate = recentComplaints.Data?
+                            .Where(c => c.BuildingId == building.Id)
+                            .Max(c => c.CreatedAt) ?? DateTime.MinValue
+                    } : new MostComplainedBuildingDto(),
+
+                    Summary = new DashboardSummaryDto
+                    {
+                        TotalBuildings = buildings.Data?.Count ?? 0,
+                        TotalTenants = totalTenants.Success ? totalTenants.Data : 0,
+                        TotalComplaints = recentComplaints.Data?.Count ?? 0,
+                        PendingPayments = recentPayments.Data?.Count(p => !p.IsPaid) ?? 0,
+                        UpcomingMeetings = 0 // You might want to add this data from a service
+                    },
+
+                    FinancialOverview = new FinancialOverviewDto
+                    {
+                        MonthlyTotalIncome = monthlyIncome.Success ? monthlyIncome.Data : 0,
+                        MonthlyExpectedIncome = buildings.Data?.Sum(b => b.TotalDuesAmount) ?? 0,
+                        MonthlyCollectedAmount = recentPayments.Data?.Where(p => p.IsPaid).Sum(p => p.Amount) ?? 0,
+                        CollectionRate = CalculateCollectionRate(
+                            recentPayments.Data?.Where(p => p.IsPaid).Sum(p => p.Amount) ?? 0,
+                            buildings.Data?.Sum(b => b.TotalDuesAmount) ?? 0
+                        )
+                    },
+
+                    RecentActivities = recentPayments.Data?.Select(p => new DashboardActivityDto
+                    {
+                        Id = p.Id,
+                        ActivityType = "Payment",
+                        Title = p.PaymentType,
+                        Description = $"{p.Amount:C2} tutarında ödeme",
+                        ActivityDate = p.PaymentDate,
+                        RelatedEntity = $"Daire {p.ApartmentId}",
+                        Status = p.IsPaid ? "Ödendi" : "Bekliyor",
+                        Amount = p.Amount,
+                        UserFullName = p.UserFullName ?? string.Empty,
+                        ProfileImageUrl = p.ProfileImageUrl ?? string.Empty
+                    })
+                    .Concat(recentComplaints.Data?.Select(c => new DashboardActivityDto
+                    {
+                        Id = c.Id,
+                        ActivityType = "Complaint",
+                        Title = c.Subject,
+                        Description = c.Description ?? string.Empty,
+                        ActivityDate = c.CreatedAt,
+                        RelatedEntity = $"Daire {c.UserId}",
+                        Status = c.Status == 1 ? "Çözüldü" : "Bekliyor",
+                        UserFullName = c.CreatedByName ?? string.Empty,
+                        ProfileImageUrl = c.ProfileImageUrl ?? string.Empty
+                    }) ?? Enumerable.Empty<DashboardActivityDto>())
+                    .OrderByDescending(a => a.ActivityDate)
+                    .Take(10)
+                    .ToList() ?? new List<DashboardActivityDto>(),
+
+                    Pagination = new PaginationMetadata
+                    {
+                        CurrentPage = 1,
+                        PageSize = 10,
+                        TotalCount = (recentPayments.Data?.Count ?? 0) + (recentComplaints.Data?.Count ?? 0),
+                        TotalPages = CalculateTotalPages((recentPayments.Data?.Count ?? 0) + (recentComplaints.Data?.Count ?? 0), 10)
+                    }
+                };
+
+                return Ok(ApiResponse<EnhancedDashboardDto>.SuccessResult(
+                    "Dashboard bilgileri başarıyla getirildi",
+                    dashboard));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting enhanced dashboard: {ex.Message}");
+                return BadRequest(ApiResponse<string>.ErrorResult(Messages.UnexpectedError));
+            }
+        }
+
+        [HttpGet("dashboard/{adminId}/activities")]
+        public async Task<IActionResult> GetDashboardActivities(
+            int adminId,
+            [FromQuery] DashboardFilterDto filter)
+        {
+            try
+            {
+                filter ??= new DashboardFilterDto();
+                var activitiesResult = await _adminService.GetFilteredActivitiesAsync(adminId, filter);
+
+                if (!activitiesResult.Success || activitiesResult.Data == null)
+                {
+                    return BadRequest(activitiesResult);
+                }
+
+                return Ok(ApiResponse<List<DashboardActivityDto>>.SuccessResult(
+                    "Aktiviteler başarıyla getirildi",
+                    activitiesResult.Data));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting dashboard activities: {ex.Message}");
+                return BadRequest(ApiResponse<string>.ErrorResult(Messages.UnexpectedError));
+            }
+        }
+
+        [HttpGet("dashboard/{adminId}/financial-overview")]
+        public async Task<IActionResult> GetFinancialOverview(
+            int adminId,
+            [FromQuery] DashboardFilterDto filter)
+        {
+            try
+            {
+                filter ??= new DashboardFilterDto();
+                var financialResult = await _adminService.GetFinancialOverviewAsync(adminId, filter);
+
+                if (!financialResult.Success || financialResult.Data == null)
+                {
+                    return BadRequest(financialResult);
+                }
+
+                return Ok(ApiResponse<FinancialOverviewDto>.SuccessResult(
+                    "Finansal özet başarıyla getirildi",
+                    financialResult.Data));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting financial overview: {ex.Message}");
+                return BadRequest(ApiResponse<string>.ErrorResult(Messages.UnexpectedError));
+            }
+        }
+
+        [HttpGet("dashboard/{adminId}/summary")]
+        public async Task<IActionResult> GetDashboardSummary(int adminId)
+        {
+            try
+            {
+                var summaryResult = await _adminService.GetDashboardSummaryAsync(adminId);
+
+                if (!summaryResult.Success || summaryResult.Data == null || summaryResult.Data == null)
+                {
+                    return BadRequest(summaryResult);
+                }
+
+                return Ok(ApiResponse<DashboardSummaryDto>.SuccessResult(
+                    "Dashboard özeti başarıyla getirildi",
+                    summaryResult.Data));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting dashboard summary: {ex.Message}");
+                return BadRequest(ApiResponse<string>.ErrorResult(Messages.UnexpectedError));
+            }
+        }
+
+        private static decimal CalculateCollectionRate(decimal collected, decimal expected)
+        {
+            return expected > 0 ? (collected / expected) * 100 : 0;
+        }
+
+        private static int CalculateTotalPages(int totalItems, int pageSize)
+        {
+            return (int)Math.Ceiling(totalItems / (double)pageSize);
+        }
     }
 }
