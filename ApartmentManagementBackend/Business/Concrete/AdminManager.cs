@@ -20,6 +20,7 @@ namespace Business.Concrete
         private readonly INotificationDal _notificationDal;
         private readonly IMeetingDal _meetingDal;
         private readonly IAdminDal _adminDal;
+        private readonly IContractDal _contractDal;
         private readonly ILogger<AdminManager> _logger;
 
         public AdminManager(
@@ -30,6 +31,7 @@ namespace Business.Concrete
             INotificationDal notificationDal,
             IMeetingDal meetingDal,
             IAdminDal adminDal,
+            IContractDal contractDal,
             ILogger<AdminManager> logger)
         {
             _userDal = userDal;
@@ -39,6 +41,7 @@ namespace Business.Concrete
             _notificationDal = notificationDal;
             _meetingDal = meetingDal;
             _adminDal = adminDal;
+            _contractDal = contractDal;
             _logger = logger;
         }
 
@@ -626,18 +629,18 @@ namespace Business.Concrete
                     return ApiResponse<EnhancedDashboardDto>.ErrorResult(activities.Message);
 
                 // Sayfalama bilgilerini hesapla
-                var totalItems = activities.Data.Count;
+                var totalItems = activities.Data?.Count ?? 0;
                 var totalPages = (int)Math.Ceiling(totalItems / (double)filter.PageSize);
-                var paginatedActivities = activities.Data
+                var paginatedActivities = activities.Data?
                     .Skip((filter.PageNumber - 1) * filter.PageSize)
                     .Take(filter.PageSize)
-                    .ToList();
+                    .ToList() ?? new List<DashboardActivityDto>();
 
                 var dashboard = new EnhancedDashboardDto
                 {
-                    Summary = summary.Data,
-                    FinancialOverview = financialOverview.Data,
-                    RecentActivities = paginatedActivities,
+                    Summary = summary.Data ?? new DashboardSummaryDto(),
+                    FinancialOverview = financialOverview.Data ?? new FinancialOverviewDto(),
+                    RecentActivities = paginatedActivities ?? new List<DashboardActivityDto>(),
                     Pagination = new PaginationMetadata
                     {
                         CurrentPage = filter.PageNumber,
@@ -928,6 +931,172 @@ namespace Business.Concrete
                 _logger.LogError($"Error getting common complaints: {ex.Message}");
                 return ApiResponse<List<string>>.ErrorResult(Messages.UnexpectedError);
             }
+        }
+
+        // Yönetim Ekranı metodları
+        public async Task<ApiResponse<ManagementDashboardDto>> GetManagementDashboardAsync(int adminId, ManagementFilterDto filter)
+        {
+            try
+            {
+                _logger.LogInformation($"Getting management dashboard for admin {adminId}");
+
+                // Admin kontrolü
+                var admin = await _adminDal.GetByIdAsync(adminId);
+                if (admin == null)
+                {
+                    _logger.LogWarning($"Admin not found with ID: {adminId}");
+                    return ApiResponse<ManagementDashboardDto>.ErrorResult("Yönetici bulunamadı.");
+                }
+
+                if (!admin.IsActive)
+                {
+                    _logger.LogWarning($"Admin with ID: {adminId} is not active");
+                    return ApiResponse<ManagementDashboardDto>.ErrorResult("Yönetici hesabı aktif değil.");
+                }
+
+                var buildings = await _adminDal.GetBuildingsForManagement(adminId);
+                _logger.LogInformation($"Retrieved {buildings?.Count ?? 0} buildings for admin {adminId}");
+
+                if (buildings == null || !buildings.Any())
+                {
+                    _logger.LogWarning($"No buildings found for admin ID: {adminId}");
+                    return ApiResponse<ManagementDashboardDto>.SuccessResult("Bu yöneticiye ait bina bulunamadı.", new ManagementDashboardDto());
+                }
+
+                var selectedBuilding = filter?.BuildingId != null
+                    ? buildings.FirstOrDefault(b => b.Id == filter.BuildingId)
+                    : null;
+
+                _logger.LogInformation($"Selected building ID: {selectedBuilding?.Id ?? -1}");
+
+                var result = new ManagementDashboardDto
+                {
+                    Buildings = buildings,
+                    Apartments = new List<ApartmentBasicDto>(),
+                    Tenants = new List<TenantBasicDto>(),
+                    UpcomingMeetings = new List<MeetingBasicDto>(),
+                    PendingComplaints = new List<ComplaintBasicDto>(),
+                    OverduePayments = new List<PaymentBasicDto>(),
+                    Statistics = new BuildingBasicStatsDto()
+                };
+
+                if (selectedBuilding != null)
+                {
+                    try
+                    {
+                        // Daire bilgilerini getir
+                        var apartments = await _adminDal.GetApartmentsForManagement(filter.BuildingId.Value);
+                        if (apartments != null)
+                        {
+                            result.Apartments = apartments.Select(a => new ApartmentBasicDto
+                            {
+                                Id = a.Id,
+                                UnitNumber = a.UnitNumber.ToString(),
+                                Floor = a.Floor,
+                                Status = a.Status,
+                                TenantName = a.TenantFullName ?? string.Empty
+                            }).ToList();
+                        }
+
+                        // Kiracı bilgilerini getir
+                        var tenants = await _adminDal.GetTenantsForManagement(filter.BuildingId.Value);
+                        if (tenants != null)
+                        {
+                            result.Tenants = tenants.Select(t => new TenantBasicDto
+                            {
+                                Id = t.Id,
+                                FullName = t.FullName ?? string.Empty,
+                                ApartmentNumber = t.ApartmentNumber ?? string.Empty,
+                                PhoneNumber = t.PhoneNumber ?? string.Empty,
+                                Email = t.Email ?? string.Empty,
+                                ProfileImage = t.ProfileImageUrl ?? string.Empty,
+                                ContractFile = t.ContractFile ?? string.Empty
+                            }).ToList();
+                        }
+
+                        // Toplantı bilgilerini getir
+                        var meetings = await _adminDal.GetMeetingsForManagement(filter.BuildingId.Value);
+                        if (meetings != null)
+                        {
+                            result.UpcomingMeetings = meetings.Select(m => new MeetingBasicDto
+                            {
+                                Id = m.Id,
+                                Title = m.Title ?? string.Empty,
+                                MeetingDate = m.MeetingDate,
+                                Location = m.Location ?? string.Empty
+                            }).ToList();
+                        }
+
+                        // Şikayet bilgilerini getir
+                        var complaints = await _adminDal.GetComplaintsForManagement(filter.BuildingId.Value);
+                        if (complaints != null)
+                        {
+                            result.PendingComplaints = complaints
+                                .Where(c => c.Status == "Bekliyor")
+                                .Select(c => new ComplaintBasicDto
+                                {
+                                    Id = c.Id,
+                                    Subject = c.Subject ?? string.Empty,
+                                    CreatedAt = c.CreatedAt,
+                                    ApartmentNumber = c.ApartmentNumber ?? string.Empty
+                                }).ToList();
+                        }
+
+                        // Ödeme bilgilerini getir
+                        var payments = await _adminDal.GetPaymentsForManagement(filter.BuildingId.Value);
+                        if (payments != null)
+                        {
+                            result.OverduePayments = payments
+                                .Where(p => !p.PaymentDate.HasValue && p.DueDate < DateTime.Now)
+                                .Select(p => new PaymentBasicDto
+                                {
+                                    Id = p.Id,
+                                    PaymentType = p.PaymentType ?? string.Empty,
+                                    Amount = p.Amount,
+                                    DueDate = p.DueDate,
+                                    ApartmentNumber = p.ApartmentNumber ?? string.Empty
+                                }).ToList();
+                        }
+
+                        // İstatistik bilgilerini getir
+                        var stats = await _adminDal.GetBuildingStatistics(filter.BuildingId.Value);
+                        if (stats != null)
+                        {
+                            result.Statistics = new BuildingBasicStatsDto
+                            {
+                                OccupancyRate = stats.OccupancyRate,
+                                LastMaintenanceDate = DateTime.Now.AddDays(-stats.DaysSinceLastMaintenance)
+                            };
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Error getting building details: {ex.Message}");
+                        // Hata durumunda boş listeler ile devam et
+                    }
+                }
+
+                var successMessage = selectedBuilding != null
+                    ? $"{(selectedBuilding.Name ?? "Bilinmeyen Bina")} binası yönetim bilgileri başarıyla getirildi"
+                    : "Yönetim bilgileri başarıyla getirildi";
+
+                return ApiResponse<ManagementDashboardDto>.SuccessResult(successMessage, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in GetManagementDashboardAsync: {ex.Message}");
+                return ApiResponse<ManagementDashboardDto>.ErrorResult($"Yönetim paneli bilgileri alınırken hata oluştu: {ex.Message}");
+            }
+        }
+
+        private static decimal CalculateCollectionRate(decimal collected, decimal expected)
+        {
+            return expected > 0 ? (collected / expected) * 100 : 0;
+        }
+
+        private static int CalculateTotalPages(int totalItems, int pageSize)
+        {
+            return (int)Math.Ceiling(totalItems / (double)pageSize);
         }
     }
 }

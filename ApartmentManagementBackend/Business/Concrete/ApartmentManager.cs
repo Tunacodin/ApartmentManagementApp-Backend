@@ -130,6 +130,7 @@ namespace Business.Concrete
                     OwnerId = apartment.OwnerId,
                     OwnerName = $"{owner?.FirstName} {owner?.LastName}".Trim(),
                     OwnerContact = owner?.PhoneNumber ?? "",
+                    OwnerProfileImage = owner?.ProfileImageUrl ?? "",
                     UnitNumber = apartment.UnitNumber,
                     Floor = apartment.Floor,
                     Type = apartment.Type,
@@ -146,6 +147,7 @@ namespace Business.Concrete
                         FullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
                         PhoneNumber = tenant.PhoneNumber,
                         Email = tenant.Email ?? "",
+                        ProfileImage = tenant.ProfileImageUrl ?? "",
                         LeaseStartDate = tenant.LeaseStartDate,
                         LeaseEndDate = tenant.LeaseEndDate
                     } : null,

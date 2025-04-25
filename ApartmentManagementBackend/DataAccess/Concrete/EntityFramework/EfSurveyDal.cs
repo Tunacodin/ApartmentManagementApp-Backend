@@ -373,8 +373,8 @@ namespace DataAccess.Concrete.EntityFramework
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error submitting survey response for SurveyId {SurveyId}, UserId {UserId}",
-                    response.SurveyId, response.UserId);
+                _logger.LogError(ex, "Error submitting survey response for SurveyId {SurveyId}, TenantId {TenantId}",
+                    response.SurveyId, response.TenantId);
                 throw;
             }
         }

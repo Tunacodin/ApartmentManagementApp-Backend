@@ -32,6 +32,7 @@ namespace Core.Constants
         public const string AdminFinancialSummaryRetrieved = "Finansal özet bilgileri getirildi";
         public const string AdminBuildingsListed = "Yönetilen binalar listelendi";
         public const string AdminStatisticsRetrieved = "Yönetici istatistikleri getirildi";
+        public const string ProfileRetrieved = "Profil bilgileri başarıyla getirildi";
 
         // User Messages
         public const string UserNotFound = "Kullanıcı bulunamadı";
@@ -50,6 +51,8 @@ namespace Core.Constants
         public const string TenantUpdated = "Kiracı bilgileri güncellendi";
         public const string TenantDeleted = "Kiracı kaydı silindi";
         public const string TenantIdMismatch = "Kiracı ID'leri eşleşmiyor";
+        public const string InvalidTenantId = "Geçersiz kiracı ID'si.";
+        public const string UnauthorizedAccess = "Bu işlem için yetkiniz bulunmamaktadır.";
 
         // Owner Messages
         public const string OwnerNotFound = "Ev sahibi bulunamadı";
@@ -89,7 +92,7 @@ namespace Core.Constants
 
         // Meeting Messages
         public const string MeetingNotFound = "Toplantı bulunamadı";
-        public const string MeetingsListed = "Toplantılar listelendi";
+        public const string MeetingsListed = "Toplantılar başarıyla listelendi";
         public const string MeetingAdded = "Toplantı başarıyla eklendi";
         public const string MeetingUpdated = "Toplantı bilgileri güncellendi";
         public const string MeetingDeleted = "Toplantı kaydı silindi";
@@ -98,7 +101,7 @@ namespace Core.Constants
 
         // Complaint Messages
         public const string ComplaintNotFound = "Şikayet bulunamadı";
-        public const string ComplaintsListed = "Şikayetler listelendi";
+        public const string ComplaintsListed = "Şikayetler başarıyla listelendi";
         public const string ComplaintAdded = "Şikayet başarıyla eklendi";
         public const string ComplaintUpdated = "Şikayet bilgileri güncellendi";
         public const string ComplaintDeleted = "Şikayet kaydı silindi";
@@ -109,7 +112,7 @@ namespace Core.Constants
 
         // Notification Messages
         public const string NotificationNotFound = "Bildirim bulunamadı";
-        public const string NotificationsListed = "Bildirimler listelendi";
+        public const string NotificationsListed = "Bildirimler başarıyla listelendi";
         public const string NotificationAdded = "Bildirim başarıyla eklendi";
         public const string NotificationUpdated = "Bildirim güncellendi";
         public const string NotificationDeleted = "Bildirim silindi";
@@ -154,9 +157,16 @@ namespace Core.Constants
         public const string OccupancyRatesRetrieved = "Doluluk oranları başarıyla getirildi";
         public const string MeetingStatisticsRetrieved = "Toplantı istatistikleri başarıyla getirildi";
         public const string InvalidAdminId = "Geçersiz admin ID";
+        public const string ReportGenerated = "Rapor başarıyla oluşturuldu";
+        public const string ErrorGeneratingReport = "Rapor oluşturulurken bir hata oluştu";
 
         // Newly added message
         public const string BuildingsNotFound = "Yöneticiye ait bina bulunamadı";
         public const string DetailedPaymentStatisticsRetrieved = "Detaylı ödeme istatistikleri başarıyla getirildi";
+
+        public const string DashboardRetrieved = "Dashboard retrieved successfully";
+        public const string SurveyResponseSubmitted = "Survey response submitted successfully";
+        public const string ActivitiesListed = "Aktiviteler başarıyla listelendi";
+        public const string SurveysListed = "Anketler başarıyla listelendi";
     }
 }

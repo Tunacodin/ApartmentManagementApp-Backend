@@ -1,13 +1,21 @@
+using System;
+
 namespace Entities.DTOs
 {
     // Temel Şikayet DTO'su (Ekleme/Güncelleme için)
     public class ComplaintDto
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
-        public int BuildingId { get; set; }
-        public string Subject { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public DateTime CreatedDate { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public int BuildingId { get; set; }
+        public int ApartmentId { get; set; }
+        public int TenantId { get; set; }
+        public string? Response { get; set; }
+        public DateTime? ResponseDate { get; set; }
+        public int? RespondedByAdminId { get; set; }
         public bool IsResolved { get; set; }
         public bool IsInProgress { get; set; }
         public int? ResolvedByAdminId { get; set; }

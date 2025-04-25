@@ -39,6 +39,7 @@ namespace Entities.DTOs
         public int OwnerId { get; set; }
         public string OwnerName { get; set; } = string.Empty;
         public string OwnerContact { get; set; } = string.Empty;
+        public string OwnerProfileImage { get; set; } = string.Empty;
         public int UnitNumber { get; set; }
         public int Floor { get; set; }
         public string Type { get; set; } = string.Empty;
@@ -60,6 +61,7 @@ namespace Entities.DTOs
         public string FullName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        public string ProfileImage { get; set; } = string.Empty;
         public DateTime LeaseStartDate { get; set; }
         public DateTime? LeaseEndDate { get; set; }
     }

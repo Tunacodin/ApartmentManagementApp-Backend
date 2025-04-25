@@ -158,10 +158,26 @@ namespace WebAPI.Controllers
         [HttpGet("dashboard/{adminId}")]
         public async Task<IActionResult> GetDashboard(int adminId)
         {
-            var result = await _adminService.GetDashboardAsync(adminId);
-            return result.Success && result.Data != null
-                ? Ok(ApiResponse<AdminDashboardDto>.SuccessResult(Messages.Success, result.Data))
-                : BadRequest(result);
+            try
+            {
+                _logger.LogInformation($"Getting dashboard for admin {adminId}");
+
+                var result = await _adminService.GetDashboardAsync(adminId);
+
+                if (!result.Success)
+                {
+                    _logger.LogWarning($"Dashboard data not found for admin {adminId}");
+                    return BadRequest(ApiResponse<AdminDashboardDto>.ErrorResult(Messages.AdminNotFound));
+                }
+
+                _logger.LogInformation($"Dashboard data retrieved successfully for admin {adminId}");
+                return Ok(ApiResponse<AdminDashboardDto>.SuccessResult(Messages.Success, result.Data));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting dashboard for admin {adminId}");
+                return StatusCode(500, ApiResponse<string>.ErrorResult($"Dashboard verisi alınırken hata oluştu: {ex.Message}"));
+            }
         }
 
         [HttpGet("{adminId}/buildings")]
@@ -391,31 +407,32 @@ namespace WebAPI.Controllers
                     EmptyApartments = emptyApartmentsResult.Success ? emptyApartmentsResult.Data : 0,
                     MonthlyIncome = monthlyIncome.Success ? monthlyIncome.Data : 0,
 
-                    RecentPayments = recentPayments.Data?.Select(p => new PaymentActivityDto
+                    RecentPayments = recentPayments.Data?.Select(p => new PaymentWithUserDto
                     {
                         Id = p.Id,
                         PaymentType = p.PaymentType,
                         Amount = p.Amount,
                         PaymentDate = p.PaymentDate,
-                        ApartmentNumber = $"Daire {p.ApartmentId}",
-                        BuildingName = buildings.Data?.FirstOrDefault(b => b.BuildingId == p.BuildingId)?.BuildingName ?? string.Empty,
-                        PayerName = p.UserFullName ?? string.Empty,
+                        BuildingId = p.BuildingId,
+                        ApartmentId = p.ApartmentId,
+                        UserId = p.UserId,
                         IsPaid = p.IsPaid,
-                        ProfileImageUrl = p.ProfileImageUrl
-                    }).ToList() ?? new List<PaymentActivityDto>(),
+                        UserFullName = p.UserFullName ?? string.Empty,
+                        ProfileImageUrl = p.ProfileImageUrl ?? string.Empty
+                    }).ToList() ?? new List<PaymentWithUserDto>(),
 
-                    RecentComplaints = recentComplaints.Data?.Select(c => new ComplaintActivityDto
+                    RecentComplaints = recentComplaints.Data?.Select(c => new ComplaintWithUserDto
                     {
                         Id = c.Id,
                         Subject = c.Subject,
                         Description = c.Description,
                         CreatedAt = c.CreatedAt,
-                        ApartmentNumber = $"Daire {c.UserId}",
-                        BuildingName = buildings.Data?.FirstOrDefault(b => b.BuildingId == c.BuildingId)?.BuildingName ?? string.Empty,
-                        ComplainerName = c.CreatedByName ?? string.Empty,
-                        Status = c.Status == 1 ? "Çözüldü" : "Bekliyor",
-                        ProfileImageUrl = c.ProfileImageUrl
-                    }).ToList() ?? new List<ComplaintActivityDto>(),
+                        BuildingId = c.BuildingId,
+                        UserId = c.UserId,
+                        Status = c.Status,
+                        CreatedByName = c.CreatedByName ?? string.Empty,
+                        ProfileImageUrl = c.ProfileImageUrl ?? string.Empty
+                    }).ToList() ?? new List<ComplaintWithUserDto>(),
 
                     MostComplainedBuilding = building != null ? new MostComplainedBuildingDto
                     {
@@ -569,6 +586,36 @@ namespace WebAPI.Controllers
             {
                 _logger.LogError($"Error getting dashboard summary: {ex.Message}");
                 return BadRequest(ApiResponse<string>.ErrorResult(Messages.UnexpectedError));
+            }
+        }
+
+        /// <summary>
+        /// Yönetim ekranı verilerini getirir
+        /// </summary>
+        /// <param name="adminId">Yönetici ID</param>
+        /// <param name="buildingId">Bina ID (opsiyonel)</param>
+        /// <returns>Yönetim ekranı verileri</returns>
+        [HttpGet("management/{adminId}")]
+        public async Task<IActionResult> GetManagementDashboard(
+            int adminId,
+            [FromQuery] int? buildingId)
+        {
+            try
+            {
+                _logger.LogInformation("Getting management dashboard for admin {AdminId}", adminId);
+
+                var filter = new ManagementFilterDto { BuildingId = buildingId };
+                var result = await _adminService.GetManagementDashboardAsync(adminId, filter);
+
+                if (!result.Success)
+                    return BadRequest(result);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting management dashboard for admin {AdminId}", adminId);
+                return StatusCode(500, ApiResponse<string>.ErrorResult(Messages.UnexpectedError));
             }
         }
 

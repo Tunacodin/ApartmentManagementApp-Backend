@@ -7,16 +7,19 @@ using System.Linq.Expressions;
 using Core.Utilities.Results;
 using Core.Constants;
 using Entities.DTOs;
+using Core.Utilities.Security;
 
 namespace Business.Concrete
 {
     public class UserManager : IUserService
     {
         private readonly IUserDal _userDal;
+        private readonly IPasswordHasher _passwordHasher;
 
-        public UserManager(IUserDal userDal)
+        public UserManager(IUserDal userDal, IPasswordHasher passwordHasher)
         {
             _userDal = userDal;
+            _passwordHasher = passwordHasher;
         }
 
         public void Add(User user)
@@ -24,6 +27,8 @@ namespace Business.Concrete
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
+            // Şifreyi hash'le
+            user.Password = _passwordHasher.HashPassword(user.Password);
             _userDal.Add(user);
         }
 
@@ -93,6 +98,11 @@ namespace Business.Concrete
                 return ApiResponse<bool>.ErrorResult(Messages.UserNotFound);
 
             return ApiResponse<bool>.SuccessResult(Messages.Retrieved, user.IsActive);
+        }
+
+        public User? GetByEmail(string email)
+        {
+            return _userDal.Get(u => u.Email == email);
         }
     }
 }

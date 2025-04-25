@@ -20,5 +20,7 @@ namespace Business.Abstract
 
         Task<ApiResponse<UserDto>> GetByIdAsync(int userId);
         Task<ApiResponse<bool>> IsUserActiveAsync(int userId);
+
+        User? GetByEmail(string email);
     }
 }

@@ -1,6 +1,7 @@
 using Core.Utilities.Results;
 using Entities.Concrete;
 using Entities.DTOs;
+using System.Collections.Generic;
 
 namespace Business.Abstract
 {
@@ -15,5 +16,11 @@ namespace Business.Abstract
         Task<ApiResponse<Survey>> CreateSurveyAsync(SurveyCreateDto surveyDto, int adminId);
         Task<ApiResponse<bool>> UpdateSurveyAsync(SurveyUpdateDto surveyDto);
         Task<ApiResponse<bool>> DeleteSurveyAsync(int surveyId);
+        List<SurveyDto> GetActiveSurveysByBuildingId(int buildingId);
+        SurveyDto GetById(int id);
+        void Add(SurveyDto survey);
+        void Update(SurveyDto survey);
+        void Delete(int id);
+        void AddResponse(SurveyResponseDto response);
     }
 }

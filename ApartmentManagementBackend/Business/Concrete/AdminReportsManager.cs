@@ -29,7 +29,7 @@ namespace Business.Concrete
             _logger = logger;
         }
 
-        public async Task<ApiResponse<List<MonthlyIncomeDto>>> GetMonthlyIncomeAsync(int adminId)
+        public async Task<ApiResponse<List<MonthlyIncomeReportDto>>> GetMonthlyIncomeAsync(int adminId)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace Business.Concrete
                 if (!buildings.Any())
                 {
                     _logger.LogWarning($"No buildings found for admin {adminId}");
-                    return ApiResponse<List<MonthlyIncomeDto>>.ErrorResult($"Admin ID {adminId} için bina bulunamadı");
+                    return ApiResponse<List<MonthlyIncomeReportDto>>.ErrorResult($"Admin ID {adminId} için bina bulunamadı");
                 }
 
                 _logger.LogInformation($"Found {buildings.Count} buildings for admin {adminId}");
@@ -48,16 +48,16 @@ namespace Business.Concrete
                 if (result == null)
                 {
                     _logger.LogWarning($"No payment data found for admin {adminId}");
-                    return ApiResponse<List<MonthlyIncomeDto>>.ErrorResult("Ödeme verisi bulunamadı");
+                    return ApiResponse<List<MonthlyIncomeReportDto>>.ErrorResult("Ödeme verisi bulunamadı");
                 }
 
                 _logger.LogInformation($"Found {result.Count} monthly income records for admin {adminId}");
-                return ApiResponse<List<MonthlyIncomeDto>>.SuccessResult("Aylık gelir raporu başarıyla getirildi", result);
+                return ApiResponse<List<MonthlyIncomeReportDto>>.SuccessResult("Aylık gelir raporu başarıyla getirildi", result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in GetMonthlyIncomeAsync for admin {AdminId}. Error: {Message}", adminId, ex.Message);
-                return ApiResponse<List<MonthlyIncomeDto>>.ErrorResult($"Hata detayı: {ex.Message}");
+                return ApiResponse<List<MonthlyIncomeReportDto>>.ErrorResult($"Hata detayı: {ex.Message}");
             }
         }
 
@@ -81,7 +81,7 @@ namespace Business.Concrete
                 }
 
                 var result = await _paymentDal.GetPaymentStatisticsAsync(adminId);
-                
+
                 _logger.LogInformation($"Successfully retrieved payment statistics for admin {adminId}");
                 return ApiResponse<PaymentStatisticsDto>.SuccessResult(Messages.PaymentStatisticsRetrieved, result);
             }
@@ -221,13 +221,13 @@ namespace Business.Concrete
 
                 _logger.LogInformation("Admin {adminId} için detaylı ödeme istatistikleri başarıyla tamamlandı", adminId);
                 return ApiResponse<PaymentDetailedStatisticsDto>.SuccessResult(
-                    Messages.DetailedPaymentStatisticsRetrieved, 
+                    Messages.DetailedPaymentStatisticsRetrieved,
                     detailedStats);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Detaylı hata: {Message}, Stack: {Stack}", 
-                    ex.Message, 
+                _logger.LogError(ex, "Detaylı hata: {Message}, Stack: {Stack}",
+                    ex.Message,
                     ex.StackTrace);
                 return ApiResponse<PaymentDetailedStatisticsDto>.ErrorResult(
                     $"Detaylı hata: {ex.Message}");

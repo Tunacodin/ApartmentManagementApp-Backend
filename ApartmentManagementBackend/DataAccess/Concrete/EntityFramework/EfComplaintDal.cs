@@ -3,6 +3,7 @@ using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
 using Entities.DTOs.Reports;
+using Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -49,7 +50,7 @@ namespace DataAccess.Concrete.EntityFramework
                             Subject = c.Complaint.Subject,
                             Description = c.Complaint.Description,
                             CreatedAt = c.Complaint.CreatedAt,
-                            Status = c.Complaint.Status,
+                            Status = (int)c.Complaint.Status,
                             ResolvedByAdminId = c.Complaint.ResolvedByAdminId,
                             ResolvedAt = c.Complaint.ResolvedAt,
                             CreatedByName = u != null ? $"{u.FirstName} {u.LastName}" : c.Complaint.CreatedByName ?? "Bilinmeyen Kullanıcı"
@@ -101,7 +102,7 @@ namespace DataAccess.Concrete.EntityFramework
                             Subject = c.Complaint.Subject,
                             Description = c.Complaint.Description,
                             CreatedAt = c.Complaint.CreatedAt,
-                            Status = c.Complaint.Status,
+                            Status = (int)c.Complaint.Status,
                             ResolvedByAdminId = c.Complaint.ResolvedByAdminId,
                             ResolvedAt = c.Complaint.ResolvedAt,
                             CreatedByName = u != null ? $"{u.FirstName} {u.LastName}" : c.Complaint.CreatedByName ?? "Bilinmeyen Kullanıcı"
@@ -136,7 +137,7 @@ namespace DataAccess.Concrete.EntityFramework
                             Subject = c.Complaint.Subject,
                             Description = c.Complaint.Description,
                             CreatedAt = c.Complaint.CreatedAt,
-                            Status = c.Complaint.Status,
+                            Status = (int)c.Complaint.Status,
                             ResolvedByAdminId = c.Complaint.ResolvedByAdminId,
                             ResolvedAt = c.Complaint.ResolvedAt,
                             CreatedByName = u != null ? $"{u.FirstName} {u.LastName}" : c.Complaint.CreatedByName ?? "Bilinmeyen Kullanıcı"
@@ -155,7 +156,7 @@ namespace DataAccess.Concrete.EntityFramework
         public async Task<int> GetActiveComplaintsCountAsync(int buildingId)
         {
             return await _context.Complaints
-                .CountAsync(c => c.BuildingId == buildingId && c.Status != 1);
+                .CountAsync(c => c.BuildingId == buildingId && c.Status != (int)ComplaintStatus.Resolved);
         }
 
         public async Task<ComplaintAnalyticsDto> GetComplaintAnalyticsAsync(int adminId)
@@ -180,10 +181,10 @@ namespace DataAccess.Concrete.EntityFramework
                 {
                     Total = complaints.Count,
                     Open = complaints.Count(c => c.Status == null),
-                    InProgress = complaints.Count(c => c.Status == 0),
-                    Resolved = complaints.Count(c => c.Status == 1),
+                    InProgress = complaints.Count(c => c.Status == (int)ComplaintStatus.InProgress),
+                    Resolved = complaints.Count(c => c.Status == (int)ComplaintStatus.Resolved),
                     AverageResolutionTime = complaints
-                        .Where(c => c.Status == 1 && c.ResolvedAt.HasValue)
+                        .Where(c => c.Status == (int)ComplaintStatus.Resolved && c.ResolvedAt.HasValue)
                         .Select(c => (c.ResolvedAt!.Value - c.CreatedAt).TotalHours)
                         .DefaultIfEmpty(0)
                         .Average()
@@ -205,7 +206,7 @@ namespace DataAccess.Concrete.EntityFramework
                     .Where(c => _context.Buildings
                         .Where(b => b.AdminId == adminId)
                         .Select(b => b.Id)
-                        .Contains(c.BuildingId) && c.Status != 1)
+                        .Contains(c.BuildingId) && c.Status != (int)ComplaintStatus.Resolved)
                     .GroupJoin(_context.Users,
                         c => c.UserId,
                         u => u.Id,
@@ -220,7 +221,7 @@ namespace DataAccess.Concrete.EntityFramework
                             Subject = c.Complaint.Subject,
                             Description = c.Complaint.Description,
                             CreatedAt = c.Complaint.CreatedAt,
-                            Status = c.Complaint.Status,
+                            Status = (int)c.Complaint.Status,
                             ResolvedByAdminId = c.Complaint.ResolvedByAdminId,
                             ResolvedAt = c.Complaint.ResolvedAt,
                             CreatedByName = u != null ? $"{u.FirstName} {u.LastName}" : c.Complaint.CreatedByName ?? "Bilinmeyen Kullanıcı"

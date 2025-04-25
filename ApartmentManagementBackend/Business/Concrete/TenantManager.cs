@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Transactions;
+using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Business.Concrete
 {
@@ -15,13 +17,41 @@ namespace Business.Concrete
         private readonly IApartmentDal _apartmentDal;
         private readonly IPaymentDal _paymentDal;
         private readonly IBuildingDal _buildingDal;
+        private readonly IMeetingService _meetingService;
+        private readonly ISurveyService _surveyService;
+        private readonly IComplaintService _complaintService;
+        private readonly INotificationService _notificationService;
+        private readonly IAdminDal _adminDal;
+        private readonly IOwnerDal _ownerDal;
+        private readonly IContractDal _contractDal;
+        private readonly ILogger<TenantManager> _logger;
 
-        public TenantManager(ITenantDal tenantDal, IApartmentDal apartmentDal, IPaymentDal paymentDal, IBuildingDal buildingDal)
+        public TenantManager(
+            ITenantDal tenantDal,
+            IApartmentDal apartmentDal,
+            IPaymentDal paymentDal,
+            IBuildingDal buildingDal,
+            IMeetingService meetingService,
+            ISurveyService surveyService,
+            IComplaintService complaintService,
+            INotificationService notificationService,
+            IAdminDal adminDal,
+            IOwnerDal ownerDal,
+            IContractDal contractDal,
+            ILogger<TenantManager> logger)
         {
             _tenantDal = tenantDal;
             _apartmentDal = apartmentDal;
             _paymentDal = paymentDal;
             _buildingDal = buildingDal;
+            _meetingService = meetingService;
+            _surveyService = surveyService;
+            _complaintService = complaintService;
+            _notificationService = notificationService;
+            _adminDal = adminDal;
+            _ownerDal = ownerDal;
+            _contractDal = contractDal;
+            _logger = logger;
         }
 
         public void Add(Tenant tenant)
@@ -222,6 +252,7 @@ namespace Business.Concrete
                 PhoneNumber = tenant.PhoneNumber ?? string.Empty,
                 Role = tenant.Role ?? string.Empty,
                 IsActive = tenant.IsActive,
+                ProfileImageUrl = tenant.ProfileImageUrl,
                 ApartmentId = tenant.ApartmentId,
                 LeaseStartDate = tenant.LeaseStartDate,
                 LeaseEndDate = tenant.LeaseEndDate,
@@ -245,6 +276,7 @@ namespace Business.Concrete
                 Email = tenant.Email ?? string.Empty,
                 PhoneNumber = tenant.PhoneNumber ?? string.Empty,
                 IsActive = tenant.IsActive,
+                ProfileImageUrl = tenant.ProfileImageUrl,
                 ApartmentId = tenant.ApartmentId,
                 BuildingName = building?.BuildingName ?? "Atanmamış",
                 UnitNumber = apartment?.UnitNumber ?? 0,
@@ -268,6 +300,7 @@ namespace Business.Concrete
                 Email = tenant.Email ?? string.Empty,
                 PhoneNumber = tenant.PhoneNumber ?? string.Empty,
                 IsActive = tenant.IsActive,
+                ProfileImageUrl = tenant.ProfileImageUrl,
                 ApartmentId = tenant.ApartmentId,
                 BuildingName = building?.BuildingName ?? "Atanmamış",
                 UnitNumber = apartment?.UnitNumber ?? 0
@@ -322,15 +355,22 @@ namespace Business.Concrete
             var payments = _paymentDal.GetAll(p => p.UserId == tenant.Id);
             if (payments == null) return null;
 
-            return payments.Select(p => new PaymentHistoryDto
-            {
-                Id = p.Id,
-                PaymentType = p.PaymentType.ToString().ToLower(),
-                Amount = p.Amount,
-                PaymentDate = p.PaymentDate,
-                IsPaid = p.IsPaid,
-                Description = p.Description ?? string.Empty
-            }).ToList();
+            return payments
+                .OrderByDescending(p => p.PaymentDate)
+                .Select(p => new PaymentHistoryDto
+                {
+                    Id = p.Id,
+                    PaymentType = p.PaymentType,
+                    Amount = p.Amount,
+                    PaymentDate = p.PaymentDate,
+                    DueDate = p.DueDate,
+                    IsPaid = p.IsPaid,
+                    Description = p.Description ?? string.Empty,
+                    DelayedDays = p.DelayedDays,
+                    DelayPenaltyAmount = p.DelayPenaltyAmount,
+                    TotalAmount = p.TotalAmount ?? p.Amount
+                })
+                .ToList();
         }
 
         public List<TenantListDto>? GetAllTenants()
@@ -403,9 +443,9 @@ namespace Business.Concrete
         private void CancelFuturePayments(int tenantId)
         {
             // Gelecek tarihli ödenmemiş ödemeleri iptal et
-            var futurePayments = _paymentDal.GetAll(p => 
-                p.UserId == tenantId && 
-                p.DueDate > DateTime.Now && 
+            var futurePayments = _paymentDal.GetAll(p =>
+                p.UserId == tenantId &&
+                p.DueDate > DateTime.Now &&
                 !p.IsPaid);
 
             if (futurePayments == null) return;
@@ -413,7 +453,437 @@ namespace Business.Concrete
             foreach (var payment in futurePayments)
             {
                 _paymentDal.Delete(payment);
-            }   
+            }
+        }
+
+        public TenantDashboardDto GetTenantDashboard(int tenantId)
+        {
+            var tenant = GetById(tenantId);
+            if (tenant == null)
+                throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+            var apartment = _apartmentDal.Get(a => a.Id == tenant.ApartmentId);
+            if (apartment == null)
+                throw new KeyNotFoundException($"Apartment not found for tenant {tenantId}");
+
+            var building = _buildingDal.Get(b => b.Id == apartment.BuildingId);
+            if (building == null)
+                throw new KeyNotFoundException($"Building not found for apartment {apartment.Id}");
+
+            _logger.LogInformation($"Building found - ID: {building.Id}, Name: {building.BuildingName}, Apartment BuildingId: {apartment.BuildingId}");
+
+            var admin = _adminDal.Get(a => a.Id == building.AdminId);
+            var owner = _ownerDal.Get(o => o.Id == apartment.OwnerId);
+            var contract = _contractDal.Get(c => c.TenantId == tenantId);
+
+            var dashboard = new TenantDashboardDto
+            {
+                Profile = new TenantProfileDto
+                {
+                    Id = tenant.Id,
+                    FullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
+                    Email = tenant.Email,
+                    PhoneNumber = tenant.PhoneNumber,
+                    ProfileImageUrl = tenant.ProfileImageUrl,
+                    IsActive = tenant.IsActive,
+                    ApartmentId = apartment.Id,
+                    ApartmentNumber = apartment.UnitNumber.ToString(),
+                    BuildingId = building.Id,
+                    BuildingName = building.BuildingName,
+                    BuildingAddress = $"{building.Street} {building.BuildingNumber}, {building.Neighborhood}, {building.District}, {building.City}",
+                    LeaseStartDate = tenant.LeaseStartDate,
+                    LeaseEndDate = tenant.LeaseEndDate ?? DateTime.MaxValue,
+                    MonthlyRent = tenant.MonthlyRent,
+                    MonthlyDues = tenant.MonthlyDues,
+                    TotalPayments = _paymentDal.GetAll(p => p.UserId == tenantId).Count,
+                    PendingPayments = _paymentDal.GetAll(p => p.UserId == tenantId && !p.IsPaid).Count,
+                    TotalComplaints = _complaintService.GetComplaintsByTenantId(tenantId).Count,
+                    ActiveComplaints = _complaintService.GetComplaintsByTenantId(tenantId).Count(c => !c.IsResolved),
+                    TotalMeetings = _meetingService.GetUpcomingMeetingsByBuildingId(building.Id).Count,
+                    UpcomingMeetings = _meetingService.GetUpcomingMeetingsByBuildingId(building.Id).Count(m => m.MeetingDate > DateTime.Now),
+                    RecentPayments = _paymentDal.GetAll(p => p.UserId == tenantId)
+                        .OrderByDescending(p => p.PaymentDate)
+                        .Take(5)
+                        .Select(p => new PaymentWithUserDto
+                        {
+                            Id = p.Id,
+                            PaymentType = p.PaymentType,
+                            Amount = p.Amount,
+                            PaymentDate = p.PaymentDate,
+                            BuildingId = building.Id,
+                            ApartmentId = p.ApartmentId,
+                            UserId = p.UserId,
+                            IsPaid = p.IsPaid,
+                            UserFullName = p.UserFullName,
+                            ProfileImageUrl = tenant.ProfileImageUrl
+                        })
+                        .ToList(),
+                    RecentComplaints = _complaintService.GetComplaintsByTenantId(tenantId)
+                        .OrderByDescending(c => c.CreatedDate)
+                        .Take(5)
+                        .Select(c => new ComplaintWithUserDto
+                        {
+                            Id = c.Id,
+                            Subject = c.Title,
+                            Description = c.Description,
+                            CreatedAt = c.CreatedDate,
+                            BuildingId = building.Id,
+                            UserId = tenantId,
+                            Status = c.Status == "Resolved" ? 1 : 0,
+                            CreatedByName = $"{tenant.FirstName} {tenant.LastName}",
+                            ProfileImageUrl = tenant.ProfileImageUrl
+                        })
+                        .ToList(),
+                    UpcomingMeetingsList = _meetingService.GetUpcomingMeetingsByBuildingId(building.Id)
+                        .Where(m => m.MeetingDate > DateTime.Now)
+                        .OrderBy(m => m.MeetingDate)
+                        .Take(5)
+                        .ToList(),
+                    AdminName = admin != null ? $"{admin.FirstName} {admin.LastName}" : null,
+                    AdminPhone = admin?.PhoneNumber,
+                    AdminEmail = admin?.Email,
+                    OwnerName = owner != null ? $"{owner.FirstName} {owner.LastName}" : null,
+                    OwnerPhone = owner?.PhoneNumber,
+                    OwnerEmail = owner?.Email
+                },
+                Contract = new ContractInfoDto
+                {
+                    StartDate = contract?.StartDate ?? DateTime.Now,
+                    EndDate = contract?.EndDate ?? DateTime.Now.AddYears(1),
+                    RemainingDays = contract != null ? (int)(contract.EndDate - DateTime.Now).TotalDays : 0,
+                    RemainingMonths = contract != null ? (int)((contract.EndDate - DateTime.Now).TotalDays / 30) : 0,
+                    MonthlyRent = contract?.RentAmount ?? tenant.MonthlyRent,
+                    MonthlyDues = building.DuesAmount,
+                    ContractStatus = contract?.IsActive == true ? "Active" : "Inactive",
+                    DaysUntilNextRent = contract != null ? (int)(contract.StartDate.AddMonths(1) - DateTime.Now).TotalDays : 0
+                },
+                Apartment = new ApartmentInfoDto
+                {
+                    Id = apartment.Id,
+                    UnitNumber = apartment.UnitNumber,
+                    Floor = apartment.Floor,
+                    Type = apartment.Type,
+                    RentAmount = apartment.RentAmount,
+                    DepositAmount = apartment.DepositAmount,
+                    HasBalcony = apartment.HasBalcony,
+                    Notes = apartment.Notes,
+                    Status = apartment.Status,
+                    CreatedAt = apartment.CreatedAt,
+                    IsActive = apartment.IsActive,
+                    IsOccupied = apartment.IsOccupied
+                },
+                Building = new BuildingInfoDto
+                {
+                    Id = building.Id,
+                    BuildingName = building.BuildingName,
+                    City = building.City,
+                    District = building.District,
+                    Neighborhood = building.Neighborhood,
+                    Street = building.Street,
+                    BuildingNumber = building.BuildingNumber,
+                    PostalCode = building.PostalCode,
+                    HasElevator = building.HasElevator,
+                    HasPlayground = building.HasPlayground,
+                    HasGarden = building.HasGarden,
+                    ParkingType = building.ParkingType,
+                    HeatingType = building.HeatingType,
+                    PoolType = building.PoolType,
+                    BuildingAge = building.BuildingAge,
+                    IncludedServices = new List<string>
+                    {
+                        building.IncludedElectric ? "Elektrik" : null,
+                        building.IncludedWater ? "Su" : null,
+                        building.IncludedGas ? "Doğalgaz" : null,
+                        building.IncludedInternet ? "İnternet" : null
+                    }.Where(s => s != null).ToList()
+                },
+                Admin = admin != null ? new AdminInfoDto
+                {
+                    FullName = $"{admin.FirstName} {admin.LastName}",
+                    Email = admin.Email,
+                    PhoneNumber = admin.PhoneNumber
+                } : null,
+                Owner = owner != null ? new OwnerInfoDto
+                {
+                    FullName = $"{owner.FirstName} {owner.LastName}",
+                    Email = owner.Email,
+                    PhoneNumber = owner.PhoneNumber,
+                    IBAN = owner.IBAN,
+                    BankName = owner.BankName
+                } : null,
+                PaymentSummary = new PaymentSummaryDto
+                {
+                    CurrentBalance = CalculateCurrentBalance(tenantId),
+                    CurrentPenalty = CalculateCurrentPenalty(tenantId),
+                    NextPaymentAmount = (contract?.RentAmount ?? tenant.MonthlyRent) + building.DuesAmount,
+                    NextPaymentDate = GetNextPaymentDate(tenantId),
+                    HasOverduePayments = HasOverduePayments(tenantId),
+                    TotalPaidAmount = GetTotalPaidAmount(tenantId),
+                    TotalPendingAmount = GetTotalPendingAmount(tenantId)
+                },
+                RecentPayments = _paymentDal.GetAll(p => p.UserId == tenantId)
+                    .OrderByDescending(p => p.PaymentDate)
+                    .Take(5)
+                    .Select(p => new PaymentHistoryDto
+                    {
+                        Id = p.Id,
+                        PaymentType = p.PaymentType,
+                        Amount = p.Amount,
+                        PaymentDate = p.PaymentDate,
+                        IsPaid = p.IsPaid
+                    })
+                    .ToList(),
+                RecentPenalties = GetRecentPenalties(tenantId),
+                UpcomingMeetings = _meetingService.GetUpcomingMeetingsByBuildingId(building.Id)
+                    .Where(m => m.MeetingDate > DateTime.Now)
+                    .OrderBy(m => m.MeetingDate)
+                    .Take(5)
+                    .ToList(),
+                ActiveSurveys = _surveyService.GetActiveSurveysByBuildingId(building.Id),
+                RecentComplaints = _complaintService.GetComplaintsByTenantId(tenantId)
+                    .OrderByDescending(c => c.CreatedDate)
+                    .Take(5)
+                    .ToList(),
+                Notifications = _notificationService.GetNotificationsByUserId(tenantId)
+                    .OrderByDescending(n => n.CreatedDate)
+                    .Take(10)
+                    .ToList()
+            };
+
+            return dashboard;
+        }
+
+        private decimal CalculateCurrentPenalty(int tenantId)
+        {
+            // Geç ödenen ödemeler için ceza hesaplama
+            var latePayments = _paymentDal.GetAll(p =>
+                p.UserId == tenantId &&
+                p.DueDate < DateTime.Now &&
+                !p.IsPaid);
+
+            if (latePayments == null || !latePayments.Any())
+                return 0;
+
+            decimal totalPenalty = 0;
+            foreach (var payment in latePayments)
+            {
+                var daysLate = (DateTime.Now - payment.DueDate).Days;
+                // Günlük %0.1 ceza (örnek)
+                totalPenalty += payment.Amount * (decimal)(daysLate * 0.001);
+            }
+
+            return totalPenalty;
+        }
+
+        public List<NotificationDto> GetTenantNotifications(int tenantId)
+        {
+            var tenant = GetById(tenantId);
+            if (tenant == null)
+                throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+            // Kiracıya özel bildirimleri veritabanından çek
+            var thirtyDaysAgo = DateTime.Now.AddDays(-30);
+            return _notificationService.GetNotificationsByUserId(tenantId)
+                .Where(n => !n.IsRead || n.CreatedDate >= thirtyDaysAgo)
+                .OrderByDescending(n => n.CreatedDate)
+                .Take(10)
+                .ToList();
+        }
+
+        public List<MeetingDto> GetUpcomingMeetings(int tenantId)
+        {
+            var tenant = GetById(tenantId);
+            if (tenant == null)
+                throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+            // Kiracının binasındaki toplantıları getir
+            var apartment = _apartmentDal.Get(a => a.Id == tenant.ApartmentId);
+            if (apartment == null)
+                throw new KeyNotFoundException($"Apartment not found for tenant {tenantId}");
+
+            return _meetingService.GetUpcomingMeetingsByBuildingId(apartment.BuildingId);
+        }
+
+        public List<SurveyDto> GetActiveSurveys(int tenantId)
+        {
+            var tenant = GetById(tenantId);
+            if (tenant == null)
+                throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+            // Kiracının binasındaki aktif anketleri getir
+            var apartment = _apartmentDal.Get(a => a.Id == tenant.ApartmentId);
+            if (apartment == null)
+                throw new KeyNotFoundException($"Apartment not found for tenant {tenantId}");
+
+            return _surveyService.GetActiveSurveysByBuildingId(apartment.BuildingId);
+        }
+
+        public List<ComplaintDto> GetRecentComplaints(int tenantId)
+        {
+            var tenant = GetById(tenantId);
+            if (tenant == null)
+                throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+            // Son 3 ay içindeki şikayetleri getir
+            var threeMonthsAgo = DateTime.Now.AddMonths(-3);
+            return _complaintService.GetComplaintsByTenantId(tenantId)
+                .Where(c => c.CreatedDate >= threeMonthsAgo)
+                .OrderByDescending(c => c.CreatedDate)
+                .Take(5)
+                .ToList();
+        }
+
+        public void CreateComplaint(int tenantId, string title, string description)
+        {
+            var tenant = GetById(tenantId);
+            if (tenant == null)
+                throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+            var apartment = _apartmentDal.Get(a => a.Id == tenant.ApartmentId);
+            if (apartment == null)
+                throw new KeyNotFoundException($"Apartment not found for tenant {tenantId}");
+
+            var complaint = new ComplaintDto
+            {
+                Title = title,
+                Description = description,
+                CreatedDate = DateTime.Now,
+                Status = "pending",
+                BuildingId = apartment.BuildingId,
+                ApartmentId = apartment.Id,
+                TenantId = tenantId,
+                IsResolved = false,
+                IsInProgress = false,
+                CreatedByName = $"{tenant.FirstName} {tenant.LastName}"
+            };
+
+            _complaintService.Add(complaint);
+
+            // Bildirim oluştur
+            var notification = new NotificationDto
+            {
+                Title = "Yeni Şikayet",
+                Message = $"Yeni bir şikayet oluşturuldu: {title}",
+                CreatedDate = DateTime.Now,
+                IsRead = false,
+                NotificationType = "complaint",
+                UserId = tenantId
+            };
+
+            _notificationService.Add(notification);
+        }
+
+        public void SubmitSurveyResponse(int tenantId, int surveyId, Dictionary<int, string> responses)
+        {
+            var tenant = GetById(tenantId);
+            if (tenant == null)
+                throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+            var survey = _surveyService.GetById(surveyId);
+            if (survey == null)
+                throw new KeyNotFoundException($"Survey with ID {surveyId} not found.");
+
+            // Anket yanıtlarını kaydet
+            foreach (var response in responses)
+            {
+                var surveyResponse = new SurveyResponseDto
+                {
+                    SurveyId = surveyId,
+                    QuestionId = response.Key,
+                    Answer = response.Value,
+                    TenantId = tenantId,
+                    ResponseDate = DateTime.Now
+                };
+
+                _surveyService.AddResponse(surveyResponse);
+            }
+
+            // Bildirim oluştur
+            var notification = new NotificationDto
+            {
+                Title = "Anket Yanıtı",
+                Message = $"{survey.Title} anketine yanıt verdiniz",
+                CreatedDate = DateTime.Now,
+                IsRead = false,
+                NotificationType = "survey",
+                UserId = tenantId
+            };
+
+            _notificationService.Add(notification);
+        }
+
+        private List<PenaltyHistoryDto> GetRecentPenalties(int tenantId)
+        {
+            var penalties = _paymentDal.GetAll(p =>
+                p.UserId == tenantId &&
+                p.PaymentType == "penalty" &&
+                p.PaymentDate >= DateTime.Now.AddMonths(-3));
+
+            return (penalties?.OrderByDescending(p => p.PaymentDate)
+                .Take(5)
+                .Select(p => new PenaltyHistoryDto
+                {
+                    Id = p.Id,
+                    Amount = p.Amount,
+                    Description = p.Description ?? "Penalty",
+                    PaymentDate = p.PaymentDate,
+                    IsPaid = p.IsPaid
+                })
+                .ToList()) ?? new List<PenaltyHistoryDto>();
+        }
+
+        private decimal CalculateCurrentBalance(int tenantId)
+        {
+            var payments = _paymentDal.GetAll(p => p.UserId == tenantId && !p.IsPaid);
+            return payments?.Sum(p => p.Amount) ?? 0;
+        }
+
+        private DateTime GetNextPaymentDate(int tenantId)
+        {
+            var payments = _paymentDal.GetAll(p =>
+                p.UserId == tenantId &&
+                !p.IsPaid &&
+                p.DueDate > DateTime.Now);
+
+            return payments?.OrderBy(p => p.DueDate)
+                .FirstOrDefault()?.DueDate ?? DateTime.Now.AddMonths(1);
+        }
+
+        private bool HasOverduePayments(int tenantId)
+        {
+            var payments = _paymentDal.GetAll(p =>
+                p.UserId == tenantId &&
+                !p.IsPaid &&
+                p.DueDate < DateTime.Now);
+
+            return payments?.Any() ?? false;
+        }
+
+        private decimal GetTotalPaidAmount(int tenantId)
+        {
+            var payments = _paymentDal.GetAll(p => p.UserId == tenantId && p.IsPaid);
+            return payments?.Sum(p => p.Amount) ?? 0;
+        }
+
+        private decimal GetTotalPendingAmount(int tenantId)
+        {
+            var payments = _paymentDal.GetAll(p => p.UserId == tenantId && !p.IsPaid);
+            return payments?.Sum(p => p.Amount) ?? 0;
+        }
+
+        private int GetDaysUntilNextRent(int tenantId)
+        {
+            var payments = _paymentDal.GetAll(p =>
+                p.UserId == tenantId &&
+                !p.IsPaid &&
+                p.DueDate > DateTime.Now);
+
+            if (payments == null || !payments.Any())
+                return 0;
+
+            var nextPaymentDate = payments.OrderBy(p => p.DueDate).First().DueDate;
+            var daysUntilNextRent = (nextPaymentDate - DateTime.Now).Days;
+            return Math.Max(daysUntilNextRent, 0);
         }
     }
 }

@@ -21,5 +21,12 @@ namespace Business.Abstract
         List<Tenant>? GetByBuildingId(int buildingId);
         List<Tenant>? GetByUserId(int userId);
         Tenant? Get(Expression<Func<Tenant, bool>> filter);
+        TenantDashboardDto GetTenantDashboard(int tenantId);
+        void CreateComplaint(int tenantId, string title, string description);
+        void SubmitSurveyResponse(int tenantId, int surveyId, Dictionary<int, string> responses);
+        List<NotificationDto> GetTenantNotifications(int tenantId);
+        List<MeetingDto> GetUpcomingMeetings(int tenantId);
+        List<SurveyDto> GetActiveSurveys(int tenantId);
+        List<ComplaintDto> GetRecentComplaints(int tenantId);
     }
 }

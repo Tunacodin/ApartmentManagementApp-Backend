@@ -16,20 +16,23 @@ namespace DataAccess.Concrete.EntityFramework
             _logger = logger;
         }
 
-        public async Task<List<MonthlyIncomeDto>> GetMonthlyIncomeAsync(int adminId)
+        public async Task<List<MonthlyIncomeReportDto>> GetMonthlyIncomeAsync(int adminId)
         {
             try
             {
+                string[] turkishMonths = { "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+                                          "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık" };
+
                 return await _context.Payments
                     .Where(p => _context.Buildings
                         .Where(b => b.AdminId == adminId)
                         .Select(b => b.Id)
                         .Contains(p.BuildingId))
                     .GroupBy(p => new { p.PaymentDate.Year, p.PaymentDate.Month })
-                    .Select(g => new MonthlyIncomeDto
+                    .Select(g => new MonthlyIncomeReportDto
                     {
                         Year = g.Key.Year,
-                        Month = g.Key.Month,
+                        Month = turkishMonths[g.Key.Month - 1],
                         TotalAmount = g.Sum(p => p.Amount),
                         PaidAmount = g.Where(p => p.IsPaid).Sum(p => p.Amount),
                         UnpaidAmount = g.Where(p => !p.IsPaid).Sum(p => p.Amount)
@@ -134,8 +137,8 @@ namespace DataAccess.Concrete.EntityFramework
                     .FirstOrDefaultAsync(b => b.Id == buildingId);
 
                 if (building == null)
-                    return new BuildingPaymentStatisticsDto 
-                    { 
+                    return new BuildingPaymentStatisticsDto
+                    {
                         BuildingId = buildingId,
                         BuildingName = "Unknown"
                     };
@@ -153,7 +156,7 @@ namespace DataAccess.Concrete.EntityFramework
                     PaidCount = payments.Count(p => p.IsPaid),
                     PendingCount = payments.Count(p => !p.IsPaid && p.DueDate > DateTime.Now),
                     OverdueCount = payments.Count(p => !p.IsPaid && p.DueDate <= DateTime.Now),
-                    CollectionRate = payments.Any() ? 
+                    CollectionRate = payments.Any() ?
                         (decimal)payments.Count(p => p.IsPaid) / payments.Count * 100 : 0
                 };
             }

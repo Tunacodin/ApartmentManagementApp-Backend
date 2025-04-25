@@ -1,6 +1,7 @@
 using Core.Utilities.Results;
 using Entities.Concrete;
 using Entities.DTOs;
+using System.Collections.Generic;
 
 namespace Business.Abstract
 {
@@ -13,5 +14,10 @@ namespace Business.Abstract
         Task<ApiResponse<bool>> ResolveComplaintAsync(int complaintId, int adminId);
         Task<ApiResponse<bool>> DeleteComplaintAsync(int complaintId);
         Task<ApiResponse<int>> GetActiveComplaintsCountAsync(int buildingId);
+        List<ComplaintDto> GetComplaintsByTenantId(int tenantId);
+        ComplaintDto GetById(int id);
+        void Add(ComplaintDto complaint);
+        void Update(ComplaintDto complaint);
+        void Delete(int id);
     }
-} 
+}

@@ -38,7 +38,7 @@ namespace Business.Concrete
             try
             {
                 var meeting = await _meetingDal.GetMeetingDetailByIdAsync(meetingId);
-                return meeting == null 
+                return meeting == null
                     ? ApiResponse<MeetingDetailDto>.ErrorResult(Messages.MeetingNotFound)
                     : ApiResponse<MeetingDetailDto>.SuccessResult(Messages.Success, meeting);
             }
@@ -172,5 +172,104 @@ namespace Business.Concrete
                 _meetingDal.Update(meeting);
             }
         }
+
+        public List<MeetingDto> GetUpcomingMeetingsByBuildingId(int buildingId)
+        {
+            try
+            {
+                var meetings = _meetingDal.GetAll(m => m.BuildingId == buildingId &&
+                                                      m.MeetingDate > DateTime.Now &&
+                                                      !m.IsCancelled);
+
+                return meetings.Select(m => new MeetingDto
+                {
+                    Id = m.Id,
+                    Title = m.Title,
+                    Description = m.Description,
+                    MeetingDate = m.MeetingDate,
+                    BuildingId = m.BuildingId,
+                    OrganizedById = m.OrganizedById
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting upcoming meetings by building ID");
+                return new List<MeetingDto>();
+            }
+        }
+
+        public MeetingDto GetById(int id)
+        {
+            try
+            {
+                var meeting = _meetingDal.Get(m => m.Id == id);
+                if (meeting == null)
+                    return null;
+
+                return new MeetingDto
+                {
+                    Id = meeting.Id,
+                    Title = meeting.Title,
+                    Description = meeting.Description,
+                    MeetingDate = meeting.MeetingDate,
+                    BuildingId = meeting.BuildingId,
+                    OrganizedById = meeting.OrganizedById
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting meeting by ID");
+                return null;
+            }
+        }
+
+        public void Add(MeetingDto meetingDto)
+        {
+            try
+            {
+                var meeting = new Meeting
+                {
+                    Title = meetingDto.Title,
+                    Description = meetingDto.Description,
+                    MeetingDate = meetingDto.MeetingDate,
+                    BuildingId = meetingDto.BuildingId,
+                    OrganizedById = meetingDto.OrganizedById,
+                    CreatedAt = DateTime.Now,
+                    Status = "Scheduled",
+                    IsCancelled = false,
+                    CancellationReason = string.Empty
+                };
+
+                _meetingDal.Add(meeting);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding meeting from DTO");
+                throw;
+            }
+        }
+
+        public void Update(MeetingDto meetingDto)
+        {
+            try
+            {
+                var meeting = _meetingDal.Get(m => m.Id == meetingDto.Id);
+                if (meeting == null)
+                    throw new KeyNotFoundException($"Meeting with ID {meetingDto.Id} not found");
+
+                meeting.Title = meetingDto.Title;
+                meeting.Description = meetingDto.Description;
+                meeting.MeetingDate = meetingDto.MeetingDate;
+                meeting.BuildingId = meetingDto.BuildingId;
+                meeting.OrganizedById = meetingDto.OrganizedById;
+
+                _meetingDal.Update(meeting);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating meeting from DTO");
+                throw;
+            }
+        }
     }
-} 
+}

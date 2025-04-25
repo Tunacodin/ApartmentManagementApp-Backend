@@ -3,6 +3,7 @@ using Core.Constants;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
+using Entities.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace Business.Concrete
@@ -119,5 +120,131 @@ namespace Business.Concrete
                 return ApiResponse<bool>.ErrorResult(Messages.UnexpectedError);
             }
         }
+
+        public List<NotificationDto> GetNotificationsByUserId(int userId)
+        {
+            try
+            {
+                var notifications = _notificationDal.GetAll(n => n.UserId == userId);
+                return notifications.Select(n => new NotificationDto
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Message = n.Message,
+                    CreatedDate = n.CreatedAt,
+                    IsRead = n.IsRead,
+                    NotificationType = "general",
+                    UserId = n.UserId
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting notifications by user ID");
+                return new List<NotificationDto>();
+            }
+        }
+
+        public NotificationDto GetById(int id)
+        {
+            try
+            {
+                var notification = _notificationDal.Get(n => n.Id == id);
+                if (notification == null)
+                    return null;
+
+                return new NotificationDto
+                {
+                    Id = notification.Id,
+                    Title = notification.Title,
+                    Message = notification.Message,
+                    CreatedDate = notification.CreatedAt,
+                    IsRead = notification.IsRead,
+                    NotificationType = "general",
+                    UserId = notification.UserId
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting notification by ID");
+                return null;
+            }
+        }
+
+        public void Add(NotificationDto notificationDto)
+        {
+            try
+            {
+                var notification = new Notification
+                {
+                    Title = notificationDto.Title,
+                    Message = notificationDto.Message,
+                    UserId = notificationDto.UserId,
+                    CreatedAt = notificationDto.CreatedDate,
+                    IsRead = notificationDto.IsRead,
+                    CreatedByAdminId = 1 // Default admin ID, should be passed from the caller
+                };
+
+                _notificationDal.Add(notification);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding notification");
+                throw;
+            }
+        }
+
+        public void Update(NotificationDto notificationDto)
+        {
+            try
+            {
+                var notification = _notificationDal.Get(n => n.Id == notificationDto.Id);
+                if (notification == null)
+                    throw new KeyNotFoundException($"Notification with ID {notificationDto.Id} not found");
+
+                notification.Title = notificationDto.Title;
+                notification.Message = notificationDto.Message;
+                notification.IsRead = notificationDto.IsRead;
+
+                _notificationDal.Update(notification);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating notification");
+                throw;
+            }
+        }
+
+        public void Delete(int id)
+        {
+            try
+            {
+                var notification = _notificationDal.Get(n => n.Id == id);
+                if (notification != null)
+                    _notificationDal.Delete(notification);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting notification");
+                throw;
+            }
+        }
+
+        public void MarkAsRead(int notificationId)
+        {
+            try
+            {
+                var notification = _notificationDal.Get(n => n.Id == notificationId);
+                if (notification != null)
+                {
+                    notification.IsRead = true;
+                    _notificationDal.Update(notification);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking notification as read");
+                throw;
+            }
+        }
     }
-} 
+}

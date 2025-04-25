@@ -1,9 +1,9 @@
 namespace Entities.DTOs.Reports
 {
-    public class MonthlyIncomeDto
+    public class MonthlyIncomeReportDto
     {
         public int Year { get; set; }
-        public int Month { get; set; }
+        public string Month { get; set; } = string.Empty;
         public decimal TotalAmount { get; set; }
         public decimal PaidAmount { get; set; }
         public decimal UnpaidAmount { get; set; }
@@ -147,4 +147,4 @@ namespace Entities.DTOs.Reports
         public int TotalPaymentCount { get; set; }
         public int PaidPaymentCount { get; set; }
     }
-} 
+}

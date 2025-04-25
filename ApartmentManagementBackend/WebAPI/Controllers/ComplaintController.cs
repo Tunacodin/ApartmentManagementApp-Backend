@@ -137,7 +137,7 @@ namespace WebAPI.Controllers
             {
                 // Get complaint details first to access the subject and userId
                 var complaintDetail = await _complaintService.GetComplaintDetailAsync(id);
-                if (!complaintDetail.Success)
+                if (!complaintDetail.Success || complaintDetail.Data == null)
                 {
                     return BadRequest(complaintDetail);
                 }
@@ -153,7 +153,7 @@ namespace WebAPI.Controllers
                 var notification = new Notification
                 {
                     Title = "Şikayet İşleme Alındı",
-                    Message = $"{complaintDetail.Data.Subject} şikayetiniz işleme alındı",
+                    Message = $"{complaintDetail.Data.Subject ?? "Bilinmeyen konu"} şikayetiniz işleme alındı",
                     UserId = complaintDetail.Data.UserId,
                     CreatedByAdminId = adminId,
                     CreatedAt = DateTime.Now,

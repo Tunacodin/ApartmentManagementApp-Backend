@@ -22,7 +22,22 @@ namespace DataAccess.Abstract
         Task<List<PaymentWithUserDto>> GetLastPayments(int adminId, int count = 5);
         Task<List<ComplaintWithUserDto>> GetLastComplaints(int adminId, int count = 5);
         Task<decimal> GetMonthlyIncome(int adminId, DateTime startDate, DateTime endDate);
-        Task<(Building building, int complaintCount)> GetMostComplainedBuilding(int adminId);
+        Task<(Building? building, int complaintCount)> GetMostComplainedBuilding(int adminId);
         Task<List<string>> GetCommonComplaints(int buildingId, int count = 3);
+
+        // Yönetim Ekranı için yeni metodlar
+        Task<List<BuildingManagementDto>> GetBuildingsForManagement(int adminId);
+        Task<List<ApartmentManagementDto>> GetApartmentsForManagement(int buildingId);
+        Task<List<TenantManagementDto>> GetTenantsForManagement(int buildingId);
+        Task<List<MeetingManagementDto>> GetMeetingsForManagement(int buildingId);
+        Task<List<ComplaintManagementDto>> GetComplaintsForManagement(int buildingId);
+        Task<List<PaymentManagementDto>> GetPaymentsForManagement(int buildingId);
+        Task<List<NotificationManagementDto>> GetNotificationsForManagement(int adminId);
+        Task<BuildingStatisticsDto> GetBuildingStatistics(int buildingId);
+        Task<Dictionary<string, decimal>> GetMonthlyIncomeChart(int buildingId, DateTime startDate, DateTime endDate);
+        Task<Dictionary<string, decimal>> GetOccupancyRateChart(int buildingId, DateTime startDate, DateTime endDate);
+        Task<int> GetDelayedPaymentsCount(int buildingId);
+        Task<int> GetDaysSinceLastMeeting(int buildingId);
+        Task<int> GetDaysSinceLastMaintenance(int buildingId);
     }
 }

@@ -21,6 +21,7 @@ namespace Entities.Concrete
         public bool EmailVerified { get; set; }
         public DateTime? LastLoginDate { get; set; }
         public bool IsActive { get; set; }
+        public int? AdminId { get; set; }
 
         // Profil bilgileri
         public string? ProfileImageUrl { get; set; }

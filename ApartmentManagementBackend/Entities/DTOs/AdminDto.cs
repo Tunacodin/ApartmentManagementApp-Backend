@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Entities.DTOs
 {
@@ -138,8 +141,8 @@ namespace Entities.DTOs
         public int EmptyApartments { get; set; }
 
         // Son Aktiviteler
-        public List<PaymentActivityDto> RecentPayments { get; set; } = new();
-        public List<ComplaintActivityDto> RecentComplaints { get; set; } = new();
+        public List<PaymentWithUserDto> RecentPayments { get; set; } = new();
+        public List<ComplaintWithUserDto> RecentComplaints { get; set; } = new();
 
         // Finansal Özet
         public decimal MonthlyIncome { get; set; }
@@ -152,34 +155,6 @@ namespace Entities.DTOs
         public FinancialOverviewDto FinancialOverview { get; set; } = new();
         public List<DashboardActivityDto> RecentActivities { get; set; } = new();
         public PaginationMetadata Pagination { get; set; } = new();
-    }
-
-    // 🔹 Ödeme Aktivite DTO'su
-    public class PaymentActivityDto
-    {
-        public int Id { get; set; }
-        public string PaymentType { get; set; } = string.Empty; // Dues, Rent
-        public decimal Amount { get; set; }
-        public DateTime PaymentDate { get; set; }
-        public string ApartmentNumber { get; set; } = string.Empty;
-        public string BuildingName { get; set; } = string.Empty;
-        public string PayerName { get; set; } = string.Empty;
-        public bool IsPaid { get; set; }
-        public string ProfileImageUrl { get; set; } = string.Empty;
-    }
-
-    // 🔹 Şikayet Aktivite DTO'su
-    public class ComplaintActivityDto
-    {
-        public int Id { get; set; }
-        public string Subject { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
-        public string ApartmentNumber { get; set; } = string.Empty;
-        public string BuildingName { get; set; } = string.Empty;
-        public string ComplainerName { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public string ProfileImageUrl { get; set; } = string.Empty;
     }
 
     // 🔹 En Çok Şikayet Alan Bina DTO'su
@@ -250,5 +225,203 @@ namespace Entities.DTOs
         public int PageSize { get; set; } = 10;
         public string SortBy { get; set; } = "date";
         public string SortDirection { get; set; } = "desc";
+    }
+
+    // 🔹 Dashboard Filtreleme DTO'su
+    public class ManagementFilterDto
+    {
+        public int? BuildingId { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string? PaymentStatus { get; set; }
+        public string? ComplaintStatus { get; set; }
+        public string? ApartmentStatus { get; set; }
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+        public string SortBy { get; set; } = "date";
+        public string SortDirection { get; set; } = "desc";
+    }
+
+    // 🔹 Yönetim Ekranı DTO'ları
+    public class ManagementDashboardDto
+    {
+        public List<BuildingManagementDto> Buildings { get; set; } = new();
+
+        // Seçili bina varsa aşağıdaki veriler doldurulur
+        public List<ApartmentBasicDto> Apartments { get; set; } = new();
+        public List<TenantBasicDto> Tenants { get; set; } = new();
+        public List<MeetingBasicDto> UpcomingMeetings { get; set; } = new();
+        public List<ComplaintBasicDto> PendingComplaints { get; set; } = new();
+        public List<PaymentBasicDto> OverduePayments { get; set; } = new();
+        public BuildingBasicStatsDto Statistics { get; set; } = new();
+    }
+
+    public class ApartmentBasicDto
+    {
+        public int Id { get; set; }
+        public string UnitNumber { get; set; }
+        public int Floor { get; set; }
+        public string Status { get; set; } // Boş/Dolu
+        public string TenantName { get; set; } = string.Empty;
+    }
+
+    public class TenantBasicDto
+    {
+        public int Id { get; set; }
+        public string FullName { get; set; }
+        public string ApartmentNumber { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public string ProfileImage { get; set; } = string.Empty;
+        public string ContractFile { get; set; } = string.Empty;
+    }
+
+    public class MeetingBasicDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public DateTime MeetingDate { get; set; }
+        public string Location { get; set; }
+    }
+
+    public class ComplaintBasicDto
+    {
+        public int Id { get; set; }
+        public string Subject { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string ApartmentNumber { get; set; }
+    }
+
+    public class PaymentBasicDto
+    {
+        public int Id { get; set; }
+        public string PaymentType { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime DueDate { get; set; }
+        public string ApartmentNumber { get; set; }
+    }
+
+    public class BuildingBasicStatsDto
+    {
+        public decimal OccupancyRate { get; set; }
+        public DateTime LastMaintenanceDate { get; set; }
+    }
+
+    // Bina Yönetimi DTO'su
+    public class BuildingManagementDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int FloorCount { get; set; }
+        public int TotalApartments { get; set; }
+        public decimal OccupancyRate { get; set; }
+        public DateTime LastMaintenanceDate { get; set; }
+        public int EmptyApartmentsCount { get; set; }
+        public int TotalResidentsCount { get; set; }
+        public int ActiveComplaintsCount { get; set; }
+        public int PendingPaymentsCount { get; set; }
+    }
+
+    // Daire Yönetimi DTO'su
+    public class ApartmentManagementDto
+    {
+        public int Id { get; set; }
+        public int UnitNumber { get; set; }
+        public int Floor { get; set; }
+        public string Status { get; set; } = string.Empty; // Boş/Dolu
+        public string TenantFullName { get; set; } = string.Empty;
+        public decimal RentAmount { get; set; }
+        public decimal DuesAmount { get; set; }
+        public DateTime? LastPaymentDate { get; set; }
+        public string OwnerFullName { get; set; } = string.Empty;
+        public int BuildingId { get; set; }
+    }
+
+    // Kiracı Yönetimi DTO'su
+    public class TenantManagementDto
+    {
+        public int Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string ApartmentNumber { get; set; } = string.Empty;
+        public string ProfileImageUrl { get; set; } = string.Empty;
+        public DateTime? LastPaymentDate { get; set; }
+        public int ActiveComplaintsCount { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public DateTime MoveInDate { get; set; }
+        public DateTime? ContractEndDate { get; set; }
+        public string ContractFile { get; set; } = string.Empty;
+    }
+
+    // Toplantı Yönetimi DTO'su
+    public class MeetingManagementDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public DateTime MeetingDate { get; set; }
+        public string Location { get; set; } = string.Empty;
+        public string OrganizedBy { get; set; } = string.Empty;
+        public string Agenda { get; set; } = string.Empty;
+        public int ParticipantsCount { get; set; }
+        public bool IsCompleted { get; set; }
+        public int BuildingId { get; set; }
+    }
+
+    // Şikayet Yönetimi DTO'su
+    public class ComplaintManagementDto
+    {
+        public int Id { get; set; }
+        public string Subject { get; set; } = string.Empty;
+        public string ComplainerName { get; set; } = string.Empty;
+        public string ProfileImageUrl { get; set; } = string.Empty;
+        public string ApartmentNumber { get; set; } = string.Empty;
+        public int DaysOpen { get; set; }
+        public string Status { get; set; } = string.Empty; // Bekliyor/Çözüldü
+        public DateTime CreatedAt { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public int BuildingId { get; set; }
+    }
+
+    // Ödeme Yönetimi DTO'su
+    public class PaymentManagementDto
+    {
+        public int Id { get; set; }
+        public string TenantFullName { get; set; } = string.Empty;
+        public string ProfileImageUrl { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string PaymentType { get; set; } = string.Empty; // Aidat/Kira
+        public DateTime? PaymentDate { get; set; }
+        public DateTime DueDate { get; set; }
+        public string Status { get; set; } = string.Empty; // Ödendi/Ödenmedi
+        public string ApartmentNumber { get; set; } = string.Empty;
+        public int BuildingId { get; set; }
+    }
+
+    // Bildirim Yönetimi DTO'su
+    public class NotificationManagementDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public string Recipients { get; set; } = string.Empty; // Tüm Kullanıcılar/Seçili Daireler/Seçili Bina
+        public DateTime CreatedAt { get; set; }
+        public int SentCount { get; set; }
+        public int ReadCount { get; set; }
+        public int CreatedByAdminId { get; set; }
+    }
+
+    // İstatistikler ve KPI'lar DTO'su
+    public class BuildingStatisticsDto
+    {
+        public int TotalApartments { get; set; }
+        public int EmptyApartments { get; set; }
+        public decimal OccupancyRate { get; set; }
+        public decimal Last30DaysIncome { get; set; }
+        public int DelayedPaymentsCount { get; set; }
+        public int OpenComplaintsCount { get; set; }
+        public int DaysSinceLastMeeting { get; set; }
+        public int DaysSinceLastMaintenance { get; set; }
+        public Dictionary<string, decimal> MonthlyIncomeChart { get; set; } = new();
+        public Dictionary<string, decimal> OccupancyRateChart { get; set; } = new();
     }
 }

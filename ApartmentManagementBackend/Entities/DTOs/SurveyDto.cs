@@ -66,17 +66,13 @@ namespace Entities.DTOs
     }
 
     // Survey Yanıt DTO'su
-    public class SurveyResponseDto
+    public class SurveyResponseSummaryDto
     {
-        public SurveyResponseDto()
-        {
-            Answers = new Dictionary<string, object>();
-        }
-
         public int SurveyId { get; set; }
-        public int UserId { get; set; }
-        public DateTime SubmittedAt { get; set; }
-        public Dictionary<string, object> Answers { get; set; }
+        public int QuestionId { get; set; }
+        public string Answer { get; set; } = string.Empty;
+        public int TenantId { get; set; }
+        public DateTime ResponseDate { get; set; }
     }
 
     // Survey İstatistik DTO'su

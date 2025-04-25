@@ -4,6 +4,7 @@ using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
+using Entities.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Business.Concrete
@@ -201,6 +202,138 @@ namespace Business.Concrete
             {
                 _logger.LogError(ex, "Error getting active complaints count");
                 return ApiResponse<int>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public List<ComplaintDto> GetComplaintsByTenantId(int tenantId)
+        {
+            try
+            {
+                var complaints = _complaintDal.GetAll(c => c.UserId == tenantId);
+                return complaints.Select(c => new ComplaintDto
+                {
+                    Id = c.Id,
+                    Title = c.Subject,
+                    Description = c.Description,
+                    CreatedDate = c.CreatedAt,
+                    Status = c.Status.HasValue ? ((ComplaintStatus)c.Status.Value).ToString() : "Open",
+                    BuildingId = c.BuildingId,
+                    TenantId = c.UserId,
+                    IsResolved = c.Status == (int)ComplaintStatus.Resolved,
+                    IsInProgress = c.Status == (int)ComplaintStatus.InProgress,
+                    ResolvedByAdminId = c.ResolvedByAdminId,
+                    ResolvedAt = c.ResolvedAt,
+                    CreatedByName = c.CreatedByName
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting complaints by tenant ID");
+                return new List<ComplaintDto>();
+            }
+        }
+
+        public ComplaintDto GetById(int id)
+        {
+            try
+            {
+                var complaint = _complaintDal.Get(c => c.Id == id);
+                if (complaint == null)
+                    return null;
+
+                return new ComplaintDto
+                {
+                    Id = complaint.Id,
+                    Title = complaint.Subject,
+                    Description = complaint.Description,
+                    CreatedDate = complaint.CreatedAt,
+                    Status = complaint.Status.HasValue ? ((ComplaintStatus)complaint.Status.Value).ToString() : "Open",
+                    BuildingId = complaint.BuildingId,
+                    TenantId = complaint.UserId,
+                    IsResolved = complaint.Status == (int)ComplaintStatus.Resolved,
+                    IsInProgress = complaint.Status == (int)ComplaintStatus.InProgress,
+                    ResolvedByAdminId = complaint.ResolvedByAdminId,
+                    ResolvedAt = complaint.ResolvedAt,
+                    CreatedByName = complaint.CreatedByName
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting complaint by ID");
+                return null;
+            }
+        }
+
+        public void Add(ComplaintDto complaint)
+        {
+            try
+            {
+                var newComplaint = new Complaint
+                {
+                    UserId = complaint.TenantId,
+                    BuildingId = complaint.BuildingId,
+                    Subject = complaint.Title,
+                    Description = complaint.Description,
+                    CreatedAt = DateTime.Now,
+                    Status = (int)ComplaintStatus.Open,
+                    CreatedByName = complaint.CreatedByName
+                };
+
+                _complaintDal.Add(newComplaint);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding complaint");
+                throw;
+            }
+        }
+
+        public void Update(ComplaintDto complaint)
+        {
+            try
+            {
+                var existingComplaint = _complaintDal.Get(c => c.Id == complaint.Id);
+                if (existingComplaint == null)
+                    throw new KeyNotFoundException($"Complaint with ID {complaint.Id} not found");
+
+                existingComplaint.Subject = complaint.Title;
+                existingComplaint.Description = complaint.Description;
+                existingComplaint.Status = Enum.Parse<ComplaintStatus>(complaint.Status) switch
+                {
+                    ComplaintStatus.Resolved => (int)ComplaintStatus.Resolved,
+                    ComplaintStatus.InProgress => (int)ComplaintStatus.InProgress,
+                    _ => (int)ComplaintStatus.Open
+                };
+
+                if (complaint.IsResolved)
+                {
+                    existingComplaint.ResolvedAt = DateTime.Now;
+                    existingComplaint.ResolvedByAdminId = complaint.ResolvedByAdminId;
+                }
+
+                _complaintDal.Update(existingComplaint);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating complaint");
+                throw;
+            }
+        }
+
+        public void Delete(int id)
+        {
+            try
+            {
+                var complaint = _complaintDal.Get(c => c.Id == id);
+                if (complaint == null)
+                    throw new KeyNotFoundException($"Complaint with ID {id} not found");
+
+                _complaintDal.Delete(complaint);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting complaint");
+                throw;
             }
         }
     }

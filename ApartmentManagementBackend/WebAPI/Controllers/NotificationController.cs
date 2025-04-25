@@ -7,6 +7,8 @@ namespace WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+   
+
     public class NotificationController : ControllerBase
     {
         private readonly INotificationService _notificationService;

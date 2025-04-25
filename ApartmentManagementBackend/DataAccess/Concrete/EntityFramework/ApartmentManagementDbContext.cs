@@ -35,6 +35,8 @@ namespace DataAccess.Concrete.EntityFramework
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
             // User ve türetilmiş sınıflar için TPH konfigürasyonu
             modelBuilder.Entity<User>()
                 .HasDiscriminator<string>("Role")
@@ -166,6 +168,14 @@ namespace DataAccess.Concrete.EntityFramework
                 .WithMany()
                 .HasForeignKey(s => s.CreatedByAdminId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Contract entity configuration
+            modelBuilder.Entity<Contract>()
+                .HasKey(c => c.Id);
+
+            modelBuilder.Entity<Contract>()
+                .Property(c => c.ContractFile)
+                .HasMaxLength(500);
         }
     }
 }

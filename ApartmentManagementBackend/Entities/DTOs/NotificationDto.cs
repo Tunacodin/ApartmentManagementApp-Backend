@@ -1,3 +1,5 @@
+using System;
+
 namespace Entities.DTOs
 {
     // Temel Bildirim DTO'su
@@ -6,9 +8,10 @@ namespace Entities.DTOs
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
+        public DateTime CreatedDate { get; set; }
+        public bool IsRead { get; set; }
+        public string NotificationType { get; set; } = string.Empty;
         public int UserId { get; set; }
-        public int CreatedByAdminId { get; set; }
-        public DateTime CreatedAt { get; set; }
     }
 
     // Detay DTO'su
@@ -42,4 +45,4 @@ namespace Entities.DTOs
         public bool IsRead { get; set; }
         public DateTime? ReadAt { get; set; }
     }
-} 
+}

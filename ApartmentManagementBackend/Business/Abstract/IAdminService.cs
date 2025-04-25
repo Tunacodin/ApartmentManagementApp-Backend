@@ -58,5 +58,8 @@ namespace Business.Abstract
         Task<ApiResponse<decimal>> GetMonthlyIncomeAsync(int adminId, DateTime startDate, DateTime endDate);
         Task<ApiResponse<(Building building, int complaintCount)>> GetMostComplainedBuildingAsync(int adminId);
         Task<ApiResponse<List<string>>> GetCommonComplaintsAsync(int buildingId, int count = 3);
+
+        // Yönetim Ekranı metodu
+        Task<ApiResponse<ManagementDashboardDto>> GetManagementDashboardAsync(int adminId, ManagementFilterDto filter);
     }
 }

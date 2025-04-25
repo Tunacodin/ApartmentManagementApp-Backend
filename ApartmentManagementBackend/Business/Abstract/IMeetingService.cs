@@ -22,5 +22,10 @@ namespace Business.Abstract
         Task<ApiResponse<bool>> CancelMeetingAsync(int meetingId, string reason);
         Task<ApiResponse<bool>> DeleteMeetingAsync(int meetingId);
         Task<ApiResponse<int>> GetUpcomingMeetingsCountAsync(int buildingId);
+        List<MeetingDto> GetUpcomingMeetingsByBuildingId(int buildingId);
+        MeetingDto GetById(int id);
+        void Add(MeetingDto meeting);
+        void Update(MeetingDto meeting);
+        
     }
 }

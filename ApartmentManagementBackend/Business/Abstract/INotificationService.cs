@@ -1,6 +1,7 @@
 using Core.Utilities.Results;
 using Entities.Concrete;
 using Entities.DTOs;
+using System.Collections.Generic;
 
 namespace Business.Abstract
 {
@@ -13,5 +14,11 @@ namespace Business.Abstract
         Task<ApiResponse<bool>> MarkAllAsReadAsync(int userId);
         Task<ApiResponse<Notification>> CreateNotificationAsync(Notification notification);
         Task<ApiResponse<bool>> DeleteNotificationAsync(int notificationId);
+        List<NotificationDto> GetNotificationsByUserId(int userId);
+        NotificationDto GetById(int id);
+        void Add(NotificationDto notification);
+        void Update(NotificationDto notification);
+        void Delete(int id);
+        void MarkAsRead(int notificationId);
     }
 }

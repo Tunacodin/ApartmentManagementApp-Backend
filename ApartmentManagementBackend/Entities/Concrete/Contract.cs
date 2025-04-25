@@ -12,4 +12,4 @@ public class Contract : IEntity
     public decimal RentAmount { get; set; }
     public string ContractFile { get; set; } = string.Empty;
     public bool IsActive { get; set; }
-} 
+}
