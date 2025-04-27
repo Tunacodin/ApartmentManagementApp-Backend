@@ -14,6 +14,8 @@ namespace DataAccess.Abstract
         Task<List<Payment>> GetRecentPayments(int adminId, int count = 10);
         Task<List<Complaint>> GetActiveComplaints(int adminId);
         Task<List<Meeting>> GetUpcomingMeetings(int adminId);
+        Task<Admin?> GetByIdAsync(int id);
+        Task UpdateAsync(Admin admin);
         Task<List<int>> GetBuildingTenants(int buildingId);
         Task<List<Complaint>> GetComplaintsByDateRange(int adminId, DateTime startDate, DateTime endDate);
         Task<List<Payment>> GetPaymentsByDateRange(int adminId, DateTime startDate, DateTime endDate);

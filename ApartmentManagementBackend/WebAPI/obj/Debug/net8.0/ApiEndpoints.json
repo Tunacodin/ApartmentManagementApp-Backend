@@ -535,6 +535,16 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.AdminController",
+    "Method": "GetPayments",
+    "RelativePath": "api/Admin/payments",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.AdminController",
     "Method": "ApproveTenantRequest",
     "RelativePath": "api/Admin/tenant-requests/{requestId}/approve",
     "HttpMethod": "POST",
@@ -1280,7 +1290,54 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.ComplaintController",
-    "Method": "Resolve",
+    "Method": "ProcessComplaint",
+    "RelativePath": "api/Complaint/{id}/process",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ComplaintController",
+    "Method": "RejectComplaint",
+    "RelativePath": "api/Complaint/{id}/reject",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "adminId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "rejectDto",
+        "Type": "Entities.DTOs.RejectComplaintDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ComplaintController",
+    "Method": "ResolveComplaint",
     "RelativePath": "api/Complaint/{id}/resolve",
     "HttpMethod": "POST",
     "IsController": true,
@@ -1295,6 +1352,11 @@
         "Name": "adminId",
         "Type": "System.Int32",
         "IsRequired": false
+      },
+      {
+        "Name": "resolveDto",
+        "Type": "Entities.DTOs.ResolveComplaintDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -2538,6 +2600,22 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.TenantController",
+    "Method": "GetNextPayments",
+    "RelativePath": "api/Tenant/{id}/next-payments",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.TenantController",
     "Method": "GetNotifications",
     "RelativePath": "api/Tenant/{id}/notifications",
     "HttpMethod": "GET",
@@ -2563,6 +2641,32 @@
       {
         "Name": "id",
         "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.TenantController",
+    "Method": "MakePayment",
+    "RelativePath": "api/Tenant/{id}/payments/{paymentId}/pay",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "paymentId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "paymentRequest",
+        "Type": "Entities.DTOs.PaymentRequestDto",
         "IsRequired": true
       }
     ],

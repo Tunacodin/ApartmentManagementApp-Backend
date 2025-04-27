@@ -26,6 +26,6 @@ namespace Business.Abstract
         MeetingDto GetById(int id);
         void Add(MeetingDto meeting);
         void Update(MeetingDto meeting);
-        
+        List<MeetingDto> GetMeetingsByTenantId(int tenantId);
     }
 }

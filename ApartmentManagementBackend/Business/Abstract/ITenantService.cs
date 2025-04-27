@@ -28,5 +28,7 @@ namespace Business.Abstract
         List<MeetingDto> GetUpcomingMeetings(int tenantId);
         List<SurveyDto> GetActiveSurveys(int tenantId);
         List<ComplaintDto> GetRecentComplaints(int tenantId);
+        List<PaymentDto> GetNextPayments(int tenantId);
+        PaymentResultDto MakePayment(int tenantId, int paymentId, PaymentRequestDto paymentRequest);
     }
 }

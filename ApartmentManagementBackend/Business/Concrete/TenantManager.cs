@@ -2,6 +2,7 @@
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
+using Entities.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -417,7 +418,7 @@ namespace Business.Concrete
                 {
                     UserId = tenant.Id,
                     ApartmentId = tenant.ApartmentId,
-                    PaymentType = "rent",
+                    PaymentType = PaymentType.Rent.ToString(),
                     Amount = tenant.MonthlyRent,
                     DueDate = tenant.LeaseStartDate.AddMonths(i),
                     IsPaid = false,
@@ -500,7 +501,7 @@ namespace Business.Concrete
                     TotalComplaints = _complaintService.GetComplaintsByTenantId(tenantId).Count,
                     ActiveComplaints = _complaintService.GetComplaintsByTenantId(tenantId).Count(c => !c.IsResolved),
                     TotalMeetings = _meetingService.GetUpcomingMeetingsByBuildingId(building.Id).Count,
-                    UpcomingMeetings = _meetingService.GetUpcomingMeetingsByBuildingId(building.Id).Count(m => m.MeetingDate > DateTime.Now),
+                    UpcomingMeetings = _meetingService.GetUpcomingMeetingsByBuildingId(building.Id).Count(m => m.StartTime > DateTime.Now),
                     RecentPayments = _paymentDal.GetAll(p => p.UserId == tenantId)
                         .OrderByDescending(p => p.PaymentDate)
                         .Take(5)
@@ -519,14 +520,14 @@ namespace Business.Concrete
                         })
                         .ToList(),
                     RecentComplaints = _complaintService.GetComplaintsByTenantId(tenantId)
-                        .OrderByDescending(c => c.CreatedDate)
+                        .OrderByDescending(c => c.CreatedAt)
                         .Take(5)
                         .Select(c => new ComplaintWithUserDto
                         {
                             Id = c.Id,
                             Subject = c.Title,
                             Description = c.Description,
-                            CreatedAt = c.CreatedDate,
+                            CreatedAt = c.CreatedAt,
                             BuildingId = building.Id,
                             UserId = tenantId,
                             Status = c.Status == "Resolved" ? 1 : 0,
@@ -535,8 +536,8 @@ namespace Business.Concrete
                         })
                         .ToList(),
                     UpcomingMeetingsList = _meetingService.GetUpcomingMeetingsByBuildingId(building.Id)
-                        .Where(m => m.MeetingDate > DateTime.Now)
-                        .OrderBy(m => m.MeetingDate)
+                        .Where(m => m.StartTime > DateTime.Now)
+                        .OrderBy(m => m.StartTime)
                         .Take(5)
                         .ToList(),
                     AdminName = admin != null ? $"{admin.FirstName} {admin.LastName}" : null,
@@ -635,13 +636,13 @@ namespace Business.Concrete
                     .ToList(),
                 RecentPenalties = GetRecentPenalties(tenantId),
                 UpcomingMeetings = _meetingService.GetUpcomingMeetingsByBuildingId(building.Id)
-                    .Where(m => m.MeetingDate > DateTime.Now)
-                    .OrderBy(m => m.MeetingDate)
+                    .Where(m => m.StartTime > DateTime.Now)
+                    .OrderBy(m => m.StartTime)
                     .Take(5)
                     .ToList(),
                 ActiveSurveys = _surveyService.GetActiveSurveysByBuildingId(building.Id),
                 RecentComplaints = _complaintService.GetComplaintsByTenantId(tenantId)
-                    .OrderByDescending(c => c.CreatedDate)
+                    .OrderByDescending(c => c.CreatedAt)
                     .Take(5)
                     .ToList(),
                 Notifications = _notificationService.GetNotificationsByUserId(tenantId)
@@ -727,8 +728,8 @@ namespace Business.Concrete
             // Son 3 ay içindeki şikayetleri getir
             var threeMonthsAgo = DateTime.Now.AddMonths(-3);
             return _complaintService.GetComplaintsByTenantId(tenantId)
-                .Where(c => c.CreatedDate >= threeMonthsAgo)
-                .OrderByDescending(c => c.CreatedDate)
+                .Where(c => c.CreatedAt >= threeMonthsAgo)
+                .OrderByDescending(c => c.CreatedAt)
                 .Take(5)
                 .ToList();
         }
@@ -747,7 +748,7 @@ namespace Business.Concrete
             {
                 Title = title,
                 Description = description,
-                CreatedDate = DateTime.Now,
+                CreatedAt = DateTime.Now,
                 Status = "pending",
                 BuildingId = apartment.BuildingId,
                 ApartmentId = apartment.Id,
@@ -884,6 +885,250 @@ namespace Business.Concrete
             var nextPaymentDate = payments.OrderBy(p => p.DueDate).First().DueDate;
             var daysUntilNextRent = (nextPaymentDate - DateTime.Now).Days;
             return Math.Max(daysUntilNextRent, 0);
+        }
+
+        public List<PaymentDto> GetNextPayments(int tenantId)
+        {
+            var tenant = GetById(tenantId);
+            if (tenant == null)
+                throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+            var payments = _paymentDal.GetAll(p =>
+                p.UserId == tenantId &&
+                !p.IsPaid &&
+                p.DueDate >= DateTime.Now)
+                .OrderBy(p => p.DueDate)
+                .Take(2) // Bir sonraki kira ve aidat
+                .Select(p =>
+                {
+                    // Gecikme kontrolü
+                    var isDelayed = p.DueDate < DateTime.Now;
+                    var delayedDays = isDelayed ? (DateTime.Now - p.DueDate).Days : 0;
+                    var penaltyAmount = isDelayed ? CalculatePenalty(p.Amount, delayedDays) : 0;
+                    var totalAmount = p.Amount + penaltyAmount;
+
+                    return new PaymentDto
+                    {
+                        Id = p.Id,
+                        UserId = tenant.Id,
+                        UserFullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
+                        PaymentType = p.PaymentType,
+                        Amount = p.Amount,
+                        PaymentDate = p.PaymentDate,
+                        DueDate = p.DueDate,
+                        IsPaid = p.IsPaid,
+                        Description = p.Description,
+                        DelayedDays = isDelayed ? delayedDays : null,
+                        DelayPenaltyAmount = isDelayed ? penaltyAmount : null,
+                        TotalAmount = totalAmount
+                    };
+                })
+                .ToList();
+
+            return payments;
+        }
+
+        public PaymentResultDto MakePayment(int tenantId, int paymentId, PaymentRequestDto paymentRequest)
+        {
+            var tenant = GetById(tenantId);
+            if (tenant == null)
+                throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+            var payment = _paymentDal.Get(p => p.Id == paymentId && p.UserId == tenantId);
+            if (payment == null)
+                throw new KeyNotFoundException($"Payment with ID {paymentId} not found.");
+
+            if (payment.IsPaid)
+                throw new InvalidOperationException("This payment has already been made.");
+
+            try
+            {
+                // Gecikme kontrolü ve ceza hesaplama
+                var isDelayed = payment.DueDate < DateTime.Now;
+                var delayedDays = isDelayed ? (DateTime.Now - payment.DueDate).Days : 0;
+                var penaltyAmount = isDelayed ? CalculatePenalty(payment.Amount, delayedDays) : 0;
+                var totalAmount = payment.Amount + penaltyAmount;
+
+                // Ödeme bilgilerini güncelle
+                payment.IsPaid = true;
+                payment.PaymentDate = DateTime.Now;
+                payment.DelayedDays = isDelayed ? delayedDays : null;
+                payment.DelayPenaltyAmount = isDelayed ? penaltyAmount : null;
+                payment.TotalAmount = totalAmount;
+                payment.Description = $"{payment.Description} - {payment.PaymentType} ödemesi yapıldı - " +
+                    $"{(isDelayed ? $"Gecikme: {delayedDays} gün, Ceza: {penaltyAmount} TL, " : "")}" +
+                    $"Toplam: {totalAmount} TL - {DateTime.Now:dd/MM/yyyy}";
+
+                _paymentDal.Update(payment);
+
+                // Admin'e bildirim gönder
+                var notification = new Notification
+                {
+                    Title = $"Yeni {GetPaymentTypeTurkish(payment.PaymentType)} Ödemesi",
+                    Message = $"{tenant.FirstName} {tenant.LastName} tarafından {GetPaymentTypeTurkish(payment.PaymentType)} ödemesi yapıldı. " +
+                        $"{(isDelayed ? $"Gecikme: {delayedDays} gün, Ceza: {penaltyAmount} TL, " : "")}" +
+                        $"Toplam: {totalAmount} TL",
+                    UserId = tenant.AdminId ?? 0,
+                    CreatedAt = DateTime.Now,
+                    IsRead = false
+                };
+                _notificationService.CreateNotificationAsync(notification);
+
+                return new PaymentResultDto
+                {
+                    PaymentId = payment.Id,
+                    Amount = payment.Amount,
+                    PaymentDate = payment.PaymentDate,
+                    PaymentType = payment.PaymentType,
+                    IsSuccessful = true,
+                    DelayedDays = delayedDays,
+                    DelayPenaltyAmount = penaltyAmount,
+                    TotalAmount = totalAmount
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error making payment for tenant {TenantId}, payment {PaymentId}", tenantId, paymentId);
+                throw;
+            }
+        }
+
+        private decimal CalculatePenalty(decimal amount, int delayedDays)
+        {
+            // Günlük %0.1 ceza (örnek)
+            return amount * (decimal)(delayedDays * 0.001);
+        }
+
+        private string GetPaymentTypeTurkish(string paymentType)
+        {
+            return paymentType.ToLower() switch
+            {
+                "rent" => "Kira",
+                "dues" => "Aidat",
+                _ => "Ödeme"
+            };
+        }
+
+        public TenantActivitiesDto GetActivities(int tenantId)
+        {
+            var tenant = GetById(tenantId);
+            if (tenant == null)
+                throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+            var activities = new TenantActivitiesDto();
+
+            // Ödeme geçmişi
+            activities.PaymentHistory = _paymentDal.GetAll(p => p.UserId == tenantId && p.IsPaid)
+                .OrderByDescending(p => p.PaymentDate)
+                .Select(p => new PaymentWithUserDto
+                {
+                    Id = p.Id,
+                    UserId = tenant.Id,
+                    UserFullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
+                    PaymentType = p.PaymentType,
+                    Amount = p.Amount,
+                    PaymentDate = p.PaymentDate,
+                    DueDate = p.DueDate,
+                    IsPaid = p.IsPaid,
+                    Description = p.Description,
+                    DelayedDays = p.DelayedDays,
+                    DelayPenaltyAmount = p.DelayPenaltyAmount,
+                    TotalAmount = p.TotalAmount
+                })
+                .ToList();
+
+            // Bekleyen ödemeler
+            activities.PendingPayments = _paymentDal.GetAll(p =>
+                p.UserId == tenantId &&
+                !p.IsPaid &&
+                p.DueDate < DateTime.Now)
+                .OrderBy(p => p.DueDate)
+                .Select(p => new PaymentWithUserDto
+                {
+                    Id = p.Id,
+                    UserId = tenant.Id,
+                    UserFullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
+                    PaymentType = p.PaymentType,
+                    Amount = p.Amount,
+                    PaymentDate = p.PaymentDate,
+                    DueDate = p.DueDate,
+                    IsPaid = p.IsPaid,
+                    Description = p.Description,
+                    DelayedDays = (DateTime.Now - p.DueDate).Days,
+                    DelayPenaltyAmount = CalculatePenalty(p.Amount, (DateTime.Now - p.DueDate).Days),
+                    TotalAmount = p.Amount + CalculatePenalty(p.Amount, (DateTime.Now - p.DueDate).Days)
+                })
+                .ToList();
+
+            // Yaklaşan ödemeler
+            activities.UpcomingPayments = _paymentDal.GetAll(p =>
+                p.UserId == tenantId &&
+                !p.IsPaid &&
+                p.DueDate >= DateTime.Now)
+                .OrderBy(p => p.DueDate)
+                .Select(p => new PaymentWithUserDto
+                {
+                    Id = p.Id,
+                    UserId = tenant.Id,
+                    UserFullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
+                    PaymentType = p.PaymentType,
+                    Amount = p.Amount,
+                    PaymentDate = p.PaymentDate,
+                    DueDate = p.DueDate,
+                    IsPaid = p.IsPaid,
+                    Description = p.Description,
+                    DelayedDays = null,
+                    DelayPenaltyAmount = null,
+                    TotalAmount = p.Amount
+                })
+                .ToList();
+
+            // Toplantı geçmişi
+            activities.MeetingHistory = _meetingService.GetMeetingsByTenantId(tenantId)
+                .OrderByDescending(m => m.StartTime)
+                .Select(m => new MeetingDto
+                {
+                    Id = m.Id,
+                    Title = m.Title,
+                    Description = m.Description,
+                    StartTime = m.StartTime,
+                    EndTime = m.EndTime,
+                    Location = m.Location,
+                    Status = m.Status,
+                    CreatedAt = m.CreatedAt
+                })
+                .ToList();
+
+            // Anket geçmişi
+            activities.SurveyHistory = _surveyService.GetSurveysByTenantId(tenantId)
+                .OrderByDescending(s => s.CreatedAt)
+                .Select(s => new SurveyDto
+                {
+                    Id = s.Id,
+                    Title = s.Title,
+                    Description = s.Description,
+                    StartDate = s.StartDate,
+                    EndDate = s.EndDate,
+                    Status = s.Status,
+                    CreatedAt = s.CreatedAt
+                })
+                .ToList();
+
+            // Şikayet geçmişi
+            activities.ComplaintHistory = _complaintService.GetComplaintsByTenantId(tenantId)
+                .OrderByDescending(c => c.CreatedAt)
+                .Select(c => new ComplaintDto
+                {
+                    Id = c.Id,
+                    Title = c.Title,
+                    Description = c.Description,
+                    Status = c.Status,
+                    CreatedAt = c.CreatedAt,
+                    UpdatedAt = c.UpdatedAt
+                })
+                .ToList();
+
+            return activities;
         }
     }
 }

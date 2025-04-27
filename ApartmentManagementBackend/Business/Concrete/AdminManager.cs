@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Entities.Enums;
 
 namespace Business.Concrete
 {
@@ -640,7 +641,7 @@ namespace Business.Concrete
                 {
                     Summary = summary.Data ?? new DashboardSummaryDto(),
                     FinancialOverview = financialOverview.Data ?? new FinancialOverviewDto(),
-                    RecentActivities = paginatedActivities ?? new List<DashboardActivityDto>(),
+                    RecentActivities = paginatedActivities,
                     Pagination = new PaginationMetadata
                     {
                         CurrentPage = filter.PageNumber,
@@ -773,7 +774,7 @@ namespace Business.Concrete
                         Description = complaint.Description ?? string.Empty,
                         ActivityDate = complaint.CreatedAt,
                         RelatedEntity = $"Kullanıcı {complaint.UserId}",
-                        Status = complaint.Status == 1 ? "Çözüldü" : "Bekliyor",
+                        Status = complaint.Status == (int)ComplaintStatus.Resolved ? "Çözüldü" : "Bekliyor",
                         UserFullName = complaint.CreatedByName ?? string.Empty
                     });
                 }

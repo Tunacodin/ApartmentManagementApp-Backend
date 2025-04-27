@@ -6,6 +6,8 @@ using Entities.Concrete;
 using Entities.DTOs;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using System.Linq.Expressions;
+using System.Linq;
 
 namespace Business.Concrete
 {
@@ -13,11 +15,15 @@ namespace Business.Concrete
     {
         private readonly ISurveyDal _surveyDal;
         private readonly ILogger<SurveyManager> _logger;
+        private readonly ITenantDal _tenantDal;
+        private readonly IApartmentDal _apartmentDal;
 
-        public SurveyManager(ISurveyDal surveyDal, ILogger<SurveyManager> logger)
+        public SurveyManager(ISurveyDal surveyDal, ILogger<SurveyManager> logger, ITenantDal tenantDal, IApartmentDal apartmentDal)
         {
             _surveyDal = surveyDal;
             _logger = logger;
+            _tenantDal = tenantDal;
+            _apartmentDal = apartmentDal;
         }
 
         public async Task<ApiResponse<List<SurveyDetailDto>>> GetSurveyDetailsAsync(int buildingId)
@@ -191,7 +197,7 @@ namespace Business.Concrete
                     Description = s.Description,
                     StartDate = s.StartDate,
                     EndDate = s.EndDate,
-                    IsActive = s.IsActive,
+                    Status = s.IsActive ? "Active" : "Inactive",
                     BuildingId = s.BuildingId,
                     TotalResponses = s.TotalResponses
                 }).ToList();
@@ -218,7 +224,7 @@ namespace Business.Concrete
                     Description = survey.Description,
                     StartDate = survey.StartDate,
                     EndDate = survey.EndDate,
-                    IsActive = survey.IsActive,
+                    Status = survey.IsActive ? "Active" : "Inactive",
                     BuildingId = survey.BuildingId,
                     TotalResponses = survey.TotalResponses
                 };
@@ -240,7 +246,7 @@ namespace Business.Concrete
                     Description = surveyDto.Description,
                     StartDate = surveyDto.StartDate,
                     EndDate = surveyDto.EndDate,
-                    IsActive = surveyDto.IsActive,
+                    IsActive = surveyDto.Status == "Active",
                     BuildingId = surveyDto.BuildingId,
                     TotalResponses = 0,
                     Questions = "[]",
@@ -269,7 +275,7 @@ namespace Business.Concrete
                 survey.Description = surveyDto.Description;
                 survey.StartDate = surveyDto.StartDate;
                 survey.EndDate = surveyDto.EndDate;
-                survey.IsActive = surveyDto.IsActive;
+                survey.IsActive = surveyDto.Status == "Active";
                 survey.BuildingId = surveyDto.BuildingId;
 
                 _surveyDal.Update(survey);
@@ -337,6 +343,105 @@ namespace Business.Concrete
             {
                 _logger.LogError(ex, "Error adding survey response");
                 throw;
+            }
+        }
+
+        public void Add(Survey survey)
+        {
+            try
+            {
+                survey.CreatedAt = DateTime.Now;
+                _surveyDal.Add(survey);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding survey");
+                throw;
+            }
+        }
+
+        public void Update(Survey survey)
+        {
+            try
+            {
+                _surveyDal.Update(survey);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating survey");
+                throw;
+            }
+        }
+
+        public List<Survey>? GetAll()
+        {
+            try
+            {
+                return _surveyDal.GetAll();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all surveys");
+                return null;
+            }
+        }
+
+        public List<Survey>? GetByBuildingId(int buildingId)
+        {
+            try
+            {
+                return _surveyDal.GetAll(s => s.BuildingId == buildingId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting surveys by building ID");
+                return null;
+            }
+        }
+
+        public Survey? Get(Expression<Func<Survey, bool>> filter)
+        {
+            try
+            {
+                return _surveyDal.Get(filter);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting survey by filter");
+                return null;
+            }
+        }
+
+        public List<SurveyDto> GetSurveysByTenantId(int tenantId)
+        {
+            try
+            {
+                var tenant = _tenantDal.Get(t => t.Id == tenantId);
+                if (tenant == null)
+                    return new List<SurveyDto>();
+
+                var apartment = _apartmentDal.Get(a => a.Id == tenant.ApartmentId);
+                if (apartment == null)
+                    return new List<SurveyDto>();
+
+                var surveys = _surveyDal.GetAll(s => s.BuildingId == apartment.BuildingId && s.IsActive);
+                return surveys.Select(s => new SurveyDto
+                {
+                    Id = s.Id,
+                    Title = s.Title,
+                    Description = s.Description,
+                    StartDate = s.StartDate,
+                    EndDate = s.EndDate,
+                    Status = s.IsActive ? "Active" : "Inactive",
+                    BuildingId = s.BuildingId,
+                    TotalResponses = s.TotalResponses,
+                    CreatedAt = s.CreatedAt
+                }).OrderByDescending(s => s.CreatedAt).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting surveys by tenant ID");
+                return new List<SurveyDto>();
             }
         }
     }

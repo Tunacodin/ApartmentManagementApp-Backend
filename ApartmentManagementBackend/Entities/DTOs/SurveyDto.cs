@@ -7,12 +7,16 @@ namespace Entities.DTOs
     public class SurveyDto
     {
         public int Id { get; set; }
-        public required string Title { get; set; }
-        public required string Description { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public bool IsActive { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
         public int BuildingId { get; set; }
+        public int? TenantId { get; set; }
+        public string CreatedByName { get; set; } = string.Empty;
+        public string ProfileImageUrl { get; set; } = string.Empty;
         public int TotalResponses { get; set; }
     }
 
@@ -41,6 +45,7 @@ namespace Entities.DTOs
             BuildingName = "Bilinmeyen Bina";
             Questions = new List<SurveyQuestionDto>();
             Results = new Dictionary<string, object>();
+            IsActive = true;
         }
 
         public string CreatedByAdminName { get; set; }
@@ -48,6 +53,7 @@ namespace Entities.DTOs
         public List<SurveyQuestionDto> Questions { get; set; }
         public Dictionary<string, object> Results { get; set; }
         public string BuildingName { get; set; }
+        public bool IsActive { get; set; }
     }
 
     // Survey Soru DTO'su

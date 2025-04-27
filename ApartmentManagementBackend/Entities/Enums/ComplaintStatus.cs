@@ -4,6 +4,7 @@ namespace Entities.Enums
     {
         Open = 0,
         InProgress = 1,
-        Resolved = 2
+        Resolved = 2,
+        Rejected = 3
     }
 }

@@ -1,12 +1,21 @@
 using Core.Utilities.Results;
 using Entities.Concrete;
 using Entities.DTOs;
+using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace Business.Abstract
 {
     public interface ISurveyService
     {
+        void Add(Survey survey);
+        void Update(Survey survey);
+        void Delete(int id);
+        SurveyDto? GetById(int id);
+        List<Survey>? GetAll();
+        List<Survey>? GetByBuildingId(int buildingId);
+        Survey? Get(Expression<Func<Survey, bool>> filter);
         Task<ApiResponse<List<SurveyDetailDto>>> GetSurveyDetailsAsync(int buildingId);
         Task<ApiResponse<SurveyDetailDto>> GetSurveyDetailAsync(int surveyId);
         Task<ApiResponse<List<SurveyDetailDto>>> GetActiveSurveysAsync(int buildingId);
@@ -17,10 +26,9 @@ namespace Business.Abstract
         Task<ApiResponse<bool>> UpdateSurveyAsync(SurveyUpdateDto surveyDto);
         Task<ApiResponse<bool>> DeleteSurveyAsync(int surveyId);
         List<SurveyDto> GetActiveSurveysByBuildingId(int buildingId);
-        SurveyDto GetById(int id);
         void Add(SurveyDto survey);
         void Update(SurveyDto survey);
-        void Delete(int id);
         void AddResponse(SurveyResponseDto response);
+        List<SurveyDto> GetSurveysByTenantId(int tenantId);
     }
 }

@@ -2,6 +2,7 @@ using Core.DataAccess;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
+using Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -112,15 +113,34 @@ namespace DataAccess.Concrete.EntityFramework
 
         public async Task<List<Complaint>> GetActiveComplaints(int adminId)
         {
-            var buildings = await _context.Buildings
-                .Where(b => b.AdminId == adminId)
-                .Select(b => b.Id)
-                .ToListAsync();
+            try
+            {
+                // Admin'in yönettiği binaları al
+                var buildingIds = await _context.Buildings
+                    .Where(b => b.AdminId == adminId)
+                    .Select(b => b.Id)
+                    .ToListAsync();
 
-            return await _context.Complaints
-                .Where(c => buildings.Contains(c.BuildingId) && c.Status != 1)
-                .OrderByDescending(c => c.CreatedAt)
-                .ToListAsync();
+                if (!buildingIds.Any())
+                {
+                    _logger.LogWarning($"No buildings found for admin with ID: {adminId}");
+                    return new List<Complaint>();
+                }
+
+                // Bu binalara ait aktif şikayetleri al
+                var complaints = await _context.Complaints
+                    .Where(c => buildingIds.Contains(c.BuildingId) &&
+                              (c.Status == (int)ComplaintStatus.Open || c.Status == (int)ComplaintStatus.InProgress))
+                    .OrderByDescending(c => c.CreatedAt)
+                    .ToListAsync();
+
+                return complaints;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while getting active complaints for admin with ID: {adminId}");
+                throw;
+            }
         }
 
         public async Task<List<Meeting>> GetUpcomingMeetings(int adminId)
@@ -590,7 +610,13 @@ namespace DataAccess.Concrete.EntityFramework
                         ProfileImageUrl = user?.ProfileImageUrl ?? string.Empty,
                         ApartmentNumber = apartment != null ? $"Daire {apartment.UnitNumber}" : string.Empty,
                         DaysOpen = (int)(DateTime.Now - c.CreatedAt).TotalDays,
-                        Status = c.Status == 1 ? "Çözüldü" : "Bekliyor",
+                        Status = c.Status switch
+                        {
+                            (int)ComplaintStatus.Resolved => "Çözüldü",
+                            (int)ComplaintStatus.InProgress => "İşlemde",
+                            (int)ComplaintStatus.Rejected => "Reddedildi",
+                            _ => "Açık"
+                        },
                         CreatedAt = c.CreatedAt,
                         Description = c.Description,
                         BuildingId = c.BuildingId

@@ -4,6 +4,7 @@ using Entities.Concrete;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using Entities.DTOs;
 
 namespace WebAPI.Controllers
 {
@@ -130,30 +131,34 @@ namespace WebAPI.Controllers
             }
         }
 
-        [HttpPost("{id}/resolve")]
-        public async Task<IActionResult> Resolve(int id, [FromQuery] int adminId)
+        [HttpPost("{id}/process")]
+        public async Task<IActionResult> ProcessComplaint(int id, [FromQuery] int adminId)
         {
             try
             {
-                // Get complaint details first to access the subject and userId
+                _logger.LogInformation($"Processing complaint {id} by admin {adminId}");
+
+                // Şikayet detaylarını al
                 var complaintDetail = await _complaintService.GetComplaintDetailAsync(id);
                 if (!complaintDetail.Success || complaintDetail.Data == null)
                 {
+                    _logger.LogWarning($"Complaint {id} not found");
                     return BadRequest(complaintDetail);
                 }
 
-                // Resolve the complaint
-                var result = await _complaintService.ResolveComplaintAsync(id, adminId);
+                // Şikayeti işleme al
+                var result = await _complaintService.ProcessComplaintAsync(id, adminId);
                 if (!result.Success)
                 {
+                    _logger.LogWarning($"Failed to process complaint {id}: {result.Message}");
                     return BadRequest(result);
                 }
 
-                // Create and send notification to the tenant
+                // Tenant'a bildirim gönder
                 var notification = new Notification
                 {
-                    Title = "Şikayet İşleme Alındı",
-                    Message = $"{complaintDetail.Data.Subject ?? "Bilinmeyen konu"} şikayetiniz işleme alındı",
+                    Title = "Şikayetiniz İşleme Alındı",
+                    Message = $"'{complaintDetail.Data.Subject}' başlıklı şikayetiniz işleme alındı",
                     UserId = complaintDetail.Data.UserId,
                     CreatedByAdminId = adminId,
                     CreatedAt = DateTime.Now,
@@ -161,13 +166,106 @@ namespace WebAPI.Controllers
                 };
 
                 await _notificationService.CreateNotificationAsync(notification);
+                _logger.LogInformation($"Complaint {id} processed successfully");
 
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error resolving complaint: {ex.Message}");
-                return StatusCode(500, new { message = "Internal server error while resolving complaint", error = ex.Message });
+                _logger.LogError(ex, $"Error processing complaint {id}");
+                return StatusCode(500, new { message = "Şikayet işleme alınırken hata oluştu", error = ex.Message });
+            }
+        }
+
+        [HttpPost("{id}/resolve")]
+        public async Task<IActionResult> ResolveComplaint(int id, [FromQuery] int adminId, [FromBody] ResolveComplaintDto resolveDto)
+        {
+            try
+            {
+                _logger.LogInformation($"Resolving complaint {id} by admin {adminId}");
+
+                // Şikayet detaylarını al
+                var complaintDetail = await _complaintService.GetComplaintDetailAsync(id);
+                if (!complaintDetail.Success || complaintDetail.Data == null)
+                {
+                    _logger.LogWarning($"Complaint {id} not found");
+                    return BadRequest(complaintDetail);
+                }
+
+                // Şikayeti çöz
+                var result = await _complaintService.ResolveComplaintAsync(id, adminId, resolveDto.Solution);
+                if (!result.Success)
+                {
+                    _logger.LogWarning($"Failed to resolve complaint {id}: {result.Message}");
+                    return BadRequest(result);
+                }
+
+                // Tenant'a bildirim gönder
+                var notification = new Notification
+                {
+                    Title = "Şikayetiniz Çözüldü",
+                    Message = $"'{complaintDetail.Data.Subject}' başlıklı şikayetiniz çözüldü. Çözüm: {resolveDto.Solution}",
+                    UserId = complaintDetail.Data.UserId,
+                    CreatedByAdminId = adminId,
+                    CreatedAt = DateTime.Now,
+                    IsRead = false
+                };
+
+                await _notificationService.CreateNotificationAsync(notification);
+                _logger.LogInformation($"Complaint {id} resolved successfully");
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error resolving complaint {id}");
+                return StatusCode(500, new { message = "Şikayet çözülürken hata oluştu", error = ex.Message });
+            }
+        }
+
+        [HttpPost("{id}/reject")]
+        public async Task<IActionResult> RejectComplaint(int id, [FromQuery] int adminId, [FromBody] RejectComplaintDto rejectDto)
+        {
+            try
+            {
+                _logger.LogInformation($"Rejecting complaint {id} by admin {adminId}");
+
+                // Şikayet detaylarını al
+                var complaintDetail = await _complaintService.GetComplaintDetailAsync(id);
+                if (!complaintDetail.Success || complaintDetail.Data == null)
+                {
+                    _logger.LogWarning($"Complaint {id} not found");
+                    return BadRequest(complaintDetail);
+                }
+
+                // Şikayeti reddet
+                var result = await _complaintService.RejectComplaintAsync(id, adminId, rejectDto.Reason);
+                if (!result.Success)
+                {
+                    _logger.LogWarning($"Failed to reject complaint {id}: {result.Message}");
+                    return BadRequest(result);
+                }
+
+                // Tenant'a bildirim gönder
+                var notification = new Notification
+                {
+                    Title = "Şikayetiniz Reddedildi",
+                    Message = $"'{complaintDetail.Data.Subject}' başlıklı şikayetiniz reddedildi. Sebep: {rejectDto.Reason}",
+                    UserId = complaintDetail.Data.UserId,
+                    CreatedByAdminId = adminId,
+                    CreatedAt = DateTime.Now,
+                    IsRead = false
+                };
+
+                await _notificationService.CreateNotificationAsync(notification);
+                _logger.LogInformation($"Complaint {id} rejected successfully");
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error rejecting complaint {id}");
+                return StatusCode(500, new { message = "Şikayet reddedilirken hata oluştu", error = ex.Message });
             }
         }
 

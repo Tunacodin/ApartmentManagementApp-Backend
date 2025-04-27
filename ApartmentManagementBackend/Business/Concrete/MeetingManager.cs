@@ -186,9 +186,14 @@ namespace Business.Concrete
                     Id = m.Id,
                     Title = m.Title,
                     Description = m.Description,
-                    MeetingDate = m.MeetingDate,
+                    StartTime = m.MeetingDate,
+                    EndTime = m.MeetingDate.AddHours(1), // Assuming 1 hour duration
+                    Location = m.Location,
+                    Status = m.Status,
+                    CreatedAt = m.CreatedAt,
                     BuildingId = m.BuildingId,
-                    OrganizedById = m.OrganizedById
+                    TenantId = m.OrganizedById,
+                    OrganizerName = m.OrganizedByName
                 }).ToList();
             }
             catch (Exception ex)
@@ -211,9 +216,14 @@ namespace Business.Concrete
                     Id = meeting.Id,
                     Title = meeting.Title,
                     Description = meeting.Description,
-                    MeetingDate = meeting.MeetingDate,
+                    StartTime = meeting.MeetingDate,
+                    EndTime = meeting.MeetingDate.AddHours(1), // Assuming 1 hour duration
+                    Location = meeting.Location,
+                    Status = meeting.Status,
+                    CreatedAt = meeting.CreatedAt,
                     BuildingId = meeting.BuildingId,
-                    OrganizedById = meeting.OrganizedById
+                    TenantId = meeting.OrganizedById,
+                    OrganizerName = meeting.OrganizedByName
                 };
             }
             catch (Exception ex)
@@ -231,9 +241,9 @@ namespace Business.Concrete
                 {
                     Title = meetingDto.Title,
                     Description = meetingDto.Description,
-                    MeetingDate = meetingDto.MeetingDate,
+                    MeetingDate = meetingDto.StartTime,
                     BuildingId = meetingDto.BuildingId,
-                    OrganizedById = meetingDto.OrganizedById,
+                    OrganizedById = meetingDto.TenantId ?? 0,
                     CreatedAt = DateTime.Now,
                     Status = "Scheduled",
                     IsCancelled = false,
@@ -259,9 +269,9 @@ namespace Business.Concrete
 
                 meeting.Title = meetingDto.Title;
                 meeting.Description = meetingDto.Description;
-                meeting.MeetingDate = meetingDto.MeetingDate;
+                meeting.MeetingDate = meetingDto.StartTime;
                 meeting.BuildingId = meetingDto.BuildingId;
-                meeting.OrganizedById = meetingDto.OrganizedById;
+                meeting.OrganizedById = meetingDto.TenantId ?? 0;
 
                 _meetingDal.Update(meeting);
             }
@@ -269,6 +279,33 @@ namespace Business.Concrete
             {
                 _logger.LogError(ex, "Error updating meeting from DTO");
                 throw;
+            }
+        }
+
+        public List<MeetingDto> GetMeetingsByTenantId(int tenantId)
+        {
+            try
+            {
+                var meetings = _meetingDal.GetAll(m => m.OrganizedById == tenantId);
+                return meetings.Select(m => new MeetingDto
+                {
+                    Id = m.Id,
+                    Title = m.Title,
+                    Description = m.Description,
+                    StartTime = m.MeetingDate,
+                    EndTime = m.MeetingDate.AddHours(1), // Assuming 1 hour duration
+                    Location = m.Location,
+                    Status = m.Status,
+                    CreatedAt = m.CreatedAt,
+                    BuildingId = m.BuildingId,
+                    TenantId = tenantId,
+                    OrganizerName = m.OrganizedByName
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting meetings by tenant ID");
+                return new List<MeetingDto>();
             }
         }
     }

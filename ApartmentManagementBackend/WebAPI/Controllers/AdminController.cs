@@ -13,11 +13,16 @@ namespace WebAPI.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
+        private readonly IPaymentService _paymentService;
         private readonly ILogger<AdminController> _logger;
 
-        public AdminController(IAdminService adminService, ILogger<AdminController> logger)
+        public AdminController(
+            IAdminService adminService,
+            IPaymentService paymentService,
+            ILogger<AdminController> logger)
         {
             _adminService = adminService;
+            _paymentService = paymentService;
             _logger = logger;
         }
 
@@ -379,7 +384,7 @@ namespace WebAPI.Controllers
             try
             {
                 var admin = await _adminService.GetByIdAsync(adminId);
-                if (admin == null || !admin.Success)
+                if (!admin.Success || admin.Data == null)
                     return BadRequest(ApiResponse<string>.ErrorResult(Messages.AdminNotFound));
 
                 // Ay başı ve sonu
@@ -407,7 +412,7 @@ namespace WebAPI.Controllers
                     EmptyApartments = emptyApartmentsResult.Success ? emptyApartmentsResult.Data : 0,
                     MonthlyIncome = monthlyIncome.Success ? monthlyIncome.Data : 0,
 
-                    RecentPayments = recentPayments.Data?.Select(p => new PaymentWithUserDto
+                    RecentPayments = recentPayments.Data?.Select(p => new Entities.DTOs.PaymentWithUserDto
                     {
                         Id = p.Id,
                         PaymentType = p.PaymentType,
@@ -419,7 +424,7 @@ namespace WebAPI.Controllers
                         IsPaid = p.IsPaid,
                         UserFullName = p.UserFullName ?? string.Empty,
                         ProfileImageUrl = p.ProfileImageUrl ?? string.Empty
-                    }).ToList() ?? new List<PaymentWithUserDto>(),
+                    }).ToList() ?? new List<Entities.DTOs.PaymentWithUserDto>(),
 
                     RecentComplaints = recentComplaints.Data?.Select(c => new ComplaintWithUserDto
                     {
@@ -627,6 +632,32 @@ namespace WebAPI.Controllers
         private static int CalculateTotalPages(int totalItems, int pageSize)
         {
             return (int)Math.Ceiling(totalItems / (double)pageSize);
+        }
+
+        [HttpGet("payments")]
+        public IActionResult GetPayments()
+        {
+            var payments = _paymentService.GetAll()
+                .Select(p => new Entities.DTOs.PaymentWithUserDto
+                {
+                    Id = p.Id,
+                    PaymentType = p.PaymentType,
+                    Amount = p.Amount,
+                    PaymentDate = p.PaymentDate,
+                    DueDate = p.DueDate,
+                    BuildingId = p.BuildingId,
+                    ApartmentId = p.ApartmentId,
+                    UserId = p.UserId,
+                    IsPaid = p.IsPaid,
+                    UserFullName = p.UserFullName,
+                    DelayedDays = p.DelayedDays,
+                    DelayPenaltyAmount = p.DelayPenaltyAmount,
+                    TotalAmount = p.TotalAmount,
+                    Description = p.Description
+                })
+                .ToList();
+
+            return Ok(payments);
         }
     }
 }

@@ -83,7 +83,9 @@ namespace Entities.DTOs
     // 🔹 Kiracı Aktiviteler DTO'su
     public class TenantActivitiesDto
     {
-        public List<PaymentWithUserDto> PaymentHistory { get; set; } = new();
+        public List<Entities.DTOs.PaymentWithUserDto> PaymentHistory { get; set; } = new();
+        public List<Entities.DTOs.PaymentWithUserDto> PendingPayments { get; set; } = new();
+        public List<Entities.DTOs.PaymentWithUserDto> UpcomingPayments { get; set; } = new();
         public List<MeetingDto> MeetingHistory { get; set; } = new();
         public List<SurveyDto> SurveyHistory { get; set; } = new();
         public List<ComplaintDto> ComplaintHistory { get; set; } = new();
@@ -148,7 +150,7 @@ namespace Entities.DTOs
         public int UpcomingMeetings { get; set; }
 
         // Son Aktiviteler
-        public List<PaymentWithUserDto> RecentPayments { get; set; }
+        public List<Entities.DTOs.PaymentWithUserDto> RecentPayments { get; set; }
         public List<ComplaintWithUserDto> RecentComplaints { get; set; }
         public List<MeetingDto> UpcomingMeetingsList { get; set; }
 

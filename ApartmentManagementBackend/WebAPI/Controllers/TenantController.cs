@@ -11,6 +11,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace WebAPI.Controllers
 {
@@ -21,12 +22,14 @@ namespace WebAPI.Controllers
         private readonly ITenantService _tenantService;
         private readonly ILogger<TenantController> _logger;
         private readonly IValidator<TenantDto> _validator;
+        private readonly IAdminService _adminService;
 
-        public TenantController(ITenantService tenantService, ILogger<TenantController> logger, IValidator<TenantDto> validator)
+        public TenantController(ITenantService tenantService, ILogger<TenantController> logger, IValidator<TenantDto> validator, IAdminService adminService)
         {
             _tenantService = tenantService;
             _logger = logger;
             _validator = validator;
+            _adminService = adminService;
         }
 
         [HttpGet]
@@ -289,9 +292,14 @@ namespace WebAPI.Controllers
                     Id = m.Id,
                     Title = m.Title,
                     Description = m.Description,
-                    MeetingDate = m.MeetingDate,
+                    StartTime = m.StartTime,
+                    EndTime = m.EndTime,
+                    Location = m.Location,
+                    Status = m.Status,
+                    CreatedAt = m.CreatedAt,
                     BuildingId = m.BuildingId,
-                    OrganizedById = m.OrganizedById
+                    TenantId = m.TenantId,
+                    OrganizerName = m.OrganizerName
                 }).ToList();
 
                 // Anketler
@@ -303,7 +311,7 @@ namespace WebAPI.Controllers
                     Description = s.Description,
                     StartDate = s.StartDate,
                     EndDate = s.EndDate,
-                    IsActive = s.IsActive,
+                    Status = s.Status,
                     BuildingId = s.BuildingId,
                     TotalResponses = s.TotalResponses
                 }).ToList();
@@ -315,7 +323,7 @@ namespace WebAPI.Controllers
                     Id = c.Id,
                     Title = c.Title,
                     Description = c.Description,
-                    CreatedDate = c.CreatedDate,
+                    CreatedAt = c.CreatedAt,
                     Status = c.Status == "Resolved" ? "1" : "0",
                     BuildingId = c.BuildingId,
                     ApartmentId = c.ApartmentId,
@@ -393,7 +401,7 @@ namespace WebAPI.Controllers
                     TotalComplaints = _tenantService.GetRecentComplaints(id).Count,
                     ActiveComplaints = _tenantService.GetRecentComplaints(id).Count(c => !c.IsResolved),
                     TotalMeetings = _tenantService.GetUpcomingMeetings(id).Count,
-                    UpcomingMeetings = _tenantService.GetUpcomingMeetings(id).Count(m => m.MeetingDate > DateTime.Now),
+                    UpcomingMeetings = _tenantService.GetUpcomingMeetings(id).Count(m => m.StartTime > DateTime.Now),
 
                     // Son Aktiviteler
                     RecentPayments = _tenantService.GetTenantPayments(id)?
@@ -417,7 +425,7 @@ namespace WebAPI.Controllers
                             Id = c.Id,
                             Subject = c.Title,
                             Description = c.Description,
-                            CreatedAt = c.CreatedDate,
+                            CreatedAt = c.CreatedAt,
                             Status = c.Status == "Resolved" ? 1 : 0,
                             CreatedByName = c.CreatedByName
                         })
@@ -426,8 +434,8 @@ namespace WebAPI.Controllers
                         .ToList() ?? new List<ComplaintWithUserDto>(),
 
                     UpcomingMeetingsList = _tenantService.GetUpcomingMeetings(id)
-                        .Where(m => m.MeetingDate > DateTime.Now)
-                        .OrderBy(m => m.MeetingDate)
+                        .Where(m => m.StartTime > DateTime.Now)
+                        .OrderBy(m => m.StartTime)
                         .Take(5)
                         .ToList(),
 
@@ -450,5 +458,38 @@ namespace WebAPI.Controllers
                 return StatusCode(500, ApiResponse<TenantProfileDto>.ErrorResult(Messages.UnexpectedError));
             }
         }
+
+        [HttpGet("{id}/next-payments")]
+        public IActionResult GetNextPayments(int id)
+        {
+            try
+            {
+                var payments = _tenantService.GetNextPayments(id);
+                return Ok(ApiResponse<List<PaymentDto>>.SuccessResult(Messages.PaymentsListed, payments));
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(ApiResponse<List<PaymentDto>>.ErrorResult(Messages.TenantNotFound));
+            }
+        }
+
+        [HttpPost("{id}/payments/{paymentId}/pay")]
+        public IActionResult MakePayment(int id, int paymentId, [FromBody] PaymentRequestDto paymentRequest)
+        {
+            try
+            {
+                var result = _tenantService.MakePayment(id, paymentId, paymentRequest);
+                return Ok(ApiResponse<PaymentResultDto>.SuccessResult(Messages.PaymentSuccessful, result));
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(ApiResponse<PaymentResultDto>.ErrorResult(Messages.PaymentNotFound));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<PaymentResultDto>.ErrorResult(ex.Message));
+            }
+        }
+
     }
 }

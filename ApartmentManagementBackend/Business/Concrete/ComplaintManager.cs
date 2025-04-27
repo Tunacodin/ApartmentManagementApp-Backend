@@ -151,25 +151,70 @@ namespace Business.Concrete
             }
         }
 
-        public async Task<ApiResponse<bool>> ResolveComplaintAsync(int complaintId, int adminId)
+        public async Task<ApiResponse<bool>> ProcessComplaintAsync(int complaintId, int adminId)
         {
             try
             {
                 var complaint = await _complaintDal.GetByIdAsync(complaintId);
                 if (complaint == null)
-                    return ApiResponse<bool>.ErrorResult(Messages.ComplaintNotFound);
+                    return ApiResponse<bool>.ErrorResult("Şikayet bulunamadı");
 
-                complaint.Status = 1;
-                complaint.ResolvedAt = DateTime.Now;
+                complaint.Status = (int)ComplaintStatus.InProgress;
                 complaint.ResolvedByAdminId = adminId;
                 await _complaintDal.UpdateAsync(complaint);
 
-                return ApiResponse<bool>.SuccessResult(Messages.ComplaintResolved, true);
+                return ApiResponse<bool>.SuccessResult("Şikayet işleme alındı", true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing complaint");
+                return ApiResponse<bool>.ErrorResult("Şikayet işleme alınırken hata oluştu");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> ResolveComplaintAsync(int complaintId, int adminId, string solution)
+        {
+            try
+            {
+                var complaint = await _complaintDal.GetByIdAsync(complaintId);
+                if (complaint == null)
+                    return ApiResponse<bool>.ErrorResult("Şikayet bulunamadı");
+
+                complaint.Status = (int)ComplaintStatus.Resolved;
+                complaint.ResolvedByAdminId = adminId;
+                complaint.ResolvedAt = DateTime.Now;
+                complaint.Description += $"\n\nÇözüm: {solution}";
+                await _complaintDal.UpdateAsync(complaint);
+
+                return ApiResponse<bool>.SuccessResult("Şikayet çözüldü", true);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error resolving complaint");
-                return ApiResponse<bool>.ErrorResult(Messages.UnexpectedError);
+                return ApiResponse<bool>.ErrorResult("Şikayet çözülürken hata oluştu");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> RejectComplaintAsync(int complaintId, int adminId, string reason)
+        {
+            try
+            {
+                var complaint = await _complaintDal.GetByIdAsync(complaintId);
+                if (complaint == null)
+                    return ApiResponse<bool>.ErrorResult("Şikayet bulunamadı");
+
+                complaint.Status = (int)ComplaintStatus.Rejected;
+                complaint.ResolvedByAdminId = adminId;
+                complaint.ResolvedAt = DateTime.Now;
+                complaint.Description += $"\n\nRed Sebebi: {reason}";
+                await _complaintDal.UpdateAsync(complaint);
+
+                return ApiResponse<bool>.SuccessResult("Şikayet reddedildi", true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting complaint");
+                return ApiResponse<bool>.ErrorResult("Şikayet reddedilirken hata oluştu");
             }
         }
 
@@ -215,7 +260,7 @@ namespace Business.Concrete
                     Id = c.Id,
                     Title = c.Subject,
                     Description = c.Description,
-                    CreatedDate = c.CreatedAt,
+                    CreatedAt = c.CreatedAt,
                     Status = c.Status.HasValue ? ((ComplaintStatus)c.Status.Value).ToString() : "Open",
                     BuildingId = c.BuildingId,
                     TenantId = c.UserId,
@@ -246,8 +291,8 @@ namespace Business.Concrete
                     Id = complaint.Id,
                     Title = complaint.Subject,
                     Description = complaint.Description,
-                    CreatedDate = complaint.CreatedAt,
                     Status = complaint.Status.HasValue ? ((ComplaintStatus)complaint.Status.Value).ToString() : "Open",
+                    CreatedAt = complaint.CreatedAt,
                     BuildingId = complaint.BuildingId,
                     TenantId = complaint.UserId,
                     IsResolved = complaint.Status == (int)ComplaintStatus.Resolved,

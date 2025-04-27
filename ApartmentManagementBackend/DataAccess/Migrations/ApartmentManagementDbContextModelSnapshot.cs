@@ -35,7 +35,8 @@ namespace DataAccess.Migrations
 
                     b.Property<string>("ContractFile")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
@@ -316,16 +317,13 @@ namespace DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsInProgress")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsResolved")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime?>("ResolvedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("ResolvedByAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Status")
                         .HasColumnType("int");
 
                     b.Property<string>("Subject")
@@ -451,6 +449,12 @@ namespace DataAccess.Migrations
                     b.Property<int?>("CardInfoId")
                         .HasColumnType("int");
 
+                    b.Property<decimal?>("DelayPenaltyAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("DelayedDays")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -466,6 +470,9 @@ namespace DataAccess.Migrations
                     b.Property<string>("PaymentType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UserFullName")
                         .IsRequired()
@@ -485,6 +492,60 @@ namespace DataAccess.Migrations
                     b.ToTable("Payments");
                 });
 
+            modelBuilder.Entity("Entities.Concrete.Survey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BuildingId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedByAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Questions")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Results")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TotalResponses")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuildingId");
+
+                    b.HasIndex("CreatedByAdminId");
+
+                    b.ToTable("Surveys");
+                });
+
             modelBuilder.Entity("Entities.Concrete.User", b =>
                 {
                     b.Property<int>("Id")
@@ -492,6 +553,9 @@ namespace DataAccess.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AdminId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -552,9 +616,6 @@ namespace DataAccess.Migrations
                 {
                     b.HasBaseType("Entities.Concrete.User");
 
-                    b.Property<int>("AdminId")
-                        .HasColumnType("int");
-
                     b.HasDiscriminator().HasValue("admin");
                 });
 
@@ -612,7 +673,6 @@ namespace DataAccess.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("MonthlyRent")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasIndex("ApartmentId");
@@ -678,6 +738,21 @@ namespace DataAccess.Migrations
                     b.HasOne("Entities.Concrete.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Entities.Concrete.Survey", b =>
+                {
+                    b.HasOne("Entities.Concrete.Building", null)
+                        .WithMany()
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Concrete.Admin", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByAdminId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

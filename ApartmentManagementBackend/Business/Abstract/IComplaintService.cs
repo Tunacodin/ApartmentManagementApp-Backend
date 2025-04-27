@@ -11,7 +11,9 @@ namespace Business.Abstract
         Task<ApiResponse<ComplaintDetailDto>> GetComplaintDetailAsync(int complaintId);
         Task<ApiResponse<List<ComplaintDetailDto>>> GetUserComplaintsAsync(int userId);
         Task<ApiResponse<Complaint>> CreateComplaintAsync(Complaint complaint);
-        Task<ApiResponse<bool>> ResolveComplaintAsync(int complaintId, int adminId);
+        Task<ApiResponse<bool>> ProcessComplaintAsync(int complaintId, int adminId);
+        Task<ApiResponse<bool>> ResolveComplaintAsync(int complaintId, int adminId, string solution);
+        Task<ApiResponse<bool>> RejectComplaintAsync(int complaintId, int adminId, string reason);
         Task<ApiResponse<bool>> DeleteComplaintAsync(int complaintId);
         Task<ApiResponse<int>> GetActiveComplaintsCountAsync(int buildingId);
         List<ComplaintDto> GetComplaintsByTenantId(int tenantId);

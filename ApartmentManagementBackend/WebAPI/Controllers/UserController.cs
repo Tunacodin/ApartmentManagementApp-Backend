@@ -36,23 +36,58 @@ namespace WebAPI.Controllers
                 if (loginDto == null)
                 {
                     _logger.LogWarning("Login attempt with null loginDto");
-                    return BadRequest(new { message = "Login bilgileri boş olamaz" });
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Login bilgileri boş olamaz",
+                        errorCode = "LOGIN_EMPTY_DATA"
+                    });
+                }
+
+                if (string.IsNullOrEmpty(loginDto.Email) || string.IsNullOrEmpty(loginDto.Password))
+                {
+                    _logger.LogWarning("Login attempt with empty email or password");
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Email ve şifre alanları boş olamaz",
+                        errorCode = "LOGIN_INVALID_DATA"
+                    });
                 }
 
                 var user = _userService.GetByEmail(loginDto.Email);
-                if (user == null || string.IsNullOrEmpty(user.Password) || string.IsNullOrEmpty(user.Email))
+                if (user == null)
                 {
                     _logger.LogWarning($"User not found for email: {loginDto.Email}");
-                    return Unauthorized(new { message = "Kullanıcı bulunamadı" });
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        message = "Kullanıcı bulunamadı",
+                        errorCode = "USER_NOT_FOUND"
+                    });
                 }
 
-                _logger.LogInformation($"User found: {user.Email}, Password length: {user.Password?.Length ?? 0}");
+                if (string.IsNullOrEmpty(user.Password) || string.IsNullOrEmpty(user.Email))
+                {
+                    _logger.LogWarning($"User data incomplete for email: {loginDto.Email}");
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        message = "Kullanıcı bilgileri eksik",
+                        errorCode = "USER_DATA_INCOMPLETE"
+                    });
+                }
 
                 var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user.Password!, loginDto.Password);
                 if (passwordVerificationResult != Core.Utilities.Security.PasswordVerificationResult.Success)
                 {
                     _logger.LogWarning($"Invalid password for user: {user.Email}");
-                    return Unauthorized(new { message = "Geçersiz şifre" });
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        message = "Geçersiz şifre",
+                        errorCode = "INVALID_PASSWORD"
+                    });
                 }
 
                 var token = _jwtHelper.CreateToken(user.Id, user.Email!, user.Role ?? "user");
@@ -60,6 +95,7 @@ namespace WebAPI.Controllers
 
                 var response = new
                 {
+                    success = true,
                     message = "Giriş başarılı",
                     token = token,
                     userId = user.Id,
@@ -73,7 +109,14 @@ namespace WebAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Login işlemi sırasında hata oluştu");
-                return StatusCode(500, new { message = "Beklenmeyen bir hata oluştu", error = ex.Message });
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Beklenmeyen bir hata oluştu",
+                    error = ex.Message,
+                    errorCode = "LOGIN_SERVER_ERROR",
+                    stackTrace = ex.StackTrace
+                });
             }
         }
 
@@ -169,21 +212,58 @@ namespace WebAPI.Controllers
         {
             try
             {
+                if (resetPasswordDto == null)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Şifre sıfırlama bilgileri boş olamaz",
+                        errorCode = "RESET_EMPTY_DATA"
+                    });
+                }
+
+                if (string.IsNullOrEmpty(resetPasswordDto.Email) || string.IsNullOrEmpty(resetPasswordDto.NewPassword))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Email ve yeni şifre alanları boş olamaz",
+                        errorCode = "RESET_INVALID_DATA"
+                    });
+                }
+
                 var user = _userService.GetByEmail(resetPasswordDto.Email);
                 if (user == null)
-                    return NotFound("Bu email adresi ile kayıtlı kullanıcı bulunamadı");
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Bu email adresi ile kayıtlı kullanıcı bulunamadı",
+                        errorCode = "USER_NOT_FOUND"
+                    });
+                }
 
-                // Yeni şifreyi hash'le
                 user.Password = _passwordHasher.HashPassword(resetPasswordDto.NewPassword);
                 _userService.Update(user);
 
                 _logger.LogInformation($"Şifre sıfırlama başarılı. Email: {resetPasswordDto.Email}");
-                return Ok("Şifreniz başarıyla güncellendi");
+                return Ok(new
+                {
+                    success = true,
+                    message = "Şifreniz başarıyla güncellendi"
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Şifre sıfırlama hatası. Email: {resetPasswordDto.Email}");
-                return StatusCode(500, "Şifre sıfırlanırken hata oluştu");
+                _logger.LogError(ex, $"Şifre sıfırlama hatası. Email: {resetPasswordDto?.Email}");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Şifre sıfırlanırken hata oluştu",
+                    error = ex.Message,
+                    errorCode = "RESET_SERVER_ERROR",
+                    stackTrace = ex.StackTrace
+                });
             }
         }
     }
