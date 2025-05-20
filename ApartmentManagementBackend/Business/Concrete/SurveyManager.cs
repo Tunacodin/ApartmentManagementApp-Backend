@@ -4,6 +4,7 @@ using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
+using Entities.Enums;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Linq.Expressions;
@@ -115,26 +116,76 @@ namespace Business.Concrete
         {
             try
             {
-                var survey = new Survey
+                // Temel validasyonlar
+                if (surveyDto.BuildingIds == null || !surveyDto.BuildingIds.Any())
                 {
-                    Title = surveyDto.Title,
-                    Description = surveyDto.Description,
-                    StartDate = surveyDto.StartDate,
-                    EndDate = surveyDto.EndDate,
-                    BuildingId = surveyDto.BuildingId,
-                    CreatedByAdminId = adminId,
-                    CreatedAt = DateTime.Now,
-                    IsActive = true,
-                    Questions = JsonSerializer.Serialize(surveyDto.Questions),
-                    Results = "{}"
-                };
+                    return ApiResponse<Survey>.ErrorResult("En az bir bina seçilmelidir.");
+                }
 
-                await _surveyDal.AddAsync(survey);
-                return ApiResponse<Survey>.SuccessResult(Messages.Success, survey);
+                // Soruları doğrula
+                if (surveyDto.Questions == null || !surveyDto.Questions.Any())
+                {
+                    return ApiResponse<Survey>.ErrorResult("En az bir soru eklenmelidir.");
+                }
+
+                // Her sorunun gerekli alanlarını kontrol et
+                foreach (var question in surveyDto.Questions)
+                {
+                    if (string.IsNullOrEmpty(question.QuestionText))
+                    {
+                        return ApiResponse<Survey>.ErrorResult("Soru metni boş olamaz.");
+                    }
+
+                    // QuestionType kontrolü
+                    if (question.QuestionType < 0)
+                    {
+                        return ApiResponse<Survey>.ErrorResult("Geçersiz soru tipi.");
+                    }
+
+                    // Options kontrolü
+                    if (question.Options == null)
+                    {
+                        question.Options = new List<string>();
+                    }
+                }
+
+                // Tarih kontrolü
+                if (surveyDto.StartDate >= surveyDto.EndDate)
+                {
+                    return ApiResponse<Survey>.ErrorResult("Başlangıç tarihi bitiş tarihinden sonra olamaz.");
+                }
+
+                if (surveyDto.EndDate < DateTime.Now)
+                {
+                    return ApiResponse<Survey>.ErrorResult("Bitiş tarihi geçmiş bir tarih olamaz.");
+                }
+
+                var createdSurveys = new List<Survey>();
+                foreach (var buildingId in surveyDto.BuildingIds)
+                {
+                    var survey = new Survey
+                    {
+                        Title = surveyDto.Title?.Trim() ?? string.Empty,
+                        Description = surveyDto.Description?.Trim() ?? string.Empty,
+                        StartDate = surveyDto.StartDate,
+                        EndDate = surveyDto.EndDate,
+                        BuildingId = buildingId,
+                        CreatedByAdminId = adminId,
+                        CreatedAt = DateTime.Now,
+                        IsActive = true,
+                        Questions = JsonSerializer.Serialize(surveyDto.Questions),
+                        Results = "{}"
+                    };
+
+                    await _surveyDal.AddAsync(survey);
+                    createdSurveys.Add(survey);
+                }
+
+                return ApiResponse<Survey>.SuccessResult(Messages.Success, createdSurveys.First());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating survey for BuildingId {BuildingId}", surveyDto.BuildingId);
+                _logger.LogError(ex, "Error creating surveys for BuildingIds {BuildingIds}", string.Join(",", surveyDto.BuildingIds));
                 return ApiResponse<Survey>.ErrorResult(Messages.UnexpectedError);
             }
         }
@@ -149,8 +200,8 @@ namespace Business.Concrete
 
                 survey.Title = surveyDto.Title ?? survey.Title;
                 survey.Description = surveyDto.Description ?? survey.Description;
-                survey.EndDate = surveyDto.EndDate ?? survey.EndDate;
-                survey.IsActive = surveyDto.IsActive ?? survey.IsActive;
+                survey.EndDate = surveyDto.EndDate;
+                survey.IsActive = surveyDto.IsActive;
 
                 if (surveyDto.Questions != null)
                 {
@@ -197,7 +248,7 @@ namespace Business.Concrete
                     Description = s.Description,
                     StartDate = s.StartDate,
                     EndDate = s.EndDate,
-                    Status = s.IsActive ? "Active" : "Inactive",
+                    Status = s.IsActive ? (int)SurveyStatus.Active : (int)SurveyStatus.Cancelled,
                     BuildingId = s.BuildingId,
                     TotalResponses = s.TotalResponses
                 }).ToList();
@@ -224,7 +275,7 @@ namespace Business.Concrete
                     Description = survey.Description,
                     StartDate = survey.StartDate,
                     EndDate = survey.EndDate,
-                    Status = survey.IsActive ? "Active" : "Inactive",
+                    Status = survey.IsActive ? (int)SurveyStatus.Active : (int)SurveyStatus.Cancelled,
                     BuildingId = survey.BuildingId,
                     TotalResponses = survey.TotalResponses
                 };
@@ -246,7 +297,7 @@ namespace Business.Concrete
                     Description = surveyDto.Description,
                     StartDate = surveyDto.StartDate,
                     EndDate = surveyDto.EndDate,
-                    IsActive = surveyDto.Status == "Active",
+                    IsActive = surveyDto.Status == (int)SurveyStatus.Active,
                     BuildingId = surveyDto.BuildingId,
                     TotalResponses = 0,
                     Questions = "[]",
@@ -275,7 +326,7 @@ namespace Business.Concrete
                 survey.Description = surveyDto.Description;
                 survey.StartDate = surveyDto.StartDate;
                 survey.EndDate = surveyDto.EndDate;
-                survey.IsActive = surveyDto.Status == "Active";
+                survey.IsActive = surveyDto.Status == (int)SurveyStatus.Active;
                 survey.BuildingId = surveyDto.BuildingId;
 
                 _surveyDal.Update(survey);
@@ -432,7 +483,7 @@ namespace Business.Concrete
                     Description = s.Description,
                     StartDate = s.StartDate,
                     EndDate = s.EndDate,
-                    Status = s.IsActive ? "Active" : "Inactive",
+                    Status = s.IsActive ? (int)SurveyStatus.Active : (int)SurveyStatus.Cancelled,
                     BuildingId = s.BuildingId,
                     TotalResponses = s.TotalResponses,
                     CreatedAt = s.CreatedAt

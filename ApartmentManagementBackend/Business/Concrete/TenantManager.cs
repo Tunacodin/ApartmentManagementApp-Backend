@@ -268,7 +268,10 @@ namespace Business.Concrete
         {
             var apartment = _apartmentDal.Get(a => a.Id == tenant.ApartmentId);
             var building = apartment != null ? _buildingDal.Get(b => b.Id == apartment.BuildingId) : null;
+            var admin = building != null ? _adminDal.Get(a => a.Id == building.AdminId) : null;
+            var owner = apartment != null ? _ownerDal.Get(o => o.Id == apartment.OwnerId) : null;
             var payments = _paymentDal.GetAll(p => p.UserId == tenant.Id);
+            var contract = _contractDal.Get(c => c.TenantId == tenant.Id);
 
             return new TenantDetailDto
             {
@@ -281,11 +284,24 @@ namespace Business.Concrete
                 ApartmentId = tenant.ApartmentId,
                 BuildingName = building?.BuildingName ?? "Atanmamış",
                 UnitNumber = apartment?.UnitNumber ?? 0,
-                LeaseStartDate = tenant.LeaseStartDate,
-                LeaseEndDate = tenant.LeaseEndDate,
-                MonthlyRent = tenant.MonthlyRent,
-                MonthlyDues = tenant.MonthlyDues,
-                LastPaymentDate = payments?.OrderByDescending(p => p.PaymentDate).FirstOrDefault()?.PaymentDate
+                LeaseStartDate = contract?.StartDate ?? tenant.LeaseStartDate,
+                LeaseEndDate = contract?.EndDate ?? tenant.LeaseEndDate,
+                MonthlyRent = contract?.RentAmount ?? apartment?.RentAmount ?? tenant.MonthlyRent,
+                MonthlyDues = building?.DuesAmount ?? tenant.MonthlyDues,
+                LastPaymentDate = payments?.OrderByDescending(p => p.PaymentDate).FirstOrDefault()?.PaymentDate,
+                ApartmentNumber = apartment?.UnitNumber ?? 0,
+                BuildingId = building?.Id ?? 0,
+                AdminName = admin != null ? $"{admin.FirstName} {admin.LastName}" : string.Empty,
+                AdminPhone = admin?.PhoneNumber ?? string.Empty,
+                AdminEmail = admin?.Email ?? string.Empty,
+                OwnerName = owner != null ? $"{owner.FirstName} {owner.LastName}" : string.Empty,
+                OwnerPhone = owner?.PhoneNumber ?? string.Empty,
+                OwnerEmail = owner?.Email ?? string.Empty,
+                DepositAmount = apartment?.DepositAmount ?? 0,
+                ContractStatus = contract?.IsActive == true ? "Active" : "Inactive",
+                RemainingDays = contract != null ? (int)(contract.EndDate - DateTime.Now).TotalDays : 0,
+                RemainingMonths = contract != null ? (int)((contract.EndDate - DateTime.Now).TotalDays / 30) : 0,
+                DaysUntilNextRent = contract != null ? (int)(contract.StartDate.AddMonths(1) - DateTime.Now).TotalDays : 0
             };
         }
 
@@ -530,7 +546,7 @@ namespace Business.Concrete
                             CreatedAt = c.CreatedAt,
                             BuildingId = building.Id,
                             UserId = tenantId,
-                            Status = c.Status == "Resolved" ? 1 : 0,
+                            Status = c.Status == (int)ComplaintStatus.Resolved ? 1 : 0,
                             CreatedByName = $"{tenant.FirstName} {tenant.LastName}",
                             ProfileImageUrl = tenant.ProfileImageUrl
                         })
@@ -749,7 +765,7 @@ namespace Business.Concrete
                 Title = title,
                 Description = description,
                 CreatedAt = DateTime.Now,
-                Status = "pending",
+                Status = (int)ComplaintStatus.Open,
                 BuildingId = apartment.BuildingId,
                 ApartmentId = apartment.Id,
                 TenantId = tenantId,
@@ -1129,6 +1145,29 @@ namespace Business.Concrete
                 .ToList();
 
             return activities;
+        }
+
+        public List<TenantListDto>? GetTenantsByBuilding(int buildingId)
+        {
+            try
+            {
+                // Önce binadaki tüm daireleri bul
+                var apartments = _apartmentDal.GetAll(a => a.BuildingId == buildingId);
+                if (apartments == null) return null;
+
+                // Dairelerde oturan kiracıları bul
+                var apartmentIds = apartments.Select(a => a.Id).ToList();
+                var tenants = _tenantDal.GetAll(t => apartmentIds.Contains(t.ApartmentId));
+                if (tenants == null) return null;
+
+                // TenantListDto'ya dönüştür
+                return tenants.Select(MapToTenantListDto).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting tenants for building {BuildingId}", buildingId);
+                return null;
+            }
         }
     }
 }

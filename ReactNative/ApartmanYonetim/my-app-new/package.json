@@ -1,0 +1,46 @@
+{
+  "name": "my-app-new",
+  "license": "0BSD",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@react-native-community/blur": "^4.4.1",
+    "@react-native-community/datetimepicker": "8.3.0",
+    "@react-native-picker/picker": "^2.11.0",
+    "@react-navigation/bottom-tabs": "^7.3.13",
+    "@react-navigation/native": "^7.1.9",
+    "@react-navigation/native-stack": "^7.3.13",
+    "@react-navigation/stack": "^7.3.2",
+    "axios": "^1.9.0",
+    "expo": "~53.0.9",
+    "expo-blur": "~14.1.4",
+    "expo-document-picker": "~13.1.5",
+    "expo-image-picker": "~16.1.4",
+    "expo-linear-gradient": "~14.1.4",
+    "expo-status-bar": "~2.2.3",
+    "lottie-react-native": "7.2.2",
+    "react": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-animatable": "^1.4.0",
+    "react-native-chart-kit": "^6.12.0",
+    "react-native-gesture-handler": "^2.25.0",
+    "react-native-get-random-values": "^1.11.0",
+    "react-native-paper": "^5.14.4",
+    "react-native-safe-area-context": "^5.4.0",
+    "react-native-screens": "^4.10.0",
+    "react-native-svg": "^15.12.0",
+    "react-native-vector-icons": "^10.2.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0"
+  },
+  "private": true
+}

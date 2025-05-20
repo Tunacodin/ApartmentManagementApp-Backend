@@ -155,6 +155,20 @@ namespace Business.Concrete
                 if (building == null)
                     return ApiResponse<Building>.ErrorResult("Bina bilgileri boş olamaz");
 
+                // Zorunlu alanların kontrolü
+                if (string.IsNullOrEmpty(building.BuildingName))
+                    return ApiResponse<Building>.ErrorResult("Bina adı boş olamaz.");
+
+                if (building.NumberOfFloors <= 0)
+                    return ApiResponse<Building>.ErrorResult("Kat sayısı 0'dan büyük olmalıdır.");
+
+                if (building.TotalApartments <= 0)
+                    return ApiResponse<Building>.ErrorResult("Toplam daire sayısı 0'dan büyük olmalıdır.");
+
+                // Adres bilgilerinin kontrolü
+                if (string.IsNullOrEmpty(building.City) || string.IsNullOrEmpty(building.District))
+                    return ApiResponse<Building>.ErrorResult("Şehir ve ilçe bilgileri zorunludur.");
+
                 await _buildingDal.AddAsync(building);
                 return ApiResponse<Building>.SuccessResult(Messages.BuildingAdded, building);
             }

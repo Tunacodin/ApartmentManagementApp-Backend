@@ -284,3 +284,6 @@ C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\o
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.pdb
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\WebAPI.genruntimeconfig.cache
 C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\obj\Debug\net8.0\ref\WebAPI.dll
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\AutoMapper.dll
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+C:\Users\Tuna\Desktop\ApartmentManagementApp\ApartmentManagementBackend\WebAPI\bin\Debug\net8.0\WebAPI.staticwebassets.runtime.json

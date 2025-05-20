@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 using Core.DataAccess;
 using Entities.Concrete;
 using Entities.DTOs.Reports;
@@ -12,5 +16,6 @@ namespace DataAccess.Abstract
         Task<List<TopDebtorDto>> GetTopDebtorsAsync(int adminId, int count);
         Task<List<TopPayerDto>> GetTopPayersAsync(int adminId, int count);
         Task<List<MonthlyCollectionRateDto>> GetMonthlyCollectionRatesAsync(int adminId);
+        Task<List<Payment>> GetListAsync(Expression<Func<Payment, bool>> filter = null);
     }
 }

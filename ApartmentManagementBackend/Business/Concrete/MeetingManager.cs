@@ -4,6 +4,7 @@ using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
+using Entities.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Business.Concrete
@@ -189,11 +190,18 @@ namespace Business.Concrete
                     StartTime = m.MeetingDate,
                     EndTime = m.MeetingDate.AddHours(1), // Assuming 1 hour duration
                     Location = m.Location,
-                    Status = m.Status,
+                    Status = m.Status switch
+                    {
+                        "Scheduled" => (int)MeetingStatus.Scheduled,
+                        "InProgress" => (int)MeetingStatus.InProgress,
+                        "Completed" => (int)MeetingStatus.Completed,
+                        "Cancelled" => (int)MeetingStatus.Cancelled,
+                        _ => (int)MeetingStatus.Scheduled
+                    },
                     CreatedAt = m.CreatedAt,
                     BuildingId = m.BuildingId,
                     TenantId = m.OrganizedById,
-                    OrganizerName = m.OrganizedByName
+                    OrganizedByName = m.OrganizedByName
                 }).ToList();
             }
             catch (Exception ex)
@@ -219,11 +227,18 @@ namespace Business.Concrete
                     StartTime = meeting.MeetingDate,
                     EndTime = meeting.MeetingDate.AddHours(1), // Assuming 1 hour duration
                     Location = meeting.Location,
-                    Status = meeting.Status,
+                    Status = meeting.Status switch
+                    {
+                        "Scheduled" => (int)MeetingStatus.Scheduled,
+                        "InProgress" => (int)MeetingStatus.InProgress,
+                        "Completed" => (int)MeetingStatus.Completed,
+                        "Cancelled" => (int)MeetingStatus.Cancelled,
+                        _ => (int)MeetingStatus.Scheduled
+                    },
                     CreatedAt = meeting.CreatedAt,
                     BuildingId = meeting.BuildingId,
                     TenantId = meeting.OrganizedById,
-                    OrganizerName = meeting.OrganizedByName
+                    OrganizedByName = meeting.OrganizedByName
                 };
             }
             catch (Exception ex)
@@ -243,9 +258,16 @@ namespace Business.Concrete
                     Description = meetingDto.Description,
                     MeetingDate = meetingDto.StartTime,
                     BuildingId = meetingDto.BuildingId,
-                    OrganizedById = meetingDto.TenantId ?? 0,
+                    OrganizedById = meetingDto.TenantId != 0 ? meetingDto.TenantId : 0,
                     CreatedAt = DateTime.Now,
-                    Status = "Scheduled",
+                    Status = meetingDto.Status switch
+                    {
+                        (int)MeetingStatus.Scheduled => "Scheduled",
+                        (int)MeetingStatus.InProgress => "InProgress",
+                        (int)MeetingStatus.Completed => "Completed",
+                        (int)MeetingStatus.Cancelled => "Cancelled",
+                        _ => "Scheduled"
+                    },
                     IsCancelled = false,
                     CancellationReason = string.Empty
                 };
@@ -271,7 +293,15 @@ namespace Business.Concrete
                 meeting.Description = meetingDto.Description;
                 meeting.MeetingDate = meetingDto.StartTime;
                 meeting.BuildingId = meetingDto.BuildingId;
-                meeting.OrganizedById = meetingDto.TenantId ?? 0;
+                meeting.OrganizedById = meetingDto.TenantId != 0 ? meetingDto.TenantId : 0;
+                meeting.Status = meetingDto.Status switch
+                {
+                    (int)MeetingStatus.Scheduled => "Scheduled",
+                    (int)MeetingStatus.InProgress => "InProgress",
+                    (int)MeetingStatus.Completed => "Completed",
+                    (int)MeetingStatus.Cancelled => "Cancelled",
+                    _ => "Scheduled"
+                };
 
                 _meetingDal.Update(meeting);
             }
@@ -295,11 +325,18 @@ namespace Business.Concrete
                     StartTime = m.MeetingDate,
                     EndTime = m.MeetingDate.AddHours(1), // Assuming 1 hour duration
                     Location = m.Location,
-                    Status = m.Status,
+                    Status = m.Status switch
+                    {
+                        "Scheduled" => (int)MeetingStatus.Scheduled,
+                        "InProgress" => (int)MeetingStatus.InProgress,
+                        "Completed" => (int)MeetingStatus.Completed,
+                        "Cancelled" => (int)MeetingStatus.Cancelled,
+                        _ => (int)MeetingStatus.Scheduled
+                    },
                     CreatedAt = m.CreatedAt,
                     BuildingId = m.BuildingId,
                     TenantId = tenantId,
-                    OrganizerName = m.OrganizedByName
+                    OrganizedByName = m.OrganizedByName
                 }).ToList();
             }
             catch (Exception ex)

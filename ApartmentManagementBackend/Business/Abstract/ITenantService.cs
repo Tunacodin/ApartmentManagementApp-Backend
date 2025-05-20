@@ -30,5 +30,6 @@ namespace Business.Abstract
         List<ComplaintDto> GetRecentComplaints(int tenantId);
         List<PaymentDto> GetNextPayments(int tenantId);
         PaymentResultDto MakePayment(int tenantId, int paymentId, PaymentRequestDto paymentRequest);
+        List<TenantListDto>? GetTenantsByBuilding(int buildingId);
     }
 }

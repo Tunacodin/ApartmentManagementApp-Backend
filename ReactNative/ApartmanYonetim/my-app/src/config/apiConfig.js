@@ -1,5 +1,5 @@
 // Base URL'i tanımla
-export const API_BASE_URL = "https://530f-78-187-59-29.ngrok-free.app/api";
+export const API_BASE_URL = "https://c740-176-240-142-80.ngrok-free.app/api";
 
 // Endpoint'leri kategorilere ayırarak tanımla
 export const API_ENDPOINTS = {
@@ -106,6 +106,17 @@ export const API_ENDPOINTS = {
         DETAIL: (id) => `${API_BASE_URL}/CardInfo/${id}`,
         ADD: `${API_BASE_URL}/CardInfo/add`,
         BY_USER: (userId) => `${API_BASE_URL}/CardInfo/user/${userId}`
+    },
+
+    // Survey endpoints
+    SURVEY: {
+        BASE: `${API_BASE_URL}/Survey`,
+        DETAIL: (id) => `${API_BASE_URL}/Survey/${id}`,
+        BY_BUILDING: (buildingId) => `${API_BASE_URL}/Survey/building/${buildingId}`,
+        ACTIVE: (buildingId) => `${API_BASE_URL}/Survey/building/${buildingId}/active`,
+        STATISTICS: (id) => `${API_BASE_URL}/Survey/${id}/statistics`,
+        SUBMIT: `${API_BASE_URL}/Survey/submit`,
+        BY_USER: (userId) => `${API_BASE_URL}/Survey/user/${userId}`
     }
 };
 

@@ -5,6 +5,7 @@ using Core.Constants;
 using Entities.DTOs;
 using Core.Utilities.Results;
 using Business.ValidationRules.FluentValidation;
+using Entities.Enums;
 
 namespace WebAPI.Controllers
 {
@@ -160,31 +161,6 @@ namespace WebAPI.Controllers
                 : BadRequest(result);
         }
 
-        [HttpGet("dashboard/{adminId}")]
-        public async Task<IActionResult> GetDashboard(int adminId)
-        {
-            try
-            {
-                _logger.LogInformation($"Getting dashboard for admin {adminId}");
-
-                var result = await _adminService.GetDashboardAsync(adminId);
-
-                if (!result.Success)
-                {
-                    _logger.LogWarning($"Dashboard data not found for admin {adminId}");
-                    return BadRequest(ApiResponse<AdminDashboardDto>.ErrorResult(Messages.AdminNotFound));
-                }
-
-                _logger.LogInformation($"Dashboard data retrieved successfully for admin {adminId}");
-                return Ok(ApiResponse<AdminDashboardDto>.SuccessResult(Messages.Success, result.Data));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error getting dashboard for admin {adminId}");
-                return StatusCode(500, ApiResponse<string>.ErrorResult($"Dashboard verisi alınırken hata oluştu: {ex.Message}"));
-            }
-        }
-
         [HttpGet("{adminId}/buildings")]
         public async Task<IActionResult> GetManagedBuildings(int adminId)
         {
@@ -224,68 +200,6 @@ namespace WebAPI.Controllers
                         AssignmentDate = DateTime.Now
                     }))
                 : BadRequest(ApiResponse<BuildingAssignmentResultDto>.ErrorResult(Messages.AdminNotFound));
-        }
-
-        [HttpGet("{adminId}/activities")]
-        public async Task<IActionResult> GetRecentActivities(int adminId, [FromQuery] int count = 10)
-        {
-            var result = await _adminService.GetRecentActivitiesAsync(adminId, count);
-            return result.Success && result.Data != null
-                ? Ok(ApiResponse<List<RecentActivityDto>>.SuccessResult(Messages.AdminActivitiesListed, result.Data))
-                : BadRequest(ApiResponse<List<RecentActivityDto>>.ErrorResult(Messages.AdminNotFound));
-        }
-
-        [HttpGet("{adminId}/financial-summaries")]
-        public async Task<IActionResult> GetFinancialSummaries(int adminId)
-        {
-            var result = await _adminService.GetFinancialSummariesAsync(adminId);
-            return result.Success && result.Data != null
-                ? Ok(ApiResponse<List<FinancialSummaryDto>>.SuccessResult(Messages.AdminFinancialSummaryRetrieved, result.Data))
-                : BadRequest(ApiResponse<List<FinancialSummaryDto>>.ErrorResult(Messages.AdminNotFound));
-        }
-
-        [HttpPut("{adminId}/profile")]
-        public async Task<IActionResult> UpdateProfile(int adminId, [FromBody] UpdateProfileDto profileDto)
-        {
-            var result = await _adminService.UpdateProfileAsync(adminId, profileDto.ProfileImageUrl, profileDto.Description);
-            return result.Success
-                ? Ok(ApiResponse<bool>.SuccessResult(Messages.ProfileUpdated, true))
-                : BadRequest(ApiResponse<bool>.ErrorResult(Messages.AdminNotFound));
-        }
-
-        [HttpPut("{adminId}/password")]
-        public async Task<IActionResult> UpdatePassword(int adminId, [FromBody] UpdatePasswordDto passwordDto)
-        {
-            var result = await _adminService.UpdatePasswordAsync(adminId, passwordDto.CurrentPassword, passwordDto.NewPassword);
-            return result.Success
-                ? Ok(ApiResponse<bool>.SuccessResult(Messages.PasswordUpdated, true))
-                : BadRequest(ApiResponse<bool>.ErrorResult(
-                    result.Message == Messages.InvalidCurrentPassword
-                        ? Messages.InvalidCurrentPassword
-                        : Messages.AdminNotFound));
-        }
-
-        [HttpPut("{adminId}/contact")]
-        public async Task<IActionResult> UpdateContactInfo(int adminId, [FromBody] UpdateContactDto contactDto)
-        {
-            var result = await _adminService.UpdateContactInfoAsync(adminId, contactDto.Email, contactDto.PhoneNumber);
-            return result.Success
-                ? Ok(ApiResponse<bool>.SuccessResult(Messages.ContactInfoUpdated, true))
-                : BadRequest(ApiResponse<bool>.ErrorResult(Messages.AdminNotFound));
-        }
-
-        [HttpGet("{adminId}/statistics")]
-        public async Task<IActionResult> GetStatistics(int adminId)
-        {
-            var statistics = new
-            {
-                TotalResidents = (await _adminService.GetTotalResidentsAsync(adminId)).Data,
-                ActiveComplaints = (await _adminService.GetActiveComplaintsCountAsync(adminId)).Data,
-                PendingPayments = (await _adminService.GetPendingPaymentsCountAsync(adminId)).Data,
-                UpcomingMeetings = (await _adminService.GetUpcomingMeetingsCountAsync(adminId)).Data
-            };
-
-            return Ok(ApiResponse<object>.SuccessResult(Messages.AdminStatisticsRetrieved, statistics));
         }
 
         [HttpPost("notifications")]
@@ -418,12 +332,25 @@ namespace WebAPI.Controllers
                         PaymentType = p.PaymentType,
                         Amount = p.Amount,
                         PaymentDate = p.PaymentDate,
+                        DueDate = p.DueDate,
                         BuildingId = p.BuildingId,
                         ApartmentId = p.ApartmentId,
                         UserId = p.UserId,
                         IsPaid = p.IsPaid,
                         UserFullName = p.UserFullName ?? string.Empty,
-                        ProfileImageUrl = p.ProfileImageUrl ?? string.Empty
+                        ProfileImageUrl = p.ProfileImageUrl ?? string.Empty,
+                        DelayedDays = p.DelayedDays,
+                        DelayPenaltyAmount = p.DelayPenaltyAmount,
+                        TotalAmount = p.TotalAmount ?? p.Amount,
+                        Description = p.PaymentType.ToLower() switch
+                        {
+                            "rent" or "dues" => p.IsPaid
+                                ? (p.DelayedDays > 0
+                                    ? $"{p.UserFullName} - Daire {p.ApartmentId} - {p.Amount:C2} (Gecikme: {p.DelayedDays} gün, Gecikme Bedeli: {p.DelayPenaltyAmount:C2}, Toplam: {p.TotalAmount:C2})"
+                                    : $"{p.UserFullName} - Daire {p.ApartmentId} - {p.Amount:C2}")
+                                : $"{p.UserFullName} - Daire {p.ApartmentId} - {p.Amount:C2} (Bekliyor)",
+                            _ => $"{p.UserFullName} - Daire {p.ApartmentId} - {p.Amount:C2}"
+                        }
                     }).ToList() ?? new List<Entities.DTOs.PaymentWithUserDto>(),
 
                     RecentComplaints = recentComplaints.Data?.Select(c => new ComplaintWithUserDto
@@ -462,12 +389,16 @@ namespace WebAPI.Controllers
                     FinancialOverview = new FinancialOverviewDto
                     {
                         MonthlyTotalIncome = monthlyIncome.Success ? monthlyIncome.Data : 0,
-                        MonthlyExpectedIncome = buildings.Data?.Sum(b => b.TotalDuesAmount) ?? 0,
+                        MonthlyExpectedIncome = buildings.Data?.Sum(b => b.TotalDuesAmount + b.TotalRentAmount) ?? 0,
                         MonthlyCollectedAmount = recentPayments.Data?.Where(p => p.IsPaid).Sum(p => p.Amount) ?? 0,
-                        CollectionRate = CalculateCollectionRate(
+                        CollectionRate = Math.Min(CalculateCollectionRate(
                             recentPayments.Data?.Where(p => p.IsPaid).Sum(p => p.Amount) ?? 0,
-                            buildings.Data?.Sum(b => b.TotalDuesAmount) ?? 0
-                        )
+                            buildings.Data?.Sum(b => b.TotalDuesAmount + b.TotalRentAmount) ?? 0
+                        ), 100),
+                        MonthlyDuesAmount = buildings.Data?.Sum(b => b.TotalDuesAmount) ?? 0,
+                        MonthlyRentAmount = buildings.Data?.Sum(b => b.TotalRentAmount) ?? 0,
+                        CollectedDuesAmount = recentPayments.Data?.Where(p => p.IsPaid && p.PaymentType == "Dues").Sum(p => p.Amount) ?? 0,
+                        CollectedRentAmount = recentPayments.Data?.Where(p => p.IsPaid && p.PaymentType == "Rent").Sum(p => p.Amount) ?? 0
                     },
 
                     RecentActivities = recentPayments.Data?.Select(p => new DashboardActivityDto
@@ -475,11 +406,12 @@ namespace WebAPI.Controllers
                         Id = p.Id,
                         ActivityType = "Payment",
                         Title = p.PaymentType,
-                        Description = $"{p.Amount:C2} tutarında ödeme",
+                        Description = $"{p.UserFullName} - Daire {p.ApartmentId} - {p.Amount:C2} {p.PaymentType}" +
+                                    (p.DelayedDays > 0 ? $" (Gecikme: {p.DelayedDays} gün, Gecikme Bedeli: {p.DelayPenaltyAmount:C2}, Toplam: {p.TotalAmount:C2})" : ""),
                         ActivityDate = p.PaymentDate,
                         RelatedEntity = $"Daire {p.ApartmentId}",
                         Status = p.IsPaid ? "Ödendi" : "Bekliyor",
-                        Amount = p.Amount,
+                        Amount = p.TotalAmount,
                         UserFullName = p.UserFullName ?? string.Empty,
                         ProfileImageUrl = p.ProfileImageUrl ?? string.Empty
                     })
@@ -491,7 +423,14 @@ namespace WebAPI.Controllers
                         Description = c.Description ?? string.Empty,
                         ActivityDate = c.CreatedAt,
                         RelatedEntity = $"Daire {c.UserId}",
-                        Status = c.Status == 1 ? "Çözüldü" : "Bekliyor",
+                        Status = c.Status switch
+                        {
+                            (int)ComplaintStatus.Open => "Açık",
+                            (int)ComplaintStatus.InProgress => "İşlemde",
+                            (int)ComplaintStatus.Resolved => "Çözüldü",
+                            (int)ComplaintStatus.Rejected => "Reddedildi",
+                            _ => "Bekliyor"
+                        },
                         UserFullName = c.CreatedByName ?? string.Empty,
                         ProfileImageUrl = c.ProfileImageUrl ?? string.Empty
                     }) ?? Enumerable.Empty<DashboardActivityDto>())
@@ -658,6 +597,124 @@ namespace WebAPI.Controllers
                 .ToList();
 
             return Ok(payments);
+        }
+
+        [HttpGet("buildings/{buildingId}/recent-activities")]
+        public async Task<IActionResult> GetBuildingRecentActivities(int buildingId, [FromQuery] int count = 10)
+        {
+            try
+            {
+                var recentActivities = new List<BuildingActivityDto>();
+
+                // Son ödemeleri getir
+                var recentPayments = await _adminService.GetLastPaymentsByBuildingAsync(buildingId, count);
+                if (recentPayments.Success && recentPayments.Data != null)
+                {
+                    recentActivities.AddRange(recentPayments.Data.Select(p => new BuildingActivityDto
+                    {
+                        Id = p.Id,
+                        ActivityType = "Payment",
+                        Title = p.PaymentType,
+                        Description = $"{p.UserFullName} - Daire {p.ApartmentId} - {p.Amount:C2} {p.PaymentType}" +
+                                    (p.DelayedDays > 0 ? $" (Gecikme: {p.DelayedDays} gün, Gecikme Bedeli: {p.DelayPenaltyAmount:C2}, Toplam: {p.TotalAmount:C2})" : ""),
+                        ActivityDate = p.PaymentDate,
+                        RelatedEntity = $"Daire {p.ApartmentId}",
+                        Status = p.IsPaid ? "Ödendi" : "Bekliyor",
+                        Amount = p.TotalAmount,
+                        UserFullName = p.UserFullName ?? string.Empty,
+                        ProfileImageUrl = p.ProfileImageUrl ?? string.Empty
+                    }));
+                }
+
+                // Son şikayetleri getir
+                var recentComplaints = await _adminService.GetLastComplaintsByBuildingAsync(buildingId, count);
+                if (recentComplaints.Success && recentComplaints.Data != null)
+                {
+                    recentActivities.AddRange(recentComplaints.Data.Select(c => new BuildingActivityDto
+                    {
+                        Id = c.Id,
+                        ActivityType = "Complaint",
+                        Title = c.Subject,
+                        Description = c.Description ?? string.Empty,
+                        ActivityDate = c.CreatedAt,
+                        RelatedEntity = $"Daire {c.UserId}",
+                        Status = c.Status switch
+                        {
+                            (int)ComplaintStatus.Open => "Açık",
+                            (int)ComplaintStatus.InProgress => "İşlemde",
+                            (int)ComplaintStatus.Resolved => "Çözüldü",
+                            (int)ComplaintStatus.Rejected => "Reddedildi",
+                            _ => "Bekliyor"
+                        },
+                        UserFullName = c.CreatedByName ?? string.Empty,
+                        ProfileImageUrl = c.ProfileImageUrl ?? string.Empty
+                    }));
+                }
+
+                // Son anketleri getir
+                var recentSurveys = await _adminService.GetLastSurveysByBuildingAsync(buildingId, count);
+                if (recentSurveys.Success && recentSurveys.Data != null)
+                {
+                    recentActivities.AddRange(recentSurveys.Data.Select(s => new BuildingActivityDto
+                    {
+                        Id = s.Id,
+                        ActivityType = "Survey",
+                        Title = s.Title,
+                        Description = s.Description ?? string.Empty,
+                        ActivityDate = s.CreatedDate,
+                        RelatedEntity = "Bina Geneli",
+                        Status = s.Status switch
+                        {
+                            (int)SurveyStatus.Active => "Aktif",
+                            (int)SurveyStatus.Completed => "Tamamlandı",
+                            (int)SurveyStatus.Cancelled => "İptal Edildi",
+                            _ => "Bekliyor"
+                        },
+                        UserFullName = s.CreatedByName ?? string.Empty,
+                        ProfileImageUrl = s.ProfileImageUrl ?? string.Empty
+                    }));
+                }
+
+                // Son toplantıları getir
+                var recentMeetings = await _adminService.GetLastMeetingsByBuildingAsync(buildingId, count);
+                if (recentMeetings.Success && recentMeetings.Data != null)
+                {
+                    recentActivities.AddRange(recentMeetings.Data.Select(m => new BuildingActivityDto
+                    {
+                        Id = m.Id,
+                        ActivityType = "Meeting",
+                        Title = m.Title,
+                        Description = m.Description ?? string.Empty,
+                        ActivityDate = m.MeetingDate,
+                        RelatedEntity = m.Location ?? "Bina Geneli",
+                        Status = m.Status switch
+                        {
+                            (int)MeetingStatus.Scheduled => "Planlandı",
+                            (int)MeetingStatus.InProgress => "Devam Ediyor",
+                            (int)MeetingStatus.Completed => "Tamamlandı",
+                            (int)MeetingStatus.Cancelled => "İptal Edildi",
+                            _ => "Bekliyor"
+                        },
+                        UserFullName = m.OrganizedByName ?? string.Empty,
+                        ProfileImageUrl = m.OrganizerImageUrl ?? string.Empty
+                    }));
+                }
+
+                // Tüm aktiviteleri tarihe göre sırala ve istenen sayıda döndür
+                var sortedActivities = recentActivities
+                    .OrderByDescending(a => a.ActivityDate)
+                    .Take(count)
+                    .ToList();
+
+                return Ok(ApiResponse<List<BuildingActivityDto>>.SuccessResult(
+                    "Bina aktiviteleri başarıyla getirildi",
+                    sortedActivities));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting building activities: {ex.Message}");
+                return BadRequest(ApiResponse<string>.ErrorResult(Messages.UnexpectedError));
+            }
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using Core.Utilities.Results;
 using Entities.Concrete;
 using Entities.DTOs;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Business.Abstract
 {
@@ -61,5 +63,11 @@ namespace Business.Abstract
 
         // Yönetim Ekranı metodu
         Task<ApiResponse<ManagementDashboardDto>> GetManagementDashboardAsync(int adminId, ManagementFilterDto filter);
+
+        // Bina aktiviteleri için yeni metodlar
+        Task<ApiResponse<List<PaymentWithUserDto>>> GetLastPaymentsByBuildingAsync(int buildingId, int count = 10);
+        Task<ApiResponse<List<ComplaintWithUserDto>>> GetLastComplaintsByBuildingAsync(int buildingId, int count = 10);
+        Task<ApiResponse<List<SurveyDto>>> GetLastSurveysByBuildingAsync(int buildingId, int count = 10);
+        Task<ApiResponse<List<MeetingDto>>> GetLastMeetingsByBuildingAsync(int buildingId, int count = 10);
     }
 }

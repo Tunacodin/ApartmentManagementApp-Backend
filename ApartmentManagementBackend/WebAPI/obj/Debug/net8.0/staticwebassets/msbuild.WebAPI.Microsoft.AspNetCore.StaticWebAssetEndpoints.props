@@ -1,0 +1,16 @@
+﻿<Project>
+  <ItemGroup>
+    <StaticWebAssetEndpoint Include="_content/WebAPI/js/apiConfig.364ckfgcaa.js">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\apiConfig.js'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"364ckfgcaa"},{"Name":"integrity","Value":"sha256-G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c="},{"Name":"label","Value":"_content/WebAPI/js/apiConfig.js"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"1737"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u0022G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c=\u0022"},{"Name":"Last-Modified","Value":"Mon, 19 May 2025 14:14:23 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/WebAPI/js/apiConfig.js">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\apiConfig.js'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"1737"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u0022G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c=\u0022"},{"Name":"Last-Modified","Value":"Mon, 19 May 2025 14:14:23 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+  </ItemGroup>
+</Project>

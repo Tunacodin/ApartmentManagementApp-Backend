@@ -27,27 +27,6 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "GetRecentActivities",
-    "RelativePath": "api/Admin/{adminId}/activities",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "adminId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "count",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminController",
     "Method": "GetManagedBuildings",
     "RelativePath": "api/Admin/{adminId}/buildings",
     "HttpMethod": "GET",
@@ -98,101 +77,6 @@
       },
       {
         "Name": "buildingId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "UpdateContactInfo",
-    "RelativePath": "api/Admin/{adminId}/contact",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "adminId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "contactDto",
-        "Type": "Entities.DTOs.UpdateContactDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "GetFinancialSummaries",
-    "RelativePath": "api/Admin/{adminId}/financial-summaries",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "adminId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "UpdatePassword",
-    "RelativePath": "api/Admin/{adminId}/password",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "adminId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "passwordDto",
-        "Type": "Entities.DTOs.UpdatePasswordDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "UpdateProfile",
-    "RelativePath": "api/Admin/{adminId}/profile",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "adminId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "profileDto",
-        "Type": "Entities.DTOs.UpdateProfileDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "GetStatistics",
-    "RelativePath": "api/Admin/{adminId}/statistics",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "adminId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -296,16 +180,21 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.AdminController",
-    "Method": "GetDashboard",
-    "RelativePath": "api/Admin/dashboard/{adminId}",
+    "Method": "GetBuildingRecentActivities",
+    "RelativePath": "api/Admin/buildings/{buildingId}/recent-activities",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "adminId",
+        "Name": "buildingId",
         "Type": "System.Int32",
         "IsRequired": true
+      },
+      {
+        "Name": "count",
+        "Type": "System.Int32",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
@@ -1352,10 +1241,21 @@
         "Name": "adminId",
         "Type": "System.Int32",
         "IsRequired": false
-      },
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ComplaintController",
+    "Method": "GetComplaintsByAdminId",
+    "RelativePath": "api/Complaint/admin/{adminId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
       {
-        "Name": "resolveDto",
-        "Type": "Entities.DTOs.ResolveComplaintDto",
+        "Name": "adminId",
+        "Type": "System.Int32",
         "IsRequired": true
       }
     ],
@@ -1381,6 +1281,22 @@
     "ContainingType": "WebAPI.Controllers.ComplaintController",
     "Method": "GetActiveComplaintsCount",
     "RelativePath": "api/Complaint/building/{buildingId}/active/count",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "buildingId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.ComplaintController",
+    "Method": "GetPendingComplaints",
+    "RelativePath": "api/Complaint/building/{buildingId}/pending",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -1436,132 +1352,6 @@
       {
         "Name": "monthsThreshold",
         "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.FinanceController",
-    "Method": "GetApartmentFinance",
-    "RelativePath": "api/Finance/apartment/{apartmentId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "apartmentId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "startDate",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      },
-      {
-        "Name": "endDate",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.FinanceController",
-    "Method": "GetBuildingFinance",
-    "RelativePath": "api/Finance/building/{buildingId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "buildingId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "startDate",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      },
-      {
-        "Name": "endDate",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.FinanceController",
-    "Method": "CalculateDelayedDays",
-    "RelativePath": "api/Finance/calculate-delayed-days/{paymentId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "paymentId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.FinanceController",
-    "Method": "CalculateDelayPenalty",
-    "RelativePath": "api/Finance/calculate-penalty/{paymentId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "paymentId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.FinanceController",
-    "Method": "CalculateTotalDebt",
-    "RelativePath": "api/Finance/calculate-total-debt/{apartmentId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "apartmentId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.FinanceController",
-    "Method": "GetCollectionRate",
-    "RelativePath": "api/Finance/collection-rate/{buildingId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "buildingId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "startDate",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      },
-      {
-        "Name": "endDate",
-        "Type": "System.DateTime",
         "IsRequired": false
       }
     ],
@@ -1629,53 +1419,6 @@
         "Name": "PageSize",
         "Type": "System.Int32",
         "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.FinanceController",
-    "Method": "GetMonthlyPayments",
-    "RelativePath": "api/Finance/monthly-payments",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "buildingId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "month",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "year",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "WebAPI.Controllers.FinanceController",
-    "Method": "GetMonthlyTrends",
-    "RelativePath": "api/Finance/monthly-trends/{buildingId}/{year}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "buildingId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "year",
-        "Type": "System.Int32",
-        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -2308,7 +2051,7 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.SurveyController",
-    "Method": "Create",
+    "Method": "CreateSurvey",
     "RelativePath": "api/Survey",
     "HttpMethod": "POST",
     "IsController": true,
@@ -2325,7 +2068,27 @@
         "IsRequired": false
       }
     ],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      },
+      {
+        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 400
+      },
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 500
+      }
+    ]
   },
   {
     "ContainingType": "WebAPI.Controllers.SurveyController",
@@ -2648,7 +2411,7 @@
   },
   {
     "ContainingType": "WebAPI.Controllers.TenantController",
-    "Method": "MakePayment",
+    "Method": "Pay",
     "RelativePath": "api/Tenant/{id}/payments/{paymentId}/pay",
     "HttpMethod": "POST",
     "IsController": true,
@@ -2662,11 +2425,6 @@
       {
         "Name": "paymentId",
         "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "paymentRequest",
-        "Type": "Entities.DTOs.PaymentRequestDto",
         "IsRequired": true
       }
     ],
@@ -2740,6 +2498,22 @@
     "Parameters": [
       {
         "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.TenantController",
+    "Method": "GetTenantsByBuilding",
+    "RelativePath": "api/Tenant/by-building/{buildingId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "buildingId",
         "Type": "System.Int32",
         "IsRequired": true
       }

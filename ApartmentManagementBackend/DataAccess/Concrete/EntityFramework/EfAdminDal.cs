@@ -342,7 +342,9 @@ namespace DataAccess.Concrete.EntityFramework
             {
                 var occupiedCount = await GetOccupiedApartmentCount(building.Id);
                 var totalApartments = await GetBuildingApartmentCount(building.Id);
-                var occupancyRate = totalApartments > 0 ? (decimal)occupiedCount / totalApartments * 100 : 0;
+                var occupancyRate = totalApartments > 0
+                    ? Math.Min((decimal)occupiedCount / totalApartments * 100, 100)
+                    : 0;
 
                 var activeComplaints = await _context.Complaints
                     .Where(c => c.BuildingId == building.Id && c.Status == 0)
@@ -709,7 +711,9 @@ namespace DataAccess.Concrete.EntityFramework
                 var totalApartments = await GetBuildingApartmentCount(buildingId);
                 var occupiedCount = await GetOccupiedApartmentCount(buildingId);
                 var emptyApartments = totalApartments - occupiedCount;
-                var occupancyRate = totalApartments > 0 ? (decimal)occupiedCount / totalApartments * 100 : 0;
+                var occupancyRate = totalApartments > 0
+                    ? Math.Min((decimal)occupiedCount / totalApartments * 100, 100)
+                    : 0;
 
                 _logger.LogInformation($"Building {buildingId} stats: Total={totalApartments}, Occupied={occupiedCount}, Empty={emptyApartments}, Rate={occupancyRate}%");
 
@@ -796,7 +800,9 @@ namespace DataAccess.Concrete.EntityFramework
             // Calculate current occupancy rate
             var totalApartments = await GetBuildingApartmentCount(buildingId);
             var occupiedCount = await GetOccupiedApartmentCount(buildingId);
-            var currentRate = totalApartments > 0 ? (decimal)occupiedCount / totalApartments * 100 : 0;
+            var currentRate = totalApartments > 0
+                ? Math.Min((decimal)occupiedCount / totalApartments * 100, 100)
+                : 0;
 
             for (var date = startDate; date <= endDate; date = date.AddMonths(1))
             {
@@ -866,6 +872,13 @@ namespace DataAccess.Concrete.EntityFramework
                 _logger.LogError($"Error getting days since last maintenance for building {buildingId}: {ex.Message}");
                 return 180;
             }
+        }
+
+        public async Task<List<Apartment>> GetBuildingApartments(int buildingId)
+        {
+            return await _context.Apartments
+                .Where(a => a.BuildingId == buildingId)
+                .ToListAsync();
         }
     }
 }

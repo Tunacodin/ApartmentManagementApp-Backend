@@ -33,22 +33,22 @@ namespace DataAccess.Concrete.EntityFramework
                 return new OccupancyRatesDto();
 
             var totalApartments = buildings.Sum(b => b.TotalApartments);
-            
+
             var buildingOccupancies = new List<BuildingOccupancyDto>();
-            
+
             foreach (var building in buildings)
             {
                 var occupiedCount = await _context.Apartments
                     .CountAsync(a => a.BuildingId == building.Id && a.IsOccupied);
-                    
+
                 buildingOccupancies.Add(new BuildingOccupancyDto
                 {
                     BuildingId = building.Id,
                     BuildingName = building.BuildingName,
                     TotalApartments = building.TotalApartments,
                     OccupiedApartments = occupiedCount,
-                    OccupancyRate = building.TotalApartments > 0 
-                        ? ((decimal)occupiedCount / building.TotalApartments) * 100 
+                    OccupancyRate = building.TotalApartments > 0 && occupiedCount > 0
+                        ? ((decimal)occupiedCount / building.TotalApartments) * 100
                         : 0
                 });
             }
@@ -59,8 +59,8 @@ namespace DataAccess.Concrete.EntityFramework
             {
                 TotalApartments = totalApartments,
                 OccupiedApartments = totalOccupied,
-                OccupancyRate = totalApartments > 0 
-                    ? ((decimal)totalOccupied / totalApartments) * 100 
+                OccupancyRate = totalApartments > 0 && totalOccupied > 0
+                    ? ((decimal)totalOccupied / totalApartments) * 100
                     : 0,
                 BuildingOccupancies = buildingOccupancies
             };

@@ -3,6 +3,8 @@ using Entities.Concrete;
 using Entities.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System;
+using System.Linq.Expressions;
 
 namespace DataAccess.Abstract
 {
@@ -14,5 +16,6 @@ namespace DataAccess.Abstract
         Task<SurveyStatisticsDto> GetSurveyStatisticsAsync(int surveyId);
         Task<bool> SubmitSurveyResponseAsync(SurveyResponseDto response);
         Task<List<SurveyDetailDto>> GetUserSurveysAsync(int userId);
+        Task<List<Survey>> GetListAsync(Expression<Func<Survey, bool>> filter = null);
     }
 }

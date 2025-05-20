@@ -1,0 +1,96 @@
+// src/constants/Fonts.js
+const Fonts = {
+  urbanist: {
+    regular: 'Urbanist-Regular',
+    medium: 'Urbanist-Medium',
+    light: 'Urbanist-Light',
+    extraLight: 'Urbanist-ExtraLight',
+    thin: 'Urbanist-Thin',
+    bold: 'Urbanist-Bold',
+    extraBold: 'Urbanist-ExtraBold',
+    black: 'Urbanist-Black',
+    semiBold: 'Urbanist-SemiBold',
+    italic: 'Urbanist-Italic',
+    mediumItalic: 'Urbanist-MediumItalic',
+    lightItalic: 'Urbanist-LightItalic',
+    extraLightItalic: 'Urbanist-ExtraLightItalic',
+    thinItalic: 'Urbanist-ThinItalic',
+    boldItalic: 'Urbanist-BoldItalic',
+    extraBoldItalic: 'Urbanist-ExtraBoldItalic',
+    blackItalic: 'Urbanist-BlackItalic',
+    semiBoldItalic: 'Urbanist-SemiBoldItalic',
+  },
+  lato: {
+    regular: 'Lato-Regular',
+    bold: 'Lato-Bold',
+    italic: 'Lato-Italic',
+    light: 'Lato-Light',
+    black: 'Lato-Black',
+    lightItalic: 'Lato-LightItalic',
+    boldItalic: 'Lato-BoldItalic',
+    blackItalic: 'Lato-BlackItalic',
+    },
+  poppins: {
+    regular: 'Poppins-Regular',
+    bold: 'Poppins-Bold',
+    italic: 'Poppins-Italic',
+    light: 'Poppins-Light',
+    black: 'Poppins-Black',
+    },
+  abel: {
+    regular: 'Abel-Regular',
+    },
+  roboto: {
+    regular: 'Roboto-Regular',
+    bold: 'Roboto-Bold',
+    italic: 'Roboto-Italic',
+    light: 'Roboto-Light',
+    black: 'Roboto-Black',
+    },
+  prompt: {
+    regular: 'Prompt-Regular',
+    bold: 'Prompt-Bold',
+    italic: 'Prompt-Italic',
+    light: 'Prompt-Light',
+    black: 'Prompt-Black',
+    },
+  playwrite: {
+    regular: 'Playwrite-Regular',
+    bold: 'Playwrite-Bold',
+    italic: 'Playwrite-Italic',
+    light: 'Playwrite-Light',
+    black: 'Playwrite-Black',
+    },  
+  bodoni: {
+    regular: 'Bodoni-Regular',
+    bold: 'Bodoni-Bold',
+    italic: 'Bodoni-Italic',
+    light: 'Bodoni-Light',
+    black: 'Bodoni-Black',
+    },
+  anton: {
+    regular: 'Anton-Regular',
+    bold: 'Anton-Bold',
+    italic: 'Anton-Italic',
+    light: 'Anton-Light',
+    black: 'Anton-Black',
+    },
+  afacadFlux: {
+    regular: 'AfacadFlux-Regular',
+    bold: 'AfacadFlux-Bold',
+    italic: 'AfacadFlux-Italic',
+    light: 'AfacadFlux-Light',
+    black: 'AfacadFlux-Black',
+    },
+  quicksand: {
+    regular: 'Quicksand-Regular',
+    bold: 'Quicksand-Bold',
+    italic: 'Quicksand-Italic',
+    light: 'Quicksand-Light',
+    black: 'Quicksand-Black',
+    },
+  
+  // Diğer fontlar buraya eklenebilir
+};
+
+export default Fonts; 

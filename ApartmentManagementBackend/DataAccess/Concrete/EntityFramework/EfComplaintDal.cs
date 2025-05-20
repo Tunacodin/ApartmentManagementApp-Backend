@@ -6,6 +6,7 @@ using Entities.DTOs.Reports;
 using Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 
 namespace DataAccess.Concrete.EntityFramework
 {
@@ -36,48 +37,47 @@ namespace DataAccess.Concrete.EntityFramework
 
                 var complaints = await _context.Complaints
                     .Where(c => c.BuildingId == buildingId)
-                    .GroupJoin(_context.Users,
+                    .Join(_context.Users,
                         c => c.UserId,
                         u => u.Id,
-                        (c, u) => new { Complaint = c, Users = u })
+                        (c, u) => new { Complaint = c, User = u })
+                    .GroupJoin(_context.Tenants,
+                        x => x.User.Id,
+                        t => t.Id,
+                        (x, t) => new { x.Complaint, x.User, Tenants = t })
                     .SelectMany(
-                        x => x.Users.DefaultIfEmpty(),
-                        (c, u) => new ComplaintDetailDto
+                        x => x.Tenants.DefaultIfEmpty(),
+                        (x, t) => new ComplaintDetailDto
                         {
-                            Id = c.Complaint.Id,
-                            UserId = c.Complaint.UserId,
-                            BuildingId = c.Complaint.BuildingId,
-                            Subject = c.Complaint.Subject,
-                            Description = c.Complaint.Description,
-                            CreatedAt = c.Complaint.CreatedAt,
-                            Status = (int)c.Complaint.Status,
-                            ResolvedByAdminId = c.Complaint.ResolvedByAdminId,
-                            ResolvedAt = c.Complaint.ResolvedAt,
-                            CreatedByName = u != null ? $"{u.FirstName} {u.LastName}" : c.Complaint.CreatedByName ?? "Bilinmeyen Kullanıcı"
+                            Id = x.Complaint.Id,
+                            UserId = x.Complaint.UserId,
+                            BuildingId = x.Complaint.BuildingId,
+                            Subject = x.Complaint.Subject,
+                            Description = x.Complaint.Description,
+                            CreatedAt = x.Complaint.CreatedAt,
+                            Status = x.Complaint.Status ?? 0,
+                            ResolvedByAdminId = x.Complaint.ResolvedByAdminId,
+                            ResolvedAt = x.Complaint.ResolvedAt,
+                            CreatedByName = x.User != null ? $"{x.User.FirstName} {x.User.LastName}" : x.Complaint.CreatedByName ?? "Bilinmeyen Kullanıcı",
+                            ProfileImageUrl = x.User != null ? (x.User.ProfileImageUrl ?? string.Empty) : string.Empty,
+                            PhoneNumber = x.User != null ? (x.User.PhoneNumber ?? string.Empty) : string.Empty,
+                            Email = x.User != null ? (x.User.Email ?? string.Empty) : string.Empty,
+                            ApartmentNumber = t != null ? t.ApartmentId.ToString() : string.Empty,
+                            DaysOpen = (int)(DateTime.Now - x.Complaint.CreatedAt).TotalDays,
+                            StatusText = x.Complaint.Status == (int)ComplaintStatus.Resolved ? "Çözüldü" :
+                                       x.Complaint.Status == (int)ComplaintStatus.InProgress ? "İşlemde" :
+                                       x.Complaint.Status == (int)ComplaintStatus.Rejected ? "Reddedildi" : "Açık"
                         })
                     .OrderByDescending(c => c.CreatedAt)
                     .ToListAsync();
 
                 _logger.LogInformation("Retrieved {Count} complaints for building {BuildingId}", complaints?.Count ?? 0, buildingId);
 
-                if (complaints == null)
-                {
-                    _logger.LogWarning("Query returned null for building {BuildingId}", buildingId);
-                    return new List<ComplaintDetailDto>();
-                }
-
-                foreach (var complaint in complaints)
-                {
-                    _logger.LogDebug("Complaint {ComplaintId}: Status={Status}, UserId={UserId}, CreatedAt={CreatedAt}",
-                        complaint.Id, complaint.Status, complaint.UserId, complaint.CreatedAt);
-                }
-
-                return complaints;
+                return complaints ?? new List<ComplaintDetailDto>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting complaint details for building {BuildingId}. Error: {Message}, StackTrace: {StackTrace}",
-                    buildingId, ex.Message, ex.StackTrace);
+                _logger.LogError(ex, "Error getting complaint details for building {BuildingId}", buildingId);
                 throw;
             }
         }
@@ -232,6 +232,131 @@ namespace DataAccess.Concrete.EntityFramework
             catch (Exception ex)
             {
                 throw new Exception($"Error getting active complaints: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<List<Complaint>> GetListAsync(Expression<Func<Complaint, bool>> filter = null)
+        {
+            return filter == null
+                ? await _context.Complaints.ToListAsync()
+                : await _context.Complaints.Where(filter).ToListAsync();
+        }
+
+        public async Task<List<Complaint>> GetUserComplaintsByBuildingIdAsync(int buildingId, int userId)
+        {
+            return await _context.Complaints
+                .Join(_context.Tenants,
+                    c => c.UserId,
+                    t => t.Id,
+                    (c, t) => new { Complaint = c, Tenant = t })
+                .Where(x => x.Complaint.BuildingId == buildingId && x.Complaint.UserId == userId)
+                .Select(x => new Complaint
+                {
+                    Id = x.Complaint.Id,
+                    UserId = x.Complaint.UserId,
+                    BuildingId = x.Complaint.BuildingId,
+                    Subject = x.Complaint.Subject,
+                    Description = x.Complaint.Description,
+                    Status = x.Complaint.Status,
+                    CreatedAt = x.Complaint.CreatedAt,
+                })
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<List<ComplaintDetailDto>> GetPendingComplaintsAsync(int buildingId)
+        {
+            try
+            {
+                return await _context.Complaints
+                    .Where(c => c.BuildingId == buildingId &&
+                           (c.Status == (int)ComplaintStatus.Open || c.Status == (int)ComplaintStatus.InProgress))
+                    .Join(_context.Users,
+                        c => c.UserId,
+                        u => u.Id,
+                        (c, u) => new { Complaint = c, User = u })
+                    .GroupJoin(_context.Tenants,
+                        x => x.User.Id,
+                        t => t.Id,
+                        (x, t) => new { x.Complaint, x.User, Tenants = t })
+                    .SelectMany(
+                        x => x.Tenants.DefaultIfEmpty(),
+                        (x, t) => new ComplaintDetailDto
+                        {
+                            Id = x.Complaint.Id,
+                            UserId = x.Complaint.UserId,
+                            BuildingId = x.Complaint.BuildingId,
+                            Subject = x.Complaint.Subject,
+                            Description = x.Complaint.Description,
+                            CreatedAt = x.Complaint.CreatedAt,
+                            Status = x.Complaint.Status ?? 0,
+                            ResolvedByAdminId = x.Complaint.ResolvedByAdminId,
+                            ResolvedAt = x.Complaint.ResolvedAt,
+                            CreatedByName = x.User != null ? $"{x.User.FirstName} {x.User.LastName}" : x.Complaint.CreatedByName ?? "Bilinmeyen Kullanıcı",
+                            ProfileImageUrl = x.User != null ? (x.User.ProfileImageUrl ?? string.Empty) : string.Empty,
+                            PhoneNumber = x.User != null ? (x.User.PhoneNumber ?? string.Empty) : string.Empty,
+                            Email = x.User != null ? (x.User.Email ?? string.Empty) : string.Empty,
+                            ApartmentNumber = t != null ? t.ApartmentId.ToString() : string.Empty,
+                            DaysOpen = (int)(DateTime.Now - x.Complaint.CreatedAt).TotalDays
+                        })
+                    .OrderByDescending(c => c.CreatedAt)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting pending complaints for building {BuildingId}", buildingId);
+                throw;
+            }
+        }
+
+        public async Task<List<ComplaintDetailDto>> GetComplaintsByAdminIdAsync(int adminId)
+        {
+            try
+            {
+                return await _context.Complaints
+                    .Join(_context.Buildings,
+                        c => c.BuildingId,
+                        b => b.Id,
+                        (c, b) => new { Complaint = c, Building = b })
+                    .Where(x => x.Building.AdminId == adminId)
+                    .Join(_context.Users,
+                        x => x.Complaint.UserId,
+                        u => u.Id,
+                        (x, u) => new { x.Complaint, x.Building, User = u })
+                    .GroupJoin(_context.Tenants,
+                        x => x.User.Id,
+                        t => t.Id,
+                        (x, t) => new { x.Complaint, x.Building, x.User, Tenants = t })
+                    .SelectMany(
+                        x => x.Tenants.DefaultIfEmpty(),
+                        (x, t) => new ComplaintDetailDto
+                        {
+                            Id = x.Complaint.Id,
+                            UserId = x.Complaint.UserId,
+                            BuildingId = x.Complaint.BuildingId,
+                            Subject = x.Complaint.Subject,
+                            Description = x.Complaint.Description,
+                            CreatedAt = x.Complaint.CreatedAt,
+                            Status = x.Complaint.Status ?? 0,
+                            ResolvedByAdminId = x.Complaint.ResolvedByAdminId,
+                            ResolvedAt = x.Complaint.ResolvedAt,
+                            CreatedByName = x.User != null ? $"{x.User.FirstName} {x.User.LastName}" : x.Complaint.CreatedByName ?? "Bilinmeyen Kullanıcı",
+                            ProfileImageUrl = x.User != null ? (x.User.ProfileImageUrl ?? string.Empty) : string.Empty,
+                            PhoneNumber = x.User != null ? (x.User.PhoneNumber ?? string.Empty) : string.Empty,
+                            Email = x.User != null ? (x.User.Email ?? string.Empty) : string.Empty,
+                            ApartmentNumber = t != null ? t.ApartmentId.ToString() : string.Empty,
+                            DaysOpen = (int)(DateTime.Now - x.Complaint.CreatedAt).TotalDays,
+                            StatusText = x.Complaint.Status == (int)ComplaintStatus.Resolved ? "Çözüldü" :
+                                       x.Complaint.Status == (int)ComplaintStatus.InProgress ? "İşlemde" :
+                                       x.Complaint.Status == (int)ComplaintStatus.Rejected ? "Reddedildi" : "Açık"
+                        })
+                    .OrderByDescending(c => c.CreatedAt)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting complaints for admin {AdminId}", adminId);
+                throw;
             }
         }
     }

@@ -2,6 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using Business.Abstract;
 using Entities.DTOs;
 using Microsoft.Extensions.Logging;
+using System.Linq;
+using Core.Utilities.Results;
+using Entities.Concrete;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.Http;
 
 namespace WebAPI.Controllers
 {
@@ -114,21 +119,87 @@ namespace WebAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Yeni bir anket oluşturur
+        /// </summary>
+        /// <remarks>
+        /// Örnek request:
+        /// 
+        ///     POST /api/Survey?adminId=1
+        ///     {
+        ///         "title": "Bina Memnuniyet Anketi",
+        ///         "description": "2024 yılı bina hizmetleri memnuniyet anketi",
+        ///         "startDate": "2024-03-20T00:00:00",
+        ///         "endDate": "2024-04-20T00:00:00",
+        ///         "buildingIds": [1, 2],
+        ///         "questions": [
+        ///             {
+        ///                 "questionText": "Bina temizliğinden memnun musunuz?",
+        ///                 "questionType": 0,
+        ///                 "isRequired": true,
+        ///                 "options": ["Evet", "Hayır", "Kısmen"]
+        ///             },
+        ///             {
+        ///                 "questionText": "Güvenlik hizmetlerini nasıl değerlendiriyorsunuz?",
+        ///                 "questionType": 1,
+        ///                 "isRequired": true,
+        ///                 "options": ["Çok İyi", "İyi", "Orta", "Kötü", "Çok Kötü"]
+        ///             }
+        ///         ]
+        ///     }
+        /// </remarks>
+        /// <param name="surveyDto">Anket bilgileri</param>
+        /// <param name="adminId">Anketi oluşturan admin ID</param>
+        /// <response code="200">Anket başarıyla oluşturuldu</response>
+        /// <response code="400">Geçersiz veri veya validasyon hatası</response>
+        /// <response code="500">Sunucu hatası</response>
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] SurveyCreateDto surveyDto, [FromQuery] int adminId)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateSurvey([FromBody] SurveyCreateDto surveyDto, [FromQuery] int adminId)
         {
             try
             {
-                _logger.LogInformation("Creating new survey for building {BuildingId}", surveyDto.BuildingId);
+                _logger.LogInformation("Creating survey with {QuestionCount} questions for admin {AdminId}",
+                    surveyDto?.Questions?.Count ?? 0, adminId);
+
+                if (surveyDto == null)
+                {
+                    _logger.LogWarning("Survey creation failed: Survey data is null");
+                    return BadRequest(ApiResponse<Survey>.ErrorResult("Anket verisi boş olamaz."));
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    var errors = string.Join(", ", ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage));
+                    _logger.LogWarning("Survey creation failed: Validation errors - {Errors}", errors);
+                    return BadRequest(ApiResponse<Survey>.ErrorResult($"Validasyon hataları: {errors}"));
+                }
+
+                if (surveyDto.BuildingIds == null || !surveyDto.BuildingIds.Any())
+                {
+                    _logger.LogWarning("Survey creation failed: No buildings selected");
+                    return BadRequest(ApiResponse<Survey>.ErrorResult("En az bir bina seçilmelidir."));
+                }
+
                 var result = await _surveyService.CreateSurveyAsync(surveyDto, adminId);
-                if (!result.Success || result.Data == null)
-                    return BadRequest(result);
-                return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result);
+                if (result.Success)
+                {
+                    _logger.LogInformation("Survey created successfully with ID {SurveyId}", result.Data.Id);
+                    return Ok(result);
+                }
+
+                _logger.LogWarning("Survey creation failed: {ErrorMessage}", result.Message);
+                return BadRequest(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating survey");
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error creating surveys for BuildingIds {BuildingIds}",
+                    surveyDto?.BuildingIds?.ToArray() ?? Array.Empty<int>());
+                return StatusCode(500, ApiResponse<Survey>.ErrorResult("Anket oluşturulurken bir hata oluştu."));
             }
         }
 

@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using Entities.Concrete;
 using System.Threading.Tasks;
 using Core.Utilities.Results;
+using Business.Abstract;
+using DataAccess.Abstract;
+using Core.Constants;
+using AutoMapper;
+using Microsoft.Extensions.Logging;
+using Entities.DTOs;
 
 namespace Business.Abstract
 {
@@ -19,5 +25,6 @@ namespace Business.Abstract
         Task<ApiResponse<bool>> CalculateDelayPenalty(int paymentId);
         Task<ApiResponse<int>> GetDelayedDays(int paymentId);
         Task<ApiResponse<decimal>> GetDelayPenaltyAmount(int paymentId);
+        Task<ApiResponse<PaymentDto>> ProcessPaymentAsync(int tenantId, int paymentId);
     }
 }

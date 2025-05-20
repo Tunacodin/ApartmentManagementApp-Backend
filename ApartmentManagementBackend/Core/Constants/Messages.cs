@@ -86,8 +86,9 @@ namespace Core.Constants
         public const string PaymentDeleted = "Ödeme kaydı silindi";
         public const string PaymentFailed = "Ödeme işlemi başarısız";
         public const string PaymentSuccessful = "Ödeme işlemi başarılı";
-        public const string PaymentDelayed = "Ödeme gecikti, ceza hesaplandı";
+        public const string PaymentDelayed = "Ödeme gecikme cezası hesaplandı";
         public const string PaymentOnTime = "Ödeme zamanında yapıldı";
+        public const string PaymentProcessed = "Ödeme başarıyla işlendi";
         public const string PaymentCancelled = "Ödeme iptal edildi";
 
         // Meeting Messages
@@ -101,6 +102,7 @@ namespace Core.Constants
 
         // Complaint Messages
         public const string ComplaintNotFound = "Şikayet bulunamadı";
+        public const string ComplaintsNotFound = "Şikayetler bulunamadı";
         public const string ComplaintsListed = "Şikayetler başarıyla listelendi";
         public const string ComplaintAdded = "Şikayet başarıyla eklendi";
         public const string ComplaintUpdated = "Şikayet bilgileri güncellendi";

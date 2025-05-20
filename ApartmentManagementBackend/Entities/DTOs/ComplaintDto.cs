@@ -1,4 +1,5 @@
 using System;
+using Entities.Enums;
 
 namespace Entities.DTOs
 {
@@ -8,7 +9,7 @@ namespace Entities.DTOs
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        public int Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public int BuildingId { get; set; }
@@ -38,6 +39,16 @@ namespace Entities.DTOs
         public int? ResolvedByAdminId { get; set; }
         public DateTime? ResolvedAt { get; set; }
         public string CreatedByName { get; set; } = string.Empty;
+        public string ProfileImageUrl { get; set; } = string.Empty;
+        public string ApartmentNumber { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public int DaysOpen { get; set; }
+        public string StatusText { get; set; } = string.Empty;
+        public bool IsResolved => Status == (int)ComplaintStatus.Resolved;
+        public bool IsInProgress => Status == (int)ComplaintStatus.InProgress;
+        public bool IsRejected => Status == (int)ComplaintStatus.Rejected;
+        public bool IsOpen => Status == (int)ComplaintStatus.Open || Status == null;
     }
 
     // Şikayet Oluşturma DTO'su (Yeni şikayet oluşturma için)

@@ -465,7 +465,7 @@ namespace DataAccess.Concrete.EntityFramework
                 {
                     TotalExpectedIncome = totalExpectedIncome,
                     TotalCollectedIncome = totalCollectedIncome,
-                    CollectionRate = totalExpectedIncome > 0 ?
+                    CollectionRate = totalExpectedIncome > 0 && totalCollectedIncome > 0 ?
                         (int)Math.Round(totalCollectedIncome / totalExpectedIncome * 100) : 0,
                     TotalPayments = payments.Count(p => p.IsPaid),
                     OverduePayments = payments.Count(p => !p.IsPaid && p.DueDate < DateTime.Now),
@@ -541,7 +541,7 @@ namespace DataAccess.Concrete.EntityFramework
                     BuildingName = building.BuildingName,
                     MonthlyExpectedIncome = expectedIncome,
                     MonthlyCollectedIncome = collectedIncome,
-                    CollectionRate = expectedIncome > 0 ?
+                    CollectionRate = expectedIncome > 0 && collectedIncome > 0 ?
                         (int)Math.Round(collectedIncome / expectedIncome * 100) : 0,
                     OverduePayments = overduePayments
                 });

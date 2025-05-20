@@ -101,7 +101,11 @@ namespace WebAPI.Controllers
                     userId = user.Id,
                     email = user.Email,
                     role = user.Role,
-                    adminId = user.AdminId
+                    adminId = user.AdminId,
+                    firstName = user.FirstName,
+                    lastName = user.LastName,
+                    phoneNumber = user.PhoneNumber,
+                    profileImageUrl = user.ProfileImageUrl
                 };
 
                 return Ok(response);
@@ -114,8 +118,7 @@ namespace WebAPI.Controllers
                     success = false,
                     message = "Beklenmeyen bir hata oluştu",
                     error = ex.Message,
-                    errorCode = "LOGIN_SERVER_ERROR",
-                    stackTrace = ex.StackTrace
+                    errorCode = "LOGIN_SERVER_ERROR"
                 });
             }
         }

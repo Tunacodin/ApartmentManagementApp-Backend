@@ -1,20 +1,23 @@
+using System;
+
 namespace Entities.DTOs
 {
     // Temel Toplantı DTO'su
     public class MeetingDto
     {
         public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public DateTime MeetingDate { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public string Location { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        public string Location { get; set; }
+        public int Status { get; set; }
+        public string OrganizedByName { get; set; }
+        public string OrganizerImageUrl { get; set; }
         public DateTime CreatedAt { get; set; }
         public int BuildingId { get; set; }
-        public int? TenantId { get; set; }
-        public string OrganizerName { get; set; } = string.Empty;
-        public string ProfileImageUrl { get; set; } = string.Empty;
+        public int TenantId { get; set; }
     }
 
     // Detay DTO'su
@@ -28,7 +31,7 @@ namespace Entities.DTOs
         public int OrganizedById { get; set; }
         public string OrganizedByName { get; set; } = string.Empty;
         public string Location { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        public int Status { get; set; }
         public bool IsCancelled { get; set; }
         public string CancellationReason { get; set; } = string.Empty;
         public double AttendanceRate { get; set; }
@@ -44,7 +47,7 @@ namespace Entities.DTOs
         public string Title { get; set; } = string.Empty;
         public DateTime MeetingDate { get; set; }
         public string OrganizedByName { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        public int Status { get; set; }
         public bool IsCancelled { get; set; }
     }
 

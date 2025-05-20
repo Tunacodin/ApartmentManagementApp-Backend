@@ -12,7 +12,7 @@
     "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./src/assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -31,34 +31,22 @@
             }
           }
         }
-      },
-      "allowsArbitraryLoads": true
+      }
     },
     "android": {
       "package": "com.yourcompany.evin",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "INTERNET"
-      ],
-      "networkSecurityConfig": {
-        "cleartextTrafficPermitted": true,
-        "debug": {
-          "certificates": [
-            "system",
-            "user"
-          ],
-          "cleartextTrafficPermitted": true
-        }
-      },
-      "usesCleartextTraffic": true
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./src/assets/favicon.png"
     },
     "plugins": [
       "expo-font"

@@ -4,6 +4,11 @@ using Entities.Concrete;
 using Entities.DTOs.Reports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace DataAccess.Concrete.EntityFramework
 {
@@ -245,6 +250,13 @@ namespace DataAccess.Concrete.EntityFramework
                 .OrderByDescending(m => m.Year)
                 .ThenByDescending(m => m.Month)
                 .ToListAsync();
+        }
+
+        public async Task<List<Payment>> GetListAsync(Expression<Func<Payment, bool>> filter = null)
+        {
+            return filter == null
+                ? await _context.Payments.ToListAsync()
+                : await _context.Payments.Where(filter).ToListAsync();
         }
     }
 }

@@ -1,4 +1,87 @@
 {
   "Version": 1,
-  "Endpoints": []
+  "Endpoints": [
+    {
+      "Route": "js/apiConfig.364ckfgcaa.js",
+      "AssetFile": "js/apiConfig.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1737"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 19 May 2025 14:14:23 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "364ckfgcaa"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c="
+        },
+        {
+          "Name": "label",
+          "Value": "js/apiConfig.js"
+        }
+      ]
+    },
+    {
+      "Route": "js/apiConfig.js",
+      "AssetFile": "js/apiConfig.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1737"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 19 May 2025 14:14:23 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c="
+        }
+      ]
+    }
+  ]
 }

@@ -1,11 +1,10 @@
-const { getDefaultConfig } = require('@expo/metro-config');
+// Learn more https://docs.expo.io/guides/customizing-metro
+const { getDefaultConfig } = require('expo/metro-config');
 
-const defaultConfig = getDefaultConfig(__dirname);
+/** @type {import('expo/metro-config').MetroConfig} */
+const config = getDefaultConfig(__dirname);
 
-module.exports = {
-  ...defaultConfig,
-  resolver: {
-    ...defaultConfig.resolver,
-    sourceExts: [...defaultConfig.resolver.sourceExts, 'mjs'],
-  },
-}; 
+// Add additional file extensions for imports
+config.resolver.sourceExts.push('mjs');
+
+module.exports = config; 

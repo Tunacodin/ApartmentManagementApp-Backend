@@ -62,8 +62,6 @@ namespace Entities.DTOs
         public decimal MonthlyRent { get; set; }
         public decimal MonthlyDues { get; set; }
         public DateTime? LastPaymentDate { get; set; }
-
-        // Yeni eklenen özellikler
         public int ApartmentNumber { get; set; }
         public int BuildingId { get; set; }
         public string AdminName { get; set; } = string.Empty;
@@ -72,6 +70,11 @@ namespace Entities.DTOs
         public string OwnerName { get; set; } = string.Empty;
         public string OwnerPhone { get; set; } = string.Empty;
         public string OwnerEmail { get; set; } = string.Empty;
+        public decimal DepositAmount { get; set; }
+        public string ContractStatus { get; set; } = string.Empty;
+        public int RemainingDays { get; set; }
+        public int RemainingMonths { get; set; }
+        public int DaysUntilNextRent { get; set; }
     }
 
     // 🔹 Kiracı + Ödemeler DTO'su (İsteğe Bağlı Olarak Ödemeler Dahil)

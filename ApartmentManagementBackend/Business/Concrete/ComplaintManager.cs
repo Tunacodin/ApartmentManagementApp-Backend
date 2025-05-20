@@ -6,6 +6,7 @@ using Entities.Concrete;
 using Entities.DTOs;
 using Entities.Enums;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace Business.Concrete
 {
@@ -18,6 +19,7 @@ namespace Business.Concrete
         {
             _complaintDal = complaintDal;
             _logger = logger;
+
         }
 
         public async Task<ApiResponse<List<ComplaintDetailDto>>> GetBuildingComplaintsAsync(int buildingId)
@@ -183,7 +185,6 @@ namespace Business.Concrete
                 complaint.Status = (int)ComplaintStatus.Resolved;
                 complaint.ResolvedByAdminId = adminId;
                 complaint.ResolvedAt = DateTime.Now;
-                complaint.Description += $"\n\nÇözüm: {solution}";
                 await _complaintDal.UpdateAsync(complaint);
 
                 return ApiResponse<bool>.SuccessResult("Şikayet çözüldü", true);
@@ -250,6 +251,48 @@ namespace Business.Concrete
             }
         }
 
+        public async Task<ApiResponse<List<ComplaintDetailDto>>> GetPendingComplaintsAsync(int buildingId)
+        {
+            try
+            {
+                var complaints = await _complaintDal.GetPendingComplaintsAsync(buildingId);
+                if (complaints == null)
+                {
+                    return ApiResponse<List<ComplaintDetailDto>>.ErrorResult(Messages.ComplaintsNotFound);
+                }
+
+                return ApiResponse<List<ComplaintDetailDto>>.SuccessResult(Messages.ComplaintsListed, complaints);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting pending complaints for building {BuildingId}", buildingId);
+                return ApiResponse<List<ComplaintDetailDto>>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<List<ComplaintDetailDto>>> GetComplaintsByAdminIdAsync(int adminId)
+        {
+            try
+            {
+                _logger.LogInformation("Getting complaints for admin {AdminId}", adminId);
+
+                var complaints = await _complaintDal.GetComplaintsByAdminIdAsync(adminId);
+                if (complaints == null || !complaints.Any())
+                {
+                    _logger.LogWarning("No complaints found for admin {AdminId}", adminId);
+                    return ApiResponse<List<ComplaintDetailDto>>.SuccessResult(Messages.ComplaintsListed, new List<ComplaintDetailDto>());
+                }
+
+                _logger.LogInformation("Retrieved {Count} complaints for admin {AdminId}", complaints.Count, adminId);
+                return ApiResponse<List<ComplaintDetailDto>>.SuccessResult(Messages.ComplaintsListed, complaints);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting complaints for admin {AdminId}", adminId);
+                return ApiResponse<List<ComplaintDetailDto>>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
         public List<ComplaintDto> GetComplaintsByTenantId(int tenantId)
         {
             try
@@ -261,7 +304,7 @@ namespace Business.Concrete
                     Title = c.Subject,
                     Description = c.Description,
                     CreatedAt = c.CreatedAt,
-                    Status = c.Status.HasValue ? ((ComplaintStatus)c.Status.Value).ToString() : "Open",
+                    Status = (int)(c.Status ?? (int)ComplaintStatus.Open),
                     BuildingId = c.BuildingId,
                     TenantId = c.UserId,
                     IsResolved = c.Status == (int)ComplaintStatus.Resolved,
@@ -291,7 +334,7 @@ namespace Business.Concrete
                     Id = complaint.Id,
                     Title = complaint.Subject,
                     Description = complaint.Description,
-                    Status = complaint.Status.HasValue ? ((ComplaintStatus)complaint.Status.Value).ToString() : "Open",
+                    Status = (int)(complaint.Status ?? (int)ComplaintStatus.Open),
                     CreatedAt = complaint.CreatedAt,
                     BuildingId = complaint.BuildingId,
                     TenantId = complaint.UserId,
@@ -320,7 +363,7 @@ namespace Business.Concrete
                     Subject = complaint.Title,
                     Description = complaint.Description,
                     CreatedAt = DateTime.Now,
-                    Status = (int)ComplaintStatus.Open,
+                    Status = complaint.Status,
                     CreatedByName = complaint.CreatedByName
                 };
 
@@ -343,12 +386,7 @@ namespace Business.Concrete
 
                 existingComplaint.Subject = complaint.Title;
                 existingComplaint.Description = complaint.Description;
-                existingComplaint.Status = Enum.Parse<ComplaintStatus>(complaint.Status) switch
-                {
-                    ComplaintStatus.Resolved => (int)ComplaintStatus.Resolved,
-                    ComplaintStatus.InProgress => (int)ComplaintStatus.InProgress,
-                    _ => (int)ComplaintStatus.Open
-                };
+                existingComplaint.Status = complaint.Status;
 
                 if (complaint.IsResolved)
                 {
@@ -379,6 +417,85 @@ namespace Business.Concrete
             {
                 _logger.LogError(ex, "Error deleting complaint");
                 throw;
+            }
+        }
+
+        public async Task<ApiResponse<List<ComplaintDetailDto>>> GetUserComplaintsByBuildingIdAsync(int buildingId, int userId)
+        {
+            try
+            {
+                _logger.LogInformation("Getting complaints for user {UserId} in building {BuildingId}", userId, buildingId);
+
+                if (buildingId <= 0)
+                {
+                    _logger.LogWarning("Invalid buildingId: {BuildingId}", buildingId);
+                    return ApiResponse<List<ComplaintDetailDto>>.ErrorResult("Geçersiz bina ID'si");
+                }
+
+                if (userId <= 0)
+                {
+                    _logger.LogWarning("Invalid userId: {UserId}", userId);
+                    return ApiResponse<List<ComplaintDetailDto>>.ErrorResult("Geçersiz kullanıcı ID'si");
+                }
+
+                var complaints = await _complaintDal.GetUserComplaintsByBuildingIdAsync(buildingId, userId);
+                if (complaints == null || !complaints.Any())
+                {
+                    _logger.LogWarning("No complaints found for user {UserId} in building {BuildingId}", userId, buildingId);
+                    return ApiResponse<List<ComplaintDetailDto>>.SuccessResult(Messages.ComplaintsListed, new List<ComplaintDetailDto>());
+                }
+
+                var complaintDtos = complaints.Select(c => new ComplaintDetailDto
+                {
+                    Id = c.Id,
+                    UserId = c.UserId,
+                    BuildingId = c.BuildingId,
+                    Subject = c.Subject,
+                    Description = c.Description,
+                    CreatedAt = c.CreatedAt,
+                    Status = c.Status ?? 0,
+                    ResolvedByAdminId = c.ResolvedByAdminId,
+                    ResolvedAt = c.ResolvedAt,
+                    CreatedByName = c.CreatedByName ?? "Bilinmeyen Kullanıcı"
+                }).ToList();
+
+                _logger.LogInformation("Retrieved {Count} complaints for user {UserId} in building {BuildingId}",
+                    complaintDtos.Count, userId, buildingId);
+
+                return ApiResponse<List<ComplaintDetailDto>>.SuccessResult(Messages.ComplaintsListed, complaintDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting complaints for user {UserId} in building {BuildingId}", userId, buildingId);
+                return ApiResponse<List<ComplaintDetailDto>>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<ComplaintDetailDto>> GetComplaintDetailByIdAsync(int complaintId)
+        {
+            try
+            {
+                _logger.LogInformation("Getting complaint detail for ID {ComplaintId}", complaintId);
+
+                if (complaintId <= 0)
+                {
+                    _logger.LogWarning("Invalid complaintId: {ComplaintId}", complaintId);
+                    return ApiResponse<ComplaintDetailDto>.ErrorResult("Geçersiz şikayet ID'si");
+                }
+
+                var complaint = await _complaintDal.GetComplaintDetailByIdAsync(complaintId);
+                if (complaint == null)
+                {
+                    _logger.LogWarning("No complaint found with ID {ComplaintId}", complaintId);
+                    return ApiResponse<ComplaintDetailDto>.ErrorResult("Şikayet bulunamadı");
+                }
+
+                return ApiResponse<ComplaintDetailDto>.SuccessResult(Messages.ComplaintRetrieved, complaint);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting complaint detail for ID {ComplaintId}", complaintId);
+                return ApiResponse<ComplaintDetailDto>.ErrorResult(Messages.UnexpectedError);
             }
         }
     }

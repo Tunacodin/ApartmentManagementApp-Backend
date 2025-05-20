@@ -41,5 +41,6 @@ namespace DataAccess.Abstract
         Task<int> GetDelayedPaymentsCount(int buildingId);
         Task<int> GetDaysSinceLastMeeting(int buildingId);
         Task<int> GetDaysSinceLastMaintenance(int buildingId);
+        Task<List<Apartment>> GetBuildingApartments(int buildingId);
     }
 }

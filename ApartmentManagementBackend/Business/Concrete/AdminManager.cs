@@ -23,6 +23,9 @@ namespace Business.Concrete
         private readonly IAdminDal _adminDal;
         private readonly IContractDal _contractDal;
         private readonly ILogger<AdminManager> _logger;
+        private readonly IPaymentDal _paymentDal;
+        private readonly IComplaintDal _complaintDal;
+        private readonly ISurveyDal _surveyDal;
 
         public AdminManager(
             IUserDal userDal,
@@ -33,7 +36,10 @@ namespace Business.Concrete
             IMeetingDal meetingDal,
             IAdminDal adminDal,
             IContractDal contractDal,
-            ILogger<AdminManager> logger)
+            ILogger<AdminManager> logger,
+            IPaymentDal paymentDal,
+            IComplaintDal complaintDal,
+            ISurveyDal surveyDal)
         {
             _userDal = userDal;
             _buildingDal = buildingDal;
@@ -44,6 +50,9 @@ namespace Business.Concrete
             _adminDal = adminDal;
             _contractDal = contractDal;
             _logger = logger;
+            _paymentDal = paymentDal;
+            _complaintDal = complaintDal;
+            _surveyDal = surveyDal;
         }
 
         public async Task<ApiResponse<AdminDetailDto>> GetByIdAsync(int id)
@@ -264,7 +273,7 @@ namespace Business.Concrete
                         ExpectedIncome = expectedIncome,
                         CollectedAmount = buildingPayments.Sum(p => p.Amount),
                         PendingAmount = expectedIncome - buildingPayments.Sum(p => p.Amount),
-                        CollectionRate = buildingPayments.Sum(p => p.Amount) / expectedIncome * 100,
+                        CollectionRate = expectedIncome > 0 ? (buildingPayments.Sum(p => p.Amount) / expectedIncome * 100) : 0,
                         TotalPayments = buildingPayments.Count(),
                         PendingPayments = buildingPayments.Count(p => !p.IsPaid)
                     };
@@ -299,6 +308,15 @@ namespace Business.Concrete
                     var buildingTenants = await _adminDal.GetBuildingTenants(building.Id);
                     var buildingPayments = payments.Where(p => buildingTenants.Contains(p.UserId));
 
+                    var totalExpectedAmount = (building.DuesAmount * totalApartments +
+                        (await _adminDal.GetBuildingApartments(building.Id))
+                            .Where(a => a.IsOccupied)
+                            .Sum(a => a.RentAmount));
+                    var collectedAmount = buildingPayments.Sum(p => p.Amount);
+                    var collectionRate = totalExpectedAmount > 0
+                        ? Math.Min((collectedAmount / totalExpectedAmount) * 100, 100)
+                        : 0;
+
                     managedBuildings.Add(new AdminManagedBuildingDto
                     {
                         BuildingId = building.Id,
@@ -307,10 +325,13 @@ namespace Business.Concrete
                         OccupiedApartments = occupiedApartments,
                         OccupancyRate = totalApartments > 0 ? (decimal)occupiedApartments / totalApartments * 100 : 0,
                         TotalDuesAmount = building.DuesAmount * totalApartments,
+                        TotalRentAmount = (await _adminDal.GetBuildingApartments(building.Id))
+                            .Where(a => a.IsOccupied)
+                            .Sum(a => a.RentAmount),
                         ActiveComplaints = complaints,
                         LastMaintenanceDate = building.LastMaintenanceDate,
-                        PendingAmount = (building.DuesAmount * totalApartments) - buildingPayments.Sum(p => p.Amount),
-                        CollectionRate = buildingPayments.Sum(p => p.Amount) / (building.DuesAmount * totalApartments) * 100,
+                        PendingAmount = totalExpectedAmount - collectedAmount,
+                        CollectionRate = collectionRate,
                         TotalPayments = buildingPayments.Count(),
                         PendingPayments = buildingPayments.Count(p => !p.IsPaid)
                     });
@@ -730,7 +751,13 @@ namespace Business.Concrete
                     MonthlyExpectedIncome = totalExpected,
                     MonthlyCollectedAmount = totalCollected,
                     MonthlyTotalIncome = totalCollected,
-                    CollectionRate = totalCollected > 0 ? (totalCollected / totalExpected * 100) : 0
+                    CollectionRate = totalExpected > 0
+                        ? Math.Min((totalCollected / totalExpected) * 100, 100)
+                        : 0,
+                    MonthlyDuesAmount = payments.Where(p => p.PaymentType == "Dues").Sum(p => p.Amount),
+                    MonthlyRentAmount = payments.Where(p => p.PaymentType == "Rent").Sum(p => p.Amount),
+                    CollectedDuesAmount = payments.Where(p => p.IsPaid && p.PaymentType == "Dues").Sum(p => p.Amount),
+                    CollectedRentAmount = payments.Where(p => p.IsPaid && p.PaymentType == "Rent").Sum(p => p.Amount)
                 };
 
                 return ApiResponse<FinancialOverviewDto>.SuccessResult(Messages.Success, overview);
@@ -869,6 +896,29 @@ namespace Business.Concrete
             try
             {
                 var payments = await _adminDal.GetLastPayments(adminId, count);
+
+                // Gecikme bilgilerini hesapla
+                foreach (var payment in payments)
+                {
+                    // Sadece rent ve dues ödemeleri için gecikme hesapla
+                    if ((payment.PaymentType.ToLower() == "rent" || payment.PaymentType.ToLower() == "dues") &&
+                        !payment.IsPaid &&
+                        payment.DueDate != DateTime.MinValue &&
+                        payment.DueDate < DateTime.Now)
+                    {
+                        payment.DelayedDays = (int)(DateTime.Now - payment.DueDate).TotalDays;
+                        payment.DelayPenaltyAmount = payment.Amount * payment.DelayedDays.Value * 0.001m; // Günlük %0.1 gecikme cezası
+                        payment.TotalAmount = payment.Amount + payment.DelayPenaltyAmount;
+                    }
+                    else
+                    {
+                        // Diğer durumlarda gecikme bilgilerini sıfırla
+                        payment.DelayedDays = null;
+                        payment.DelayPenaltyAmount = null;
+                        payment.TotalAmount = payment.Amount;
+                    }
+                }
+
                 return ApiResponse<List<PaymentWithUserDto>>.SuccessResult(Messages.Success, payments);
             }
             catch (Exception ex)
@@ -1098,6 +1148,135 @@ namespace Business.Concrete
         private static int CalculateTotalPages(int totalItems, int pageSize)
         {
             return (int)Math.Ceiling(totalItems / (double)pageSize);
+        }
+
+        public async Task<ApiResponse<List<PaymentWithUserDto>>> GetLastPaymentsByBuildingAsync(int buildingId, int count = 10)
+        {
+            try
+            {
+                var payments = await _paymentDal.GetListAsync(p => p.BuildingId == buildingId);
+                var result = payments
+                    .OrderByDescending(p => p.PaymentDate)
+                    .Take(count)
+                    .Select(p => new PaymentWithUserDto
+                    {
+                        Id = p.Id,
+                        PaymentType = p.PaymentType,
+                        Amount = p.Amount,
+                        PaymentDate = p.PaymentDate,
+                        DueDate = p.DueDate,
+                        BuildingId = p.BuildingId,
+                        ApartmentId = p.ApartmentId,
+                        UserId = p.UserId,
+                        IsPaid = p.IsPaid,
+                        UserFullName = p.UserFullName,
+                        DelayedDays = p.DelayedDays,
+                        DelayPenaltyAmount = p.DelayPenaltyAmount,
+                        TotalAmount = p.TotalAmount ?? p.Amount,
+                        Description = p.Description,
+                        Status = p.IsPaid ? "Ödendi" : "Bekliyor"
+                    })
+                    .ToList();
+
+                return ApiResponse<List<PaymentWithUserDto>>.SuccessResult("Ödemeler başarıyla getirildi", result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<PaymentWithUserDto>>.ErrorResult("Ödemeler getirilirken bir hata oluştu: " + ex.Message);
+            }
+        }
+
+        public async Task<ApiResponse<List<ComplaintWithUserDto>>> GetLastComplaintsByBuildingAsync(int buildingId, int count = 10)
+        {
+            try
+            {
+                var complaints = await _complaintDal.GetListAsync(c => c.BuildingId == buildingId);
+                var result = complaints
+                    .OrderByDescending(c => c.CreatedAt)
+                    .Take(count)
+                    .Select(c => new ComplaintWithUserDto
+                    {
+                        Id = c.Id,
+                        Subject = c.Subject,
+                        Description = c.Description,
+                        CreatedAt = c.CreatedAt,
+                        BuildingId = c.BuildingId,
+                        UserId = c.UserId,
+                        Status = c.Status ?? (int)ComplaintStatus.Open,
+                        CreatedByName = c.CreatedByName,
+                        UserFullName = c.CreatedByName
+                    })
+                    .ToList();
+
+                return ApiResponse<List<ComplaintWithUserDto>>.SuccessResult("Şikayetler başarıyla getirildi", result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<ComplaintWithUserDto>>.ErrorResult("Şikayetler getirilirken bir hata oluştu: " + ex.Message);
+            }
+        }
+
+        public async Task<ApiResponse<List<SurveyDto>>> GetLastSurveysByBuildingAsync(int buildingId, int count = 10)
+        {
+            try
+            {
+                var surveys = await _surveyDal.GetListAsync(s => s.BuildingId == buildingId);
+                var result = surveys
+                    .OrderByDescending(s => s.CreatedAt)
+                    .Take(count)
+                    .Select(s => new SurveyDto
+                    {
+                        Id = s.Id,
+                        Title = s.Title,
+                        Description = s.Description,
+                        CreatedDate = s.CreatedAt,
+                        EndDate = s.EndDate,
+                        Status = s.IsActive ? 1 : 0,
+                        CreatedByName = s.CreatedByAdminId.ToString()
+                    })
+                    .ToList();
+
+                return ApiResponse<List<SurveyDto>>.SuccessResult("Anketler başarıyla getirildi", result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<SurveyDto>>.ErrorResult("Anketler getirilirken bir hata oluştu: " + ex.Message);
+            }
+        }
+
+        public async Task<ApiResponse<List<MeetingDto>>> GetLastMeetingsByBuildingAsync(int buildingId, int count = 10)
+        {
+            try
+            {
+                var meetings = await _meetingDal.GetListAsync(m => m.BuildingId == buildingId);
+                var result = meetings
+                    .OrderByDescending(m => m.MeetingDate)
+                    .Take(count)
+                    .Select(m => new MeetingDto
+                    {
+                        Id = m.Id,
+                        Title = m.Title,
+                        Description = m.Description,
+                        MeetingDate = m.MeetingDate,
+                        Location = m.Location,
+                        Status = m.Status switch
+                        {
+                            "Scheduled" => (int)MeetingStatus.Scheduled,
+                            "InProgress" => (int)MeetingStatus.InProgress,
+                            "Completed" => (int)MeetingStatus.Completed,
+                            "Cancelled" => (int)MeetingStatus.Cancelled,
+                            _ => (int)MeetingStatus.Scheduled
+                        },
+                        OrganizedByName = m.OrganizedByName
+                    })
+                    .ToList();
+
+                return ApiResponse<List<MeetingDto>>.SuccessResult("Toplantılar başarıyla getirildi", result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<MeetingDto>>.ErrorResult("Toplantılar getirilirken bir hata oluştu: " + ex.Message);
+            }
         }
     }
 }

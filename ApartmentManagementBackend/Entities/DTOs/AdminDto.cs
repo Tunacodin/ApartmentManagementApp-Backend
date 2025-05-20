@@ -62,12 +62,23 @@ namespace Entities.DTOs
         public string BuildingName { get; set; } = string.Empty;
         public int TotalApartments { get; set; }
         public int OccupiedApartments { get; set; }
-        public decimal OccupancyRate { get; set; }
+        private decimal _occupancyRate;
+        public decimal OccupancyRate
+        {
+            get => _occupancyRate;
+            set => _occupancyRate = value >= 0 && value <= 100 ? value : 0;
+        }
         public decimal TotalDuesAmount { get; set; }
+        public decimal TotalRentAmount { get; set; }
         public int ActiveComplaints { get; set; }
         public DateTime LastMaintenanceDate { get; set; }
         public decimal PendingAmount { get; set; }
-        public decimal CollectionRate { get; set; }
+        private decimal _collectionRate;
+        public decimal CollectionRate
+        {
+            get => _collectionRate;
+            set => _collectionRate = value >= 0 && value <= 100 ? value : 0;
+        }
         public int TotalPayments { get; set; }
         public int PendingPayments { get; set; }
     }
@@ -184,7 +195,10 @@ namespace Entities.DTOs
         public decimal MonthlyExpectedIncome { get; set; }
         public decimal MonthlyCollectedAmount { get; set; }
         public decimal CollectionRate { get; set; }
-        public Dictionary<string, decimal> MonthlyBreakdown { get; set; } = new();
+        public decimal MonthlyDuesAmount { get; set; }
+        public decimal MonthlyRentAmount { get; set; }
+        public decimal CollectedDuesAmount { get; set; }
+        public decimal CollectedRentAmount { get; set; }
     }
 
     // 🔹 Dashboard Aktivite DTO'su
@@ -303,7 +317,12 @@ namespace Entities.DTOs
 
     public class BuildingBasicStatsDto
     {
-        public decimal OccupancyRate { get; set; }
+        private decimal _occupancyRate;
+        public decimal OccupancyRate
+        {
+            get => _occupancyRate;
+            set => _occupancyRate = value >= 0 && value <= 100 ? value : 0;
+        }
         public DateTime LastMaintenanceDate { get; set; }
     }
 
@@ -314,7 +333,12 @@ namespace Entities.DTOs
         public string Name { get; set; } = string.Empty;
         public int FloorCount { get; set; }
         public int TotalApartments { get; set; }
-        public decimal OccupancyRate { get; set; }
+        private decimal _occupancyRate;
+        public decimal OccupancyRate
+        {
+            get => _occupancyRate;
+            set => _occupancyRate = value >= 0 && value <= 100 ? value : 0;
+        }
         public DateTime LastMaintenanceDate { get; set; }
         public int EmptyApartmentsCount { get; set; }
         public int TotalResidentsCount { get; set; }

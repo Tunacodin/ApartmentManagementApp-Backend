@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 using Entities.DTOs;
+using Entities.Enums;
 
 namespace WebAPI.Controllers
 {
@@ -53,8 +54,7 @@ namespace WebAPI.Controllers
                     return BadRequest(result);
                 }
 
-                _logger.LogInformation("Successfully retrieved {Count} complaints for building {BuildingId}",
-                    result.Data?.Count ?? 0, buildingId);
+                _logger.LogInformation("Successfully retrieved complaint details for building {BuildingId}", buildingId);
 
                 return Ok(result);
             }
@@ -69,8 +69,45 @@ namespace WebAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _complaintService.GetComplaintDetailAsync(id);
-            return result.Success ? Ok(result) : NotFound(result);
+            try
+            {
+                var result = await _complaintService.GetComplaintDetailAsync(id);
+                if (!result.Success || result.Data == null)
+                {
+                    return NotFound(result);
+                }
+
+                // Şikayet durumuna göre günleri hesapla
+                var complaint = result.Data;
+                if (complaint.Status == (int)ComplaintStatus.Resolved || complaint.Status == (int)ComplaintStatus.Rejected)
+                {
+                    // Çözülmüş veya reddedilmiş şikayetler için çözülme tarihine kadar olan günleri hesapla
+                    complaint.DaysOpen = complaint.ResolvedAt.HasValue
+                        ? (int)(complaint.ResolvedAt.Value - complaint.CreatedAt).TotalDays
+                        : 0;
+                }
+                else
+                {
+                    // Açık veya işlemdeki şikayetler için bugüne kadar olan günleri hesapla
+                    complaint.DaysOpen = (int)(DateTime.Now - complaint.CreatedAt).TotalDays;
+                }
+
+                // Status text'i güncelle
+                complaint.StatusText = complaint.Status switch
+                {
+                    (int)ComplaintStatus.Resolved => "Çözüldü",
+                    (int)ComplaintStatus.InProgress => "İşlemde",
+                    (int)ComplaintStatus.Rejected => "Reddedildi",
+                    _ => "Açık"
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting complaint {id}");
+                return StatusCode(500, new { message = "Şikayet detayları alınırken hata oluştu", error = ex.Message });
+            }
         }
 
         [HttpGet("user/{userId}")]
@@ -178,11 +215,24 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("{id}/resolve")]
-        public async Task<IActionResult> ResolveComplaint(int id, [FromQuery] int adminId, [FromBody] ResolveComplaintDto resolveDto)
+        [Consumes("application/json")]
+        public async Task<IActionResult> ResolveComplaint(int id, [FromQuery] int adminId)
         {
             try
             {
                 _logger.LogInformation($"Resolving complaint {id} by admin {adminId}");
+
+                if (id <= 0)
+                {
+                    _logger.LogWarning($"Invalid complaint ID: {id}");
+                    return BadRequest("Geçersiz şikayet ID'si");
+                }
+
+                if (adminId <= 0)
+                {
+                    _logger.LogWarning($"Invalid admin ID: {adminId}");
+                    return BadRequest("Geçersiz admin ID'si");
+                }
 
                 // Şikayet detaylarını al
                 var complaintDetail = await _complaintService.GetComplaintDetailAsync(id);
@@ -192,8 +242,10 @@ namespace WebAPI.Controllers
                     return BadRequest(complaintDetail);
                 }
 
+                _logger.LogInformation($"Found complaint: {complaintDetail.Data.Subject}");
+
                 // Şikayeti çöz
-                var result = await _complaintService.ResolveComplaintAsync(id, adminId, resolveDto.Solution);
+                var result = await _complaintService.ResolveComplaintAsync(id, adminId, "Şikayet çözüldü");
                 if (!result.Success)
                 {
                     _logger.LogWarning($"Failed to resolve complaint {id}: {result.Message}");
@@ -204,7 +256,7 @@ namespace WebAPI.Controllers
                 var notification = new Notification
                 {
                     Title = "Şikayetiniz Çözüldü",
-                    Message = $"'{complaintDetail.Data.Subject}' başlıklı şikayetiniz çözüldü. Çözüm: {resolveDto.Solution}",
+                    Message = $"'{complaintDetail.Data.Subject}' başlıklı şikayetiniz çözüldü.",
                     UserId = complaintDetail.Data.UserId,
                     CreatedByAdminId = adminId,
                     CreatedAt = DateTime.Now,
@@ -218,7 +270,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error resolving complaint {id}");
+                _logger.LogError(ex, $"Error resolving complaint {id}. Error: {ex.Message}, StackTrace: {ex.StackTrace}");
                 return StatusCode(500, new { message = "Şikayet çözülürken hata oluştu", error = ex.Message });
             }
         }
@@ -281,6 +333,84 @@ namespace WebAPI.Controllers
         {
             var result = await _complaintService.GetActiveComplaintsCountAsync(buildingId);
             return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpGet("building/{buildingId}/pending")]
+        public async Task<IActionResult> GetPendingComplaints(int buildingId)
+        {
+            try
+            {
+                _logger.LogInformation("Getting pending complaints for building {BuildingId}", buildingId);
+
+                if (buildingId <= 0)
+                {
+                    _logger.LogWarning("Invalid buildingId: {BuildingId}", buildingId);
+                    return BadRequest("Invalid building ID");
+                }
+
+                var result = await _complaintService.GetPendingComplaintsAsync(buildingId);
+
+                if (result == null)
+                {
+                    _logger.LogWarning("Result is null for building {BuildingId}", buildingId);
+                    return StatusCode(500, "Internal server error - null result");
+                }
+
+                if (!result.Success)
+                {
+                    _logger.LogWarning("Unsuccessful result for building {BuildingId}. Message: {Message}", buildingId, result.Message);
+                    return BadRequest(result);
+                }
+
+                _logger.LogInformation("Successfully retrieved pending complaints for building {BuildingId}", buildingId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting pending complaints for building {BuildingId}. Error: {Message}",
+                    buildingId, ex.Message);
+                return StatusCode(500, new { message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        [HttpGet("admin/{adminId}")]
+        public async Task<IActionResult> GetComplaintsByAdminId(int adminId)
+        {
+            try
+            {
+                _logger.LogInformation("Getting complaints for admin {AdminId}", adminId);
+
+                if (adminId <= 0)
+                {
+                    _logger.LogWarning("Invalid adminId: {AdminId}", adminId);
+                    return BadRequest("Invalid admin ID");
+                }
+
+                var result = await _complaintService.GetComplaintsByAdminIdAsync(adminId);
+
+                if (result == null)
+                {
+                    _logger.LogWarning("Result is null for admin {AdminId}", adminId);
+                    return StatusCode(500, "Internal server error - null result");
+                }
+
+                if (!result.Success)
+                {
+                    _logger.LogWarning("Unsuccessful result for admin {AdminId}. Message: {Message}", adminId, result.Message);
+                    return BadRequest(result);
+                }
+
+                _logger.LogInformation("Successfully retrieved complaints for admin {AdminId}", adminId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting complaints for admin {AdminId}. Error: {Message}",
+                    adminId, ex.Message);
+                return StatusCode(500, new { message = "Internal server error", error = ex.Message });
+            }
         }
     }
 }

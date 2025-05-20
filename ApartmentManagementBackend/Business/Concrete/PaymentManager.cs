@@ -1,19 +1,28 @@
 using Business.Abstract;
 using DataAccess.Abstract;
 using Entities.Concrete;
+using Entities.DTOs;
 using Core.Utilities.Results;
 using Core.Constants;
+using AutoMapper;
+using Microsoft.Extensions.Logging;
 
 namespace Business.Concrete
 {
     public class PaymentManager : IPaymentService
     {
         private readonly IPaymentDal _paymentDal;
+        private readonly IMapper _mapper;
+        private readonly ILogger<PaymentManager> _logger;
+        private readonly IContractDal _contractDal;
         private const decimal DAILY_PENALTY_RATE = 0.001m; // Günlük %0.1 gecikme cezası
 
-        public PaymentManager(IPaymentDal paymentDal)
+        public PaymentManager(IPaymentDal paymentDal, IContractDal contractDal, IMapper mapper, ILogger<PaymentManager> logger)
         {
             _paymentDal = paymentDal;
+            _contractDal = contractDal;
+            _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<bool>> AddAsync(Payment payment)
@@ -122,6 +131,30 @@ namespace Business.Concrete
                 return ApiResponse<decimal>.ErrorResult(Messages.PaymentNotFound);
 
             return ApiResponse<decimal>.SuccessResult(Messages.Retrieved, payment.DelayPenaltyAmount ?? 0);
+        }
+
+        public async Task<ApiResponse<PaymentDto>> ProcessPaymentAsync(int tenantId, int paymentId)
+        {
+            try
+            {
+                var payment = await _paymentDal.GetAsync(p => p.Id == paymentId && p.UserId == tenantId);
+                if (payment == null)
+                    return ApiResponse<PaymentDto>.ErrorResult(Messages.PaymentNotFound);
+
+                // Ödeme işlemini gerçekleştir
+                payment.IsPaid = true;
+                payment.PaymentDate = DateTime.Now;
+                await _paymentDal.UpdateAsync(payment);
+
+                // PaymentDto'ya dönüştür
+                var paymentDto = _mapper.Map<PaymentDto>(payment);
+                return ApiResponse<PaymentDto>.SuccessResult(Messages.PaymentProcessed, paymentDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ödeme işlemi sırasında hata oluştu");
+                return ApiResponse<PaymentDto>.ErrorResult(Messages.PaymentFailed);
+            }
         }
     }
 }

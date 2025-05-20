@@ -5,6 +5,7 @@ using Entities.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using System.Linq.Expressions;
 
 namespace DataAccess.Concrete.EntityFramework
 {
@@ -21,6 +22,15 @@ namespace DataAccess.Concrete.EntityFramework
         {
             try
             {
+                _logger.LogInformation("Getting surveys for building {BuildingId}", buildingId);
+
+                // Önce tüm anketleri kontrol et
+                var allSurveys = await _context.Surveys.ToListAsync();
+                _logger.LogInformation("Total surveys in database: {Count}", allSurveys.Count);
+
+                var buildingSurveys = allSurveys.Where(s => s.BuildingId == buildingId).ToList();
+                _logger.LogInformation("Surveys for building {BuildingId}: {Count}", buildingId, buildingSurveys.Count);
+
                 var surveys = await _context.Surveys
                     .Where(s => s.BuildingId == buildingId)
                     .GroupJoin(_context.Buildings,
@@ -48,7 +58,8 @@ namespace DataAccess.Concrete.EntityFramework
                             TotalResponses = s.Survey.TotalResponses,
                             CreatedAt = s.Survey.CreatedAt,
                             BuildingName = s.Building == null ? null : s.Building.BuildingName,
-                            CreatedByAdminName = a == null ? null : $"{a.FirstName} {a.LastName}",
+                            CreatedByName = a == null ? null : $"{a.FirstName} {a.LastName}",
+                            ProfileImageUrl = a != null ? a.ProfileImageUrl : string.Empty,
                             Questions = s.Survey.Questions,
                             Results = s.Survey.Results
                         })
@@ -67,7 +78,8 @@ namespace DataAccess.Concrete.EntityFramework
                     TotalResponses = s.TotalResponses,
                     CreatedAt = s.CreatedAt,
                     BuildingName = s.BuildingName ?? "Bilinmeyen Bina",
-                    CreatedByAdminName = s.CreatedByAdminName ?? "Bilinmeyen Admin",
+                    CreatedByName = s.CreatedByName ?? "Bilinmeyen Admin",
+                    ProfileImageUrl = s.ProfileImageUrl ?? string.Empty,
                     Questions = !string.IsNullOrEmpty(s.Questions) ?
                         DeserializeQuestions(s.Questions, s.Id) ?? new List<SurveyQuestionDto>()
                         : new List<SurveyQuestionDto>(),
@@ -140,70 +152,15 @@ namespace DataAccess.Concrete.EntityFramework
                     TotalResponses = survey.TotalResponses,
                     CreatedAt = survey.CreatedAt,
                     BuildingName = buildingName ?? "Bilinmeyen Bina",
-                    CreatedByAdminName = !string.IsNullOrWhiteSpace(adminFullName) ? adminFullName : "Bilinmeyen Admin",
-                    Questions = new List<SurveyQuestionDto>(),
-                    Results = new Dictionary<string, object>()
+                    CreatedByName = !string.IsNullOrWhiteSpace(adminFullName) ? adminFullName : "Bilinmeyen Admin",
+                    ProfileImageUrl = string.Empty,
+                    Questions = !string.IsNullOrEmpty(survey.Questions) ?
+                        DeserializeQuestions(survey.Questions, survey.Id) ?? new List<SurveyQuestionDto>()
+                        : new List<SurveyQuestionDto>(),
+                    Results = !string.IsNullOrEmpty(survey.Results) ?
+                        DeserializeResults(survey.Results, survey.Id) ?? new Dictionary<string, object>()
+                        : new Dictionary<string, object>()
                 };
-
-                if (!string.IsNullOrEmpty(survey.Questions))
-                {
-                    try
-                    {
-                        var options = new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        };
-
-                        var questionsArray = JsonSerializer.Deserialize<JsonElement>(survey.Questions);
-                        if (questionsArray.ValueKind == JsonValueKind.Array)
-                        {
-                            var questions = new List<SurveyQuestionDto>();
-                            foreach (var element in questionsArray.EnumerateArray())
-                            {
-                                try
-                                {
-                                    var question = new SurveyQuestionDto
-                                    {
-                                        QuestionId = element.GetProperty("questionId").GetString() ?? "",
-                                        QuestionText = element.GetProperty("questionText").GetString() ?? "",
-                                        QuestionType = element.GetProperty("questionType").GetString() ?? "",
-                                        IsRequired = element.TryGetProperty("isRequired", out var isRequired) ? isRequired.GetBoolean() : false,
-                                        Options = element.TryGetProperty("options", out var optionsArray) ?
-                                            optionsArray.EnumerateArray().Select(o => o.GetString() ?? "").ToList() :
-                                            new List<string>()
-                                    };
-                                    questions.Add(question);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogWarning(ex, "Error deserializing individual question in survey {SurveyId}", surveyId);
-                                }
-                            }
-                            surveyDetail.Questions = questions;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Error deserializing Questions JSON for SurveyId {SurveyId}", surveyId);
-                        surveyDetail.Questions = new List<SurveyQuestionDto>();
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(survey.Results))
-                {
-                    try
-                    {
-                        var results = JsonSerializer.Deserialize<Dictionary<string, object>>(survey.Results);
-                        if (results != null)
-                        {
-                            surveyDetail.Results = results;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Error deserializing Results JSON for SurveyId {SurveyId}", surveyId);
-                    }
-                }
 
                 return surveyDetail;
             }
@@ -249,7 +206,8 @@ namespace DataAccess.Concrete.EntityFramework
                             TotalResponses = s.Survey.TotalResponses,
                             CreatedAt = s.Survey.CreatedAt,
                             BuildingName = s.Building == null ? null : s.Building.BuildingName,
-                            CreatedByAdminName = a == null ? null : $"{a.FirstName} {a.LastName}",
+                            CreatedByName = a == null ? null : $"{a.FirstName} {a.LastName}",
+                            ProfileImageUrl = a != null ? a.ProfileImageUrl : string.Empty,
                             Questions = s.Survey.Questions,
                             Results = s.Survey.Results
                         })
@@ -268,7 +226,8 @@ namespace DataAccess.Concrete.EntityFramework
                     TotalResponses = s.TotalResponses,
                     CreatedAt = s.CreatedAt,
                     BuildingName = s.BuildingName ?? "Bilinmeyen Bina",
-                    CreatedByAdminName = s.CreatedByAdminName ?? "Bilinmeyen Admin",
+                    CreatedByName = s.CreatedByName ?? "Bilinmeyen Admin",
+                    ProfileImageUrl = s.ProfileImageUrl ?? string.Empty,
                     Questions = !string.IsNullOrEmpty(s.Questions) ?
                         DeserializeQuestions(s.Questions, s.Id) ?? new List<SurveyQuestionDto>()
                         : new List<SurveyQuestionDto>(),
@@ -407,36 +366,24 @@ namespace DataAccess.Concrete.EntityFramework
         {
             try
             {
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var questionsArray = JsonSerializer.Deserialize<JsonElement>(questionsJson);
-
-                if (questionsArray.ValueKind == JsonValueKind.Array)
+                // Doğrudan SurveyQuestionDto listesi olarak deserialize et
+                var questions = JsonSerializer.Deserialize<List<SurveyQuestionDto>>(questionsJson);
+                if (questions == null)
                 {
-                    var questions = new List<SurveyQuestionDto>();
-                    foreach (var element in questionsArray.EnumerateArray())
-                    {
-                        try
-                        {
-                            var question = new SurveyQuestionDto
-                            {
-                                QuestionId = element.GetProperty("questionId").GetString() ?? "",
-                                QuestionText = element.GetProperty("questionText").GetString() ?? "",
-                                QuestionType = element.GetProperty("questionType").GetString() ?? "",
-                                IsRequired = element.TryGetProperty("isRequired", out var isRequired) ? isRequired.GetBoolean() : false,
-                                Options = element.TryGetProperty("options", out var optionsArray) ?
-                                    optionsArray.EnumerateArray().Select(o => o.GetString() ?? "").ToList() :
-                                    new List<string>()
-                            };
-                            questions.Add(question);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Error deserializing individual question in survey {SurveyId}", surveyId);
-                        }
-                    }
-                    return questions;
+                    _logger.LogWarning("Questions deserialized to null for SurveyId {SurveyId}", surveyId);
+                    return new List<SurveyQuestionDto>();
                 }
-                return new List<SurveyQuestionDto>();
+
+                // Her soru için yeni bir QuestionId oluştur
+                foreach (var question in questions)
+                {
+                    if (string.IsNullOrEmpty(question.QuestionId))
+                    {
+                        question.QuestionId = Guid.NewGuid().ToString();
+                    }
+                }
+
+                return questions;
             }
             catch (Exception ex)
             {
@@ -449,43 +396,49 @@ namespace DataAccess.Concrete.EntityFramework
         {
             try
             {
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var resultsElement = JsonSerializer.Deserialize<JsonElement>(resultsJson);
+                var results = new Dictionary<string, object>();
+                var resultsArray = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(resultsJson);
 
-                if (resultsElement.ValueKind == JsonValueKind.Object)
+                if (resultsArray != null && resultsArray.Count > 0)
                 {
-                    var results = new Dictionary<string, object>();
-                    foreach (var property in resultsElement.EnumerateObject())
+                    var firstResult = resultsArray[0];
+                    if (firstResult.ContainsKey("answers"))
                     {
-                        try
+                        var answers = firstResult["answers"] as List<object>;
+                        if (answers != null)
                         {
-                            if (property.Value.ValueKind == JsonValueKind.Object)
+                            var answerCounts = new Dictionary<string, int>();
+                            foreach (var answer in answers)
                             {
-                                var answerDict = new Dictionary<string, int>();
-                                foreach (var answer in property.Value.EnumerateObject())
+                                var answerStr = answer.ToString();
+                                if (answerCounts.ContainsKey(answerStr))
                                 {
-                                    if (answer.Value.ValueKind == JsonValueKind.Number)
-                                    {
-                                        answerDict[answer.Name] = answer.Value.GetInt32();
-                                    }
+                                    answerCounts[answerStr]++;
                                 }
-                                results[property.Name] = answerDict;
+                                else
+                                {
+                                    answerCounts[answerStr] = 1;
+                                }
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Error deserializing result for question {QuestionId} in survey {SurveyId}", property.Name, surveyId);
+                            results["answers"] = answerCounts;
                         }
                     }
-                    return results;
                 }
-                return new Dictionary<string, object>();
+
+                return results;
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Error deserializing Results JSON for SurveyId {SurveyId}", surveyId);
                 return new Dictionary<string, object>();
             }
+        }
+
+        public async Task<List<Survey>> GetListAsync(Expression<Func<Survey, bool>> filter = null)
+        {
+            return filter == null
+                ? await _context.Surveys.ToListAsync()
+                : await _context.Surveys.Where(filter).ToListAsync();
         }
     }
 }

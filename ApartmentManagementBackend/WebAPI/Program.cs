@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Core.Utilities.Security.JWT;
 using Core.Utilities.Security;
+using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -85,6 +86,8 @@ builder.Services.AddScoped<IFinanceService, FinanceManager>();
 builder.Services.AddScoped<IReportDal, EfReportDal>();
 builder.Services.AddScoped<IReportService, ReportManager>();
 
+// AutoMapper Configuration
+builder.Services.AddAutoMapper(typeof(Program));
 
 // DbContext Configuration
 builder.Services.AddDbContext<ApartmentManagementDbContext>(options =>

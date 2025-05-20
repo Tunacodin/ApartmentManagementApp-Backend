@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Entities.DTOs
 {
@@ -7,89 +8,80 @@ namespace Entities.DTOs
     public class SurveyDto
     {
         public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
+        public string Title { get; set; }
+        public string Description { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public string Status { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
+        public bool IsActive { get; set; }
+        public int Status { get; set; }
         public int BuildingId { get; set; }
-        public int? TenantId { get; set; }
-        public string CreatedByName { get; set; } = string.Empty;
-        public string ProfileImageUrl { get; set; } = string.Empty;
         public int TotalResponses { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public string BuildingName { get; set; }
+        public string CreatedByName { get; set; }
+        public string CreatedByAdminName { get; set; }
+        public string ProfileImageUrl { get; set; }
+        public List<SurveyQuestionDto> Questions { get; set; }
+        public Dictionary<string, object> Results { get; set; }
     }
 
     // Survey Oluşturma DTO'su
     public class SurveyCreateDto
     {
-        public SurveyCreateDto()
-        {
-            Questions = new List<SurveyQuestionDto>();
-        }
+        [Required(ErrorMessage = "Başlık alanı zorunludur.")]
+        [StringLength(200, ErrorMessage = "Başlık en fazla 200 karakter olabilir.")]
+        public string Title { get; set; }
 
-        public required string Title { get; set; }
-        public required string Description { get; set; }
+        [Required(ErrorMessage = "Açıklama alanı zorunludur.")]
+        [StringLength(1000, ErrorMessage = "Açıklama en fazla 1000 karakter olabilir.")]
+        public string Description { get; set; }
+
+        [Required(ErrorMessage = "Başlangıç tarihi zorunludur.")]
         public DateTime StartDate { get; set; }
+
+        [Required(ErrorMessage = "Bitiş tarihi zorunludur.")]
         public DateTime EndDate { get; set; }
-        public int BuildingId { get; set; }
-        public List<SurveyQuestionDto> Questions { get; set; }
-    }
 
-    // Survey Detay DTO'su
-    public class SurveyDetailDto : SurveyDto
-    {
-        public SurveyDetailDto()
-        {
-            CreatedByAdminName = "Bilinmeyen Admin";
-            BuildingName = "Bilinmeyen Bina";
-            Questions = new List<SurveyQuestionDto>();
-            Results = new Dictionary<string, object>();
-            IsActive = true;
-        }
+        [Required(ErrorMessage = "En az bir bina seçilmelidir.")]
+        public List<int> BuildingIds { get; set; }
 
-        public string CreatedByAdminName { get; set; }
-        public DateTime CreatedAt { get; set; }
+        [Required(ErrorMessage = "En az bir soru eklenmelidir.")]
         public List<SurveyQuestionDto> Questions { get; set; }
-        public Dictionary<string, object> Results { get; set; }
-        public string BuildingName { get; set; }
-        public bool IsActive { get; set; }
     }
 
     // Survey Soru DTO'su
     public class SurveyQuestionDto
     {
-        public SurveyQuestionDto()
-        {
-            Options = new List<string>();
-        }
+        public string? QuestionId { get; set; }
 
-        public required string QuestionId { get; set; }
-        public required string QuestionText { get; set; }
-        public required string QuestionType { get; set; } // multiple_choice, text, rating
-        public List<string> Options { get; set; }
+        [Required(ErrorMessage = "Soru metni zorunludur.")]
+        [StringLength(500, ErrorMessage = "Soru metni en fazla 500 karakter olabilir.")]
+        public string QuestionText { get; set; }
+
+        [Required(ErrorMessage = "Soru tipi zorunludur.")]
+        [Range(0, 10, ErrorMessage = "Geçersiz soru tipi.")]
+        public int QuestionType { get; set; }
+
+        [Required]
         public bool IsRequired { get; set; }
+
+        public List<string>? Options { get; set; }
+
+        public List<string>? Answers { get; set; }
     }
 
     // Survey Yanıt DTO'su
     public class SurveyResponseSummaryDto
     {
         public int SurveyId { get; set; }
-        public int QuestionId { get; set; }
-        public string Answer { get; set; } = string.Empty;
-        public int TenantId { get; set; }
-        public DateTime ResponseDate { get; set; }
+        public int TotalResponses { get; set; }
+        public Dictionary<string, Dictionary<string, int>> QuestionResponses { get; set; }
     }
 
     // Survey İstatistik DTO'su
     public class SurveyStatisticsDto
     {
-        public SurveyStatisticsDto()
-        {
-            QuestionStatistics = new Dictionary<string, Dictionary<string, int>>();
-            PopularAnswers = new List<string>();
-        }
-
         public int TotalResponses { get; set; }
         public double CompletionRate { get; set; }
         public Dictionary<string, Dictionary<string, int>> QuestionStatistics { get; set; }
@@ -100,16 +92,11 @@ namespace Entities.DTOs
     // Survey Güncelleme DTO'su
     public class SurveyUpdateDto
     {
-        public SurveyUpdateDto()
-        {
-            Questions = new List<SurveyQuestionDto>();
-        }
-
         public int Id { get; set; }
-        public required string Title { get; set; }
-        public required string Description { get; set; }
-        public DateTime? EndDate { get; set; }
-        public bool? IsActive { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public DateTime EndDate { get; set; }
+        public bool IsActive { get; set; }
         public List<SurveyQuestionDto> Questions { get; set; }
     }
 }

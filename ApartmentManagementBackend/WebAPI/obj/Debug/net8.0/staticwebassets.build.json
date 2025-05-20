@@ -1,12 +1,125 @@
 {
   "Version": 1,
-  "Hash": "tDqGxdq0A4zT6y/tDdlw1NRTJSa30/3YTmJbD0pRBwc=",
+  "Hash": "RuLTC8EBI4a2kYzQdmrypx17InDcjPMldeb7CC40kvk=",
   "Source": "WebAPI",
   "BasePath": "_content/WebAPI",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": [],
-  "Endpoints": []
+  "DiscoveryPatterns": [
+    {
+      "Name": "WebAPI\\wwwroot",
+      "Source": "WebAPI",
+      "ContentRoot": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\wwwroot\\",
+      "BasePath": "_content/WebAPI",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\wwwroot\\js\\apiConfig.js",
+      "SourceId": "WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\wwwroot\\",
+      "BasePath": "_content/WebAPI",
+      "RelativePath": "js/apiConfig#[.{fingerprint}]?.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "364ckfgcaa",
+      "Integrity": "G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\apiConfig.js"
+    }
+  ],
+  "Endpoints": [
+    {
+      "Route": "js/apiConfig.364ckfgcaa.js",
+      "AssetFile": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\wwwroot\\js\\apiConfig.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1737"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 19 May 2025 14:14:23 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "364ckfgcaa"
+        },
+        {
+          "Name": "label",
+          "Value": "js/apiConfig.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c="
+        }
+      ]
+    },
+    {
+      "Route": "js/apiConfig.js",
+      "AssetFile": "C:\\Users\\Tuna\\Desktop\\ApartmentManagementApp\\ApartmentManagementBackend\\WebAPI\\wwwroot\\js\\apiConfig.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1737"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 19 May 2025 14:14:23 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-G9AWx76NFlBuURH/wN5j7m7bYEC8JVfTRx3nUGkJP6c="
+        }
+      ]
+    }
+  ]
 }

@@ -3,7 +3,9 @@ using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
 using Entities.DTOs.Reports;
+using Entities.Enums;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace DataAccess.Concrete.EntityFramework
 {
@@ -24,7 +26,11 @@ namespace DataAccess.Concrete.EntityFramework
                     Description = m.Description,
                     MeetingDate = m.MeetingDate,
                     Location = m.Location,
-                    Status = m.Status,
+                    Status = m.Status == "Scheduled" ? (int)MeetingStatus.Scheduled :
+                             m.Status == "InProgress" ? (int)MeetingStatus.InProgress :
+                             m.Status == "Completed" ? (int)MeetingStatus.Completed :
+                             m.Status == "Cancelled" ? (int)MeetingStatus.Cancelled :
+                             (int)MeetingStatus.Scheduled,
                     IsCancelled = m.IsCancelled,
                     CancellationReason = m.CancellationReason,
                     OrganizedByName = m.OrganizedByName,
@@ -49,7 +55,11 @@ namespace DataAccess.Concrete.EntityFramework
                     Description = m.Description,
                     MeetingDate = m.MeetingDate,
                     Location = m.Location,
-                    Status = m.Status,
+                    Status = m.Status == "Scheduled" ? (int)MeetingStatus.Scheduled :
+                             m.Status == "InProgress" ? (int)MeetingStatus.InProgress :
+                             m.Status == "Completed" ? (int)MeetingStatus.Completed :
+                             m.Status == "Cancelled" ? (int)MeetingStatus.Cancelled :
+                             (int)MeetingStatus.Scheduled,
                     IsCancelled = m.IsCancelled,
                     CancellationReason = m.CancellationReason,
                     OrganizedByName = m.OrganizedByName,
@@ -67,8 +77,8 @@ namespace DataAccess.Concrete.EntityFramework
         public async Task<List<MeetingDetailDto>> GetUpcomingMeetingsAsync(int buildingId)
         {
             return await _context.Meetings
-                .Where(m => m.BuildingId == buildingId && 
-                           m.MeetingDate > DateTime.Now && 
+                .Where(m => m.BuildingId == buildingId &&
+                           m.MeetingDate > DateTime.Now &&
                            !m.IsCancelled)
                 .Select(m => new MeetingDetailDto
                 {
@@ -77,7 +87,11 @@ namespace DataAccess.Concrete.EntityFramework
                     Description = m.Description,
                     MeetingDate = m.MeetingDate,
                     Location = m.Location,
-                    Status = m.Status,
+                    Status = m.Status == "Scheduled" ? (int)MeetingStatus.Scheduled :
+                             m.Status == "InProgress" ? (int)MeetingStatus.InProgress :
+                             m.Status == "Completed" ? (int)MeetingStatus.Completed :
+                             m.Status == "Cancelled" ? (int)MeetingStatus.Cancelled :
+                             (int)MeetingStatus.Scheduled,
                     IsCancelled = m.IsCancelled,
                     OrganizedByName = m.OrganizedByName,
                     BuildingId = m.BuildingId,
@@ -93,8 +107,8 @@ namespace DataAccess.Concrete.EntityFramework
         public async Task<int> GetUpcomingMeetingsCountAsync(int buildingId)
         {
             return await _context.Meetings
-                .CountAsync(m => m.BuildingId == buildingId && 
-                                m.MeetingDate > DateTime.Now && 
+                .CountAsync(m => m.BuildingId == buildingId &&
+                                m.MeetingDate > DateTime.Now &&
                                 !m.IsCancelled);
         }
 
@@ -131,6 +145,13 @@ namespace DataAccess.Concrete.EntityFramework
             {
                 throw new Exception($"Error getting meeting statistics: {ex.Message}", ex);
             }
+        }
+
+        public async Task<List<Meeting>> GetListAsync(Expression<Func<Meeting, bool>> filter = null)
+        {
+            return filter == null
+                ? await _context.Meetings.ToListAsync()
+                : await _context.Meetings.Where(filter).ToListAsync();
         }
     }
 }
