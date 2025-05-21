@@ -1,5 +1,5 @@
 // Base URL'i tanımla
-export const API_BASE_URL = "https://6c67-176-240-142-80.ngrok-free.app/api";
+export const API_BASE_URL = "https://7f2d-176-240-142-80.ngrok-free.app/api";
 
 // Axios instance oluştur
 import axios from 'axios';
@@ -163,8 +163,8 @@ export const API_ENDPOINTS = {
         ACTIVE_COUNT: (buildingId) => `${API_BASE_URL}/Complaint/building/${buildingId}/active/count`,
         UPDATE: (id) => `${API_BASE_URL}/Complaint/${id}`,
         DELETE: (id) => `${API_BASE_URL}/Complaint/${id}`,
-        RESOLVE: (id, adminId) => `${API_BASE_URL}/Complaint/${id}/resolve/${adminId}`,
-        TAKE: (id, adminId) => `${API_BASE_URL}/Complaint/${id}/take?adminId=${adminId}`,
+        RESOLVE: (id, adminId) => `${API_BASE_URL}/Complaint/${id}/resolve?adminId=${adminId}`,
+        TAKE: (id, adminId) => `${API_BASE_URL}/Complaint/${id}/process?adminId=${adminId}`,
         REJECT: (id, adminId) => `${API_BASE_URL}/Complaint/${id}/reject/${adminId}`,
         CLOSE: (id, adminId) => `${API_BASE_URL}/Complaint/${id}/close/${adminId}`,
         ADD_COMMENT: (id) => `${API_BASE_URL}/Complaint/${id}/comment`

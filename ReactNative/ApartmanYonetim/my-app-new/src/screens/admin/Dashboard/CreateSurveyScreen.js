@@ -8,12 +8,14 @@ import {
   StyleSheet,
   Alert,
   Platform,
+  KeyboardAvoidingView,
+  ActivityIndicator,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { API_ENDPOINTS, getCurrentAdminId, api } from '../../../config/apiConfig';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Fonts, Colors, Gradients } from '../../../constants';
+import { Fonts, Colors } from '../../../constants';
 
 const CreateSurveyScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({
@@ -33,7 +35,7 @@ const CreateSurveyScreen = ({ navigation }) => {
   });
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [validationErrors, setValidationErrors] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchBuildings();
@@ -41,35 +43,34 @@ const CreateSurveyScreen = ({ navigation }) => {
 
   const fetchBuildings = async () => {
     try {
+      setLoading(true);
       const adminId = await getCurrentAdminId();
-      console.log('Fetching buildings for adminId:', adminId);
+      const response = await api.get(`${API_ENDPOINTS.ADMIN.BASE}/management/${adminId}`);
       
-      const response = await api.get(API_ENDPOINTS.ADMIN.BUILDINGS(adminId));
-      console.log('Buildings response:', response.data);
-      
-      if (response.data.success) {
-        const buildingsData = response.data.data.map(building => ({
-          id: building.buildingId,
-          name: building.buildingName
-        }));
-        console.log('Processed buildings data:', buildingsData);
-        setBuildings(buildingsData);
-      } else {
-        console.error('API response not successful:', response.data);
-        Alert.alert('Hata', 'Bina verileri alınamadı.');
+      if (response.data && response.data.success) {
+        setBuildings(response.data.data.buildings || []);
       }
     } catch (error) {
       console.error('Error fetching buildings:', error);
       Alert.alert('Hata', 'Binalar yüklenirken bir hata oluştu.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleBuildingSelect = (buildingId) => {
-    console.log('Selected building:', buildingId);
-    setFormData(prev => ({
-      ...prev,
-      buildingIds: [buildingId]
-    }));
+  const toggleBuildingSelection = (buildingId) => {
+    setFormData(prev => {
+      const currentBuildingIds = [...prev.buildingIds];
+      const index = currentBuildingIds.indexOf(buildingId);
+      
+      if (index === -1) {
+        currentBuildingIds.push(buildingId);
+      } else {
+        currentBuildingIds.splice(index, 1);
+      }
+      
+      return { ...prev, buildingIds: currentBuildingIds };
+    });
   };
 
   const handleAddQuestion = () => {
@@ -111,31 +112,18 @@ const CreateSurveyScreen = ({ navigation }) => {
     }));
   };
 
-  const validateForm = () => {
-    const errors = {
-      buildingIds: formData.buildingIds.length === 0,
-      title: !formData.title.trim(),
-      description: !formData.description.trim(),
-      questions: formData.questions.length === 0
-    };
-
-    setValidationErrors(errors);
-    return !Object.values(errors).some(error => error);
-  };
-
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      Alert.alert('Hata', 'Lütfen tüm zorunlu alanları doldurun.');
+    if (formData.buildingIds.length === 0 || !formData.title || !formData.description || formData.questions.length === 0) {
+      Alert.alert('Uyarı', 'Lütfen tüm zorunlu alanları doldurun.');
       return;
     }
 
     try {
       const adminId = await getCurrentAdminId();
       
-      // Soruları temizle ve formatla
       const cleanedQuestions = formData.questions.map(q => ({
         questionText: q.questionText.trim(),
-        questionType: 0, // MultipleChoice için 0
+        questionType: 0,
         isRequired: q.isRequired,
         options: q.options.filter(opt => opt.trim() !== '')
       }));
@@ -143,20 +131,16 @@ const CreateSurveyScreen = ({ navigation }) => {
       const surveyData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
-        startDate: formData.startDate.toISOString().split('T')[0], // Sadece tarih kısmını al
-        endDate: formData.endDate.toISOString().split('T')[0], // Sadece tarih kısmını al
+        startDate: formData.startDate.toISOString().split('T')[0],
+        endDate: formData.endDate.toISOString().split('T')[0],
         buildingIds: formData.buildingIds,
         questions: cleanedQuestions
       };
 
-      const endpoint = API_ENDPOINTS.SURVEY.CREATE(adminId);
-      console.log('Survey endpoint:', endpoint);
-      console.log('Submitting survey data:', surveyData);
-      
-      const response = await api.post(endpoint, surveyData);
+      const response = await api.post(API_ENDPOINTS.SURVEY.CREATE(adminId), surveyData);
 
       if (response.data.success) {
-        Alert.alert('Başarılı', 'Anket başarıyla oluşturuldu.', [
+        Alert.alert('Başarılı', response.data.message || 'Anket başarıyla oluşturuldu.', [
           { text: 'Tamam', onPress: () => navigation.goBack() }
         ]);
       }
@@ -166,247 +150,294 @@ const CreateSurveyScreen = ({ navigation }) => {
     }
   };
 
-  const renderDatePicker = (show, value, onChange, label) => {
-    if (Platform.OS === 'android') {
-      return (
-        <TouchableOpacity
-          style={styles.datePickerButton}
-          onPress={() => show(true)}
-        >
-          <Icon name="event" size={24} color="#2196f3" style={styles.dateIcon} />
-          <View style={styles.dateTextContainer}>
-            <Text style={styles.dateLabel}>{label}</Text>
-            <Text style={styles.dateValue}>{value.toLocaleDateString('tr-TR')}</Text>
-          </View>
-        </TouchableOpacity>
-      );
-    }
-
-    return show && (
-      <DateTimePicker
-        value={value}
-        mode="date"
-        display="default"
-        onChange={onChange}
-        minimumDate={new Date()}
-      />
-    );
+  const formatDate = (date) => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
   };
 
-  return (
-    <ScrollView style={styles.container}>
-      <LinearGradient
-        colors={Gradients.normal}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <Text style={styles.title}>Yeni Anket Oluştur</Text>
-      </LinearGradient>
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6366F1" />
+      </View>
+    );
+  }
 
-      <View style={styles.formContainer}>
-        <View style={styles.formCard}>
+  return (
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    >
+      <ScrollView 
+        style={styles.scrollView}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.scrollViewContent}
+      >
+        <View style={styles.formContainer}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Binalar</Text>
+            <View style={styles.selectContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {buildings.map((building) => (
+                  <TouchableOpacity
+                    key={building.id}
+                    style={[
+                      styles.buildingItem,
+                      formData.buildingIds.includes(building.id) && styles.selectedBuildingItem
+                    ]}
+                    onPress={() => toggleBuildingSelection(building.id)}
+                  >
+                    <LinearGradient
+                      colors={formData.buildingIds.includes(building.id) 
+                        ? ['#6366F1', '#8B5CF6']
+                        : ['#F1F5F9', '#E2E8F0']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.buildingGradient}
+                    >
+                      <View style={styles.buildingItemContent}>
+                        <Icon 
+                          name="office-building" 
+                          size={24} 
+                          color={formData.buildingIds.includes(building.id) ? '#FFFFFF' : '#6366F1'} 
+                        />
+                        <Text 
+                          style={[
+                            styles.buildingItemText,
+                            { color: formData.buildingIds.includes(building.id) ? '#FFFFFF' : '#1E293B' }
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {building.name}
+                        </Text>
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Anket Başlığı</Text>
-            <View style={[styles.inputWrapper, validationErrors.title && styles.errorInput]}>
-              <Icon name="title" size={24} color={Colors.primary} style={styles.inputIcon} />
+            <View style={styles.inputWrapper}>
+              <Icon name="format-title" size={20} color="#6366F1" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={formData.title}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
                 placeholder="Anket başlığını girin"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor="#94A3B8"
               />
             </View>
-            {validationErrors.title && (
-              <Text style={styles.errorText}>Anket başlığı zorunludur</Text>
-            )}
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Açıklama</Text>
-            <View style={[styles.inputWrapper, validationErrors.description && styles.errorInput]}>
-              <Icon name="description" size={24} color={Colors.primary} style={styles.inputIcon} />
+            <View style={styles.inputWrapper}>
+              <Icon name="text" size={20} color="#6366F1" style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
                 placeholder="Anket açıklamasını girin"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor="#94A3B8"
                 multiline
                 numberOfLines={4}
+                textAlignVertical="top"
               />
             </View>
-            {validationErrors.description && (
-              <Text style={styles.errorText}>Açıklama zorunludur</Text>
-            )}
           </View>
 
-          <View style={styles.dateSection}>
-            <Text style={styles.label}>Anket Tarihleri</Text>
-            <View style={styles.dateContainer}>
-              {renderDatePicker(
-                setShowStartDatePicker,
-                formData.startDate,
-                (event, selectedDate) => {
-                  setShowStartDatePicker(false);
-                  if (selectedDate) {
-                    setFormData(prev => ({ ...prev, startDate: selectedDate }));
-                  }
-                },
-                'Başlangıç Tarihi'
-              )}
-              {renderDatePicker(
-                setShowEndDatePicker,
-                formData.endDate,
-                (event, selectedDate) => {
-                  setShowEndDatePicker(false);
-                  if (selectedDate) {
-                    setFormData(prev => ({ ...prev, endDate: selectedDate }));
-                  }
-                },
-                'Bitiş Tarihi'
-              )}
-            </View>
-          </View>
-
-          <View style={styles.buildingsContainer}>
-            <Text style={styles.label}>Bina Seçin</Text>
-            <View style={styles.buildingsList}>
-              {buildings.map((building) => (
-                <TouchableOpacity
-                  key={building.id}
-                  style={[
-                    styles.buildingItem,
-                    formData.buildingIds.includes(building.id) && styles.selectedBuilding
-                  ]}
-                  onPress={() => handleBuildingSelect(building.id)}
-                >
-                  <LinearGradient
-                    colors={formData.buildingIds.includes(building.id) ? Gradients.normal : ['#fff', '#fff']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.buildingGradient}
-                  >
-                    <Icon 
-                      name="business" 
-                      size={24} 
-                      color={formData.buildingIds.includes(building.id) ? "#fff" : Colors.primary}
-                      style={styles.buildingIcon}
-                    />
-                    <Text style={[
-                      styles.buildingText,
-                      formData.buildingIds.includes(building.id) && styles.selectedBuildingText
-                    ]}>
-                      {building.name}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ))}
-            </View>
-            {validationErrors.buildingIds && (
-              <Text style={styles.errorText}>Lütfen bir bina seçin</Text>
-            )}
-          </View>
-
-          <View style={styles.questionsContainer}>
-            <Text style={styles.label}>Sorular</Text>
-            <View style={styles.questionForm}>
-              <View style={styles.inputWrapper}>
-                <Icon name="help-outline" size={24} color={Colors.primary} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  value={currentQuestion.questionText}
-                  onChangeText={(text) => setCurrentQuestion(prev => ({ ...prev, questionText: text }))}
-                  placeholder="Soru metnini girin"
-                  placeholderTextColor={Colors.textSecondary}
-                />
-              </View>
-              
-              {currentQuestion.questionType === 'MultipleChoice' && (
-                <View style={styles.optionsContainer}>
-                  {currentQuestion.options.map((option, index) => (
-                    <View key={index} style={styles.optionInputWrapper}>
-                      <Icon name="radio-button-unchecked" size={20} color={Colors.primary} style={styles.optionIcon} />
-                      <TextInput
-                        style={styles.optionInput}
-                        value={option}
-                        onChangeText={(text) => handleOptionChange(text, index)}
-                        placeholder={`Seçenek ${index + 1}`}
-                        placeholderTextColor={Colors.textSecondary}
-                      />
-                    </View>
-                  ))}
-                  <TouchableOpacity
-                    style={styles.addOptionButton}
-                    onPress={handleAddOption}
-                  >
-                    <LinearGradient
-                      colors={Gradients.success}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.buttonGradient}
-                    >
-                      <Icon name="add-circle-outline" size={20} color="#fff" />
-                      <Text style={styles.buttonText}>Seçenek Ekle</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              )}
-              
+          <View style={styles.dateContainer}>
+            <View style={styles.dateInputContainer}>
+              <Text style={styles.label}>Başlangıç Tarihi</Text>
               <TouchableOpacity
-                style={styles.addQuestionButton}
-                onPress={handleAddQuestion}
+                style={styles.dateButton}
+                onPress={() => setShowStartDatePicker(true)}
               >
                 <LinearGradient
-                  colors={Gradients.normal}
+                  colors={['#6366F1', '#8B5CF6']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={styles.buttonGradient}
+                  style={styles.dateButtonGradient}
                 >
-                  <Icon name="add" size={24} color="#fff" />
-                  <Text style={styles.buttonText}>Soruyu Ekle</Text>
+                  <View style={styles.dateButtonContent}>
+                    <Icon name="calendar-start" size={24} color="#FFFFFF" />
+                    <Text style={styles.dateButtonText}>
+                      {formatDate(formData.startDate)}
+                    </Text>
+                  </View>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
 
-            {formData.questions.map((question, index) => (
-              <View key={index} style={styles.questionItem}>
-                <View style={styles.questionHeader}>
-                  <Icon name="help" size={20} color={Colors.primary} />
-                  <Text style={styles.questionText}>{question.questionText}</Text>
-                </View>
-                {question.questionType === 'MultipleChoice' && (
-                  <View style={styles.optionsList}>
-                    {question.options.map((option, optIndex) => (
-                      <View key={optIndex} style={styles.optionItem}>
-                        <Icon name="radio-button-unchecked" size={16} color={Colors.primary} />
-                        <Text style={styles.optionText}>{option}</Text>
-                      </View>
-                    ))}
+            <View style={styles.dateInputContainer}>
+              <Text style={styles.label}>Bitiş Tarihi</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowEndDatePicker(true)}
+              >
+                <LinearGradient
+                  colors={['#6366F1', '#8B5CF6']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.dateButtonGradient}
+                >
+                  <View style={styles.dateButtonContent}>
+                    <Icon name="calendar-end" size={24} color="#FFFFFF" />
+                    <Text style={styles.dateButtonText}>
+                      {formatDate(formData.endDate)}
+                    </Text>
                   </View>
-                )}
-              </View>
-            ))}
-            {validationErrors.questions && (
-              <Text style={styles.errorText}>En az bir soru eklemelisiniz</Text>
-            )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          {showStartDatePicker && (
+            <DateTimePicker
+              value={formData.startDate}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={(event, selectedDate) => {
+                setShowStartDatePicker(false);
+                if (selectedDate) {
+                  setFormData(prev => ({ ...prev, startDate: selectedDate }));
+                }
+              }}
+              minimumDate={new Date()}
+              textColor="#FFFFFF"
+              accentColor="#000000"
+              themeVariant="dark"
+              locale="tr-TR"
+            />
+          )}
+
+          {showEndDatePicker && (
+            <DateTimePicker
+              value={formData.endDate}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={(event, selectedDate) => {
+                setShowEndDatePicker(false);
+                if (selectedDate) {
+                  setFormData(prev => ({ ...prev, endDate: selectedDate }));
+                }
+              }}
+              minimumDate={formData.startDate}
+              textColor="#FFFFFF"
+              accentColor="#000000"
+              themeVariant="dark"
+              locale="tr-TR"
+            />
+          )}
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Soru Ekle</Text>
+            <View style={styles.inputWrapper}>
+              <Icon name="help-circle" size={20} color="#6366F1" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                value={currentQuestion.questionText}
+                onChangeText={(text) => setCurrentQuestion(prev => ({ ...prev, questionText: text }))}
+                placeholder="Soru metnini girin"
+                placeholderTextColor="#94A3B8"
+              />
+            </View>
+
+            {currentQuestion.questionType === 'MultipleChoice' && (
+              <View style={styles.optionsContainer}>
+                {currentQuestion.options.map((option, index) => (
+                  <View key={index} style={styles.optionInputWrapper}>
+                    <Icon name="circle-outline" size={20} color="#6366F1" style={styles.optionIcon} />
+                    <TextInput
+                      style={styles.optionInput}
+                      value={option}
+                      onChangeText={(text) => handleOptionChange(text, index)}
+                      placeholder={`Seçenek ${index + 1}`}
+                      placeholderTextColor="#94A3B8"
+                    />
+                  </View>
+                ))}
+                <TouchableOpacity
+                  style={styles.addOptionButton}
+                  onPress={handleAddOption}
+                >
+                  <LinearGradient
+                    colors={['#6366F1', '#8B5CF6']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.buttonGradient}
+                  >
+                    <Icon name="plus" size={20} color="#FFFFFF" />
+                    <Text style={styles.buttonText}>Seçenek Ekle</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.addQuestionButton}
+              onPress={handleAddQuestion}
+            >
+              <LinearGradient
+                colors={['#6366F1', '#8B5CF6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.buttonGradient}
+              >
+                <Icon name="plus" size={24} color="#FFFFFF" />
+                <Text style={styles.buttonText}>Soruyu Ekle</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          {formData.questions.length > 0 && (
+            <View style={styles.questionsList}>
+              <Text style={styles.label}>Eklenen Sorular</Text>
+              {formData.questions.map((question, index) => (
+                <View key={index} style={styles.questionItem}>
+                  <View style={styles.questionHeader}>
+                    <Icon name="help-circle" size={20} color="#6366F1" />
+                    <Text style={styles.questionText}>{question.questionText}</Text>
+                  </View>
+                  {question.questionType === 'MultipleChoice' && (
+                    <View style={styles.optionsList}>
+                      {question.options.map((option, optIndex) => (
+                        <View key={optIndex} style={styles.optionItem}>
+                          <Icon name="circle-outline" size={16} color="#6366F1" />
+                          <Text style={styles.optionText}>{option}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleSubmit}
+          >
             <LinearGradient
-              colors={Gradients.normal}
+              colors={['#6366F1', '#8B5CF6']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.buttonGradient}
+              style={styles.submitButtonGradient}
             >
-              <Icon name="check-circle" size={24} color="#fff" />
-              <Text style={styles.buttonText}>Anketi Oluştur</Text>
+              <View style={styles.submitButtonContent}>
+                <Text style={styles.submitButtonText}>Anketi Oluştur</Text>
+              </View>
             </LinearGradient>
           </TouchableOpacity>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -415,36 +446,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
-    padding: 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
   },
-  title: {
-    fontSize: 24,
-    fontFamily: Fonts.lato.bold,
-    color: '#fff',
-    textAlign: 'center',
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    padding: 16,
+    paddingBottom: Platform.OS === 'ios' ? 100 : 80,
   },
   formContainer: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  formCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    marginBottom: 20,
+    borderRadius: 20,
+    padding: 20,
   },
   inputContainer: {
     marginBottom: 20,
@@ -452,126 +469,104 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontFamily: Fonts.lato.bold,
-    color: Colors.text,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#F1F5F9',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: 12,
+    borderColor: 'rgba(99, 102, 241, 0.2)',
   },
   inputIcon: {
-    marginRight: 8,
+    padding: 12,
   },
   input: {
     flex: 1,
+    padding: 12,
     fontSize: 16,
+    color: '#000000',
     fontFamily: Fonts.lato.regular,
-    color: '#000',
-    paddingVertical: 12,
-  },
-  errorInput: {
-    borderColor: Colors.error,
   },
   textArea: {
-    height: 100,
+    height: 120,
     textAlignVertical: 'top',
   },
-  dateSection: {
-    marginBottom: 20,
-  },
-  dateContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  datePickerButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  dateIcon: {
-    marginRight: 8,
-  },
-  dateTextContainer: {
-    flex: 1,
-  },
-  dateLabel: {
-    fontSize: 12,
-    fontFamily: Fonts.lato.regular,
-    color: '#666',
-  },
-  dateValue: {
-    fontSize: 16,
-    fontFamily: Fonts.lato.medium,
-    color: '#000',
-  },
-  buildingsContainer: {
-    marginBottom: 20,
-  },
-  buildingsList: {
+  selectContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
   buildingItem: {
-    flex: 1,
-    minWidth: '48%',
+    width: 160,
+    height: 80,
+    marginRight: 8,
     borderRadius: 12,
     overflow: 'hidden',
-    elevation: 2,
+  },
+  selectedBuildingItem: {
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 8,
   },
   buildingGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flex: 1,
     padding: 12,
   },
-  buildingIcon: {
-    marginRight: 8,
-  },
-  buildingText: {
-    fontSize: 16,
-    fontFamily: Fonts.lato.medium,
-    color: '#000',
+  buildingItemContent: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
   },
-  selectedBuildingText: {
-    color: '#fff',
+  buildingItemText: {
+    fontSize: 14,
+    fontFamily: Fonts.lato.bold,
+    textAlign: 'center',
   },
-  questionsContainer: {
+  dateContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
     marginBottom: 20,
   },
-  questionForm: {
-    backgroundColor: '#fff',
+  dateInputContainer: {
+    flex: 1,
+  },
+  dateButton: {
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    overflow: 'hidden',
+  },
+  dateButtonGradient: {
+    padding: 12,
+  },
+  dateButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  dateButtonText: {
+    fontSize: 16,
+    fontFamily: Fonts.lato.regular,
+    color: '#FFFFFF',
   },
   optionsContainer: {
-    marginBottom: 16,
+    marginTop: 12,
+    gap: 8,
   },
   optionInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.2)',
+    padding: 12,
   },
   optionIcon: {
     marginRight: 8,
@@ -580,32 +575,41 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontFamily: Fonts.lato.regular,
-    color: Colors.text,
+    color: '#000000',
   },
   buttonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
   },
   addOptionButton: {
     marginTop: 8,
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   addQuestionButton: {
-    marginTop: 8,
-    borderRadius: 8,
+    marginTop: 12,
+    borderRadius: 12,
     overflow: 'hidden',
   },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: Fonts.lato.bold,
+    marginLeft: 8,
+  },
+  questionsList: {
+    marginTop: 20,
+  },
   questionItem: {
-    backgroundColor: '#fff',
+    backgroundColor: '#F1F5F9',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(99, 102, 241, 0.2)',
   },
   questionHeader: {
     flexDirection: 'row',
@@ -615,7 +619,7 @@ const styles = StyleSheet.create({
   questionText: {
     fontSize: 16,
     fontFamily: Fonts.lato.medium,
-    color: '#000',
+    color: '#000000',
     marginLeft: 8,
     flex: 1,
   },
@@ -630,33 +634,27 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 14,
     fontFamily: Fonts.lato.regular,
-    color: '#666',
+    color: '#64748B',
     marginLeft: 8,
   },
   submitButton: {
-    marginTop: 16,
-    marginBottom: 100,
+    marginTop: 20,
     borderRadius: 12,
     overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    position: 'relative',
-    zIndex: 1,
   },
-  buttonText: {
-    color: '#fff',
+  submitButtonGradient: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  submitButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontFamily: Fonts.lato.bold,
-    marginLeft: 8,
-  },
-  errorText: {
-    color: Colors.error,
-    fontSize: 14,
-    fontFamily: Fonts.lato.regular,
-    marginTop: 4,
   },
 });
 

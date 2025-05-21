@@ -223,6 +223,46 @@ const FinancialOverviewCard = ({ data }) => {
   );
 };
 
+const getStatusGradient = (status) => {
+  switch (status) {
+    case ComplaintStatus.Resolved:
+    case 'Ödendi':
+    case 'Çözüldü':
+      return theme?.gradients?.success || Gradients.success || ['#4CAF50', '#45a049'];
+    case ComplaintStatus.Open:
+    case 'Bekliyor':
+      return theme?.gradients?.warning || Gradients.warning || ['#FFC107', '#FFA000'];
+    case ComplaintStatus.InProgress:
+    case 'İşlemde':
+      return theme?.gradients?.info || Gradients.info || ['#2196F3', '#1976D2'];
+    case ComplaintStatus.Rejected:
+    case 'Reddedildi':
+      return theme?.gradients?.danger || Gradients.danger || ['#FF5252', '#FF1744'];
+    default:
+      return [Colors.textSecondary, Colors.textSecondary];
+  }
+};
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case ComplaintStatus.Resolved:
+    case 'Ödendi':
+    case 'Çözüldü':
+      return '#4CAF50';
+    case ComplaintStatus.Open:
+    case 'Bekliyor':
+      return '#FFC107';
+    case ComplaintStatus.InProgress:
+    case 'İşlemde':
+      return '#2196F3';
+    case ComplaintStatus.Rejected:
+    case 'Reddedildi':
+      return '#FF5252';
+    default:
+      return Colors.textSecondary;
+  }
+};
+
 const ActivityItem = ({ activity }) => {
   const theme = useTheme();
   
@@ -239,11 +279,19 @@ const ActivityItem = ({ activity }) => {
 
   const getStatusGradient = (status) => {
     switch (status) {
+      case ComplaintStatus.Resolved:
       case 'Ödendi':
       case 'Çözüldü':
         return theme?.gradients?.success || Gradients.success || ['#4CAF50', '#45a049'];
+      case ComplaintStatus.Open:
       case 'Bekliyor':
         return theme?.gradients?.warning || Gradients.warning || ['#FFC107', '#FFA000'];
+      case ComplaintStatus.InProgress:
+      case 'İşlemde':
+        return theme?.gradients?.info || Gradients.info || ['#2196F3', '#1976D2'];
+      case ComplaintStatus.Rejected:
+      case 'Reddedildi':
+        return theme?.gradients?.danger || Gradients.danger || ['#FF5252', '#FF1744'];
       default:
         return [Colors.textSecondary, Colors.textSecondary];
     }
@@ -308,19 +356,14 @@ const ActivityItem = ({ activity }) => {
             </Text>
           )}
           <View style={styles.statusContainer}>
-            <Badge 
-              style={{ 
-                fontSize: 12,
-                fontFamily: Fonts.lato.bold,
-                paddingHorizontal: 8,
-                marginBottom: 4,
-                backgroundColor: activity?.status === 'Ödendi' || activity?.status === 'Çözüldü' 
-                  ? (theme?.colors?.success || Colors.success) 
-                  : (theme?.colors?.warning || Colors.warning) 
-              }}
+            <LinearGradient
+              colors={getStatusGradient(activity.status)}
+              style={styles.statusGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
             >
-              {activity?.status || 'Bekliyor'}
-            </Badge>
+              <Text style={styles.statusText}>{activity?.status || 'Bekliyor'}</Text>
+            </LinearGradient>
           </View>
         </View>
       )}
@@ -331,14 +374,34 @@ const ActivityItem = ({ activity }) => {
 const PaymentItem = ({ payment }) => {
   const theme = useTheme();
   
-  // Daire numarasını description'dan çıkar
   const getApartmentNumber = (description) => {
     if (!description) return '';
     const match = description.match(/Daire (\d+)/);
     return match ? match[1] : '';
   };
 
+  const getStatusGradient = (status) => {
+    switch (status) {
+      case ComplaintStatus.Resolved:
+      case 'Ödendi':
+      case 'Çözüldü':
+        return theme?.gradients?.success || Gradients.success || ['#4CAF50', '#45a049'];
+      case ComplaintStatus.Open:
+      case 'Bekliyor':
+        return theme?.gradients?.warning || Gradients.warning || ['#FFC107', '#FFA000'];
+      case ComplaintStatus.InProgress:
+      case 'İşlemde':
+        return theme?.gradients?.info || Gradients.info || ['#2196F3', '#1976D2'];
+      case ComplaintStatus.Rejected:
+      case 'Reddedildi':
+        return theme?.gradients?.danger || Gradients.danger || ['#FF5252', '#FF1744'];
+      default:
+        return [Colors.textSecondary, Colors.textSecondary];
+    }
+  };
+
   const apartmentNumber = getApartmentNumber(payment.description);
+  const status = payment?.isPaid ? 'Ödendi' : 'Bekliyor';
 
   return (
     <List.Item
@@ -374,7 +437,7 @@ const PaymentItem = ({ payment }) => {
           ) : (
             <>
               <LinearGradient
-                colors={payment.isPaid ? (theme?.gradients?.success || Gradients.success) : (theme?.gradients?.warning || Gradients.warning)}
+                colors={getStatusGradient(status)}
                 style={styles.activityIconGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -389,21 +452,15 @@ const PaymentItem = ({ payment }) => {
         </View>
       )}
       right={props => (
-        <View style={styles.activityRight}>
-          <Text style={{ color: '#666666', fontFamily: Fonts.lato.regular }}>
-            {formatDate(payment?.paymentDate)}
-          </Text>
-          <Badge 
-            style={{ 
-              fontSize: 12,
-              fontFamily: Fonts.lato.bold,
-              paddingHorizontal: 8,
-              marginBottom: 4,
-              backgroundColor: payment?.isPaid ? '#4CAF50' : '#FFC107'
-            }}
+        <View style={styles.statusContainer}>
+          <LinearGradient
+            colors={getStatusGradient(status)}
+            style={styles.statusGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
           >
-            {payment?.isPaid ? 'Ödendi' : 'Bekliyor'}
-          </Badge>
+            <Text style={styles.statusText}>{status}</Text>
+          </LinearGradient>
         </View>
       )}
     />
@@ -416,12 +473,17 @@ const ComplaintItem = ({ complaint, onPress }) => {
   const getStatusGradient = (status) => {
     switch (status) {
       case ComplaintStatus.Resolved:
+      case 'Ödendi':
+      case 'Çözüldü':
         return theme?.gradients?.success || Gradients.success || ['#4CAF50', '#45a049'];
       case ComplaintStatus.Open:
+      case 'Bekliyor':
         return theme?.gradients?.warning || Gradients.warning || ['#FFC107', '#FFA000'];
       case ComplaintStatus.InProgress:
+      case 'İşlemde':
         return theme?.gradients?.info || Gradients.info || ['#2196F3', '#1976D2'];
       case ComplaintStatus.Rejected:
+      case 'Reddedildi':
         return theme?.gradients?.danger || Gradients.danger || ['#FF5252', '#FF1744'];
       default:
         return [Colors.textSecondary, Colors.textSecondary];
@@ -443,14 +505,7 @@ const ComplaintItem = ({ complaint, onPress }) => {
     }
   };
 
-  // Daire numarasını relatedEntity'den al
-  const getApartmentNumber = (relatedEntity) => {
-    if (!relatedEntity) return '';
-    return relatedEntity.replace('Daire ', '');
-  };
-
   const status = getStatusText(complaint.status);
-  const apartmentNumber = getApartmentNumber(complaint.relatedEntity);
 
   return (
     <TouchableOpacity onPress={() => onPress(complaint)}>
@@ -481,7 +536,7 @@ const ComplaintItem = ({ complaint, onPress }) => {
                   style={styles.profileAvatar}
                 />
                 <Text style={[styles.apartmentText, { color: '#000000' }]}>
-                  {complaint.relatedEntity}
+                  Daire {complaint.apartmentNumber}
                 </Text>
               </>
             ) : (
@@ -495,34 +550,22 @@ const ComplaintItem = ({ complaint, onPress }) => {
                   <Icon name="alert-circle" size={24} color={Colors.text} />
                 </LinearGradient>
                 <Text style={[styles.apartmentText, { color: '#000000' }]}>
-                  {complaint.relatedEntity}
+                  Daire {complaint.apartmentNumber}
                 </Text>
               </>
             )}
           </View>
         )}
         right={props => (
-          <View style={styles.activityRight}>
-            <Text style={{ color: '#666666', fontFamily: Fonts.lato.regular }}>
-              {new Date(complaint.createdAt).toLocaleDateString('tr-TR')}
-            </Text>
-            <Badge 
-              style={{ 
-                fontSize: 12,
-                fontFamily: Fonts.lato.bold,
-                paddingHorizontal: 8,
-                marginBottom: 4,
-                backgroundColor: complaint.status === ComplaintStatus.Resolved 
-                  ? '#4CAF50'
-                  : complaint.status === ComplaintStatus.Rejected
-                  ? '#FF5252'
-                  : complaint.status === ComplaintStatus.InProgress
-                  ? '#2196F3'
-                  : '#FFC107'
-              }}
+          <View style={styles.statusContainer}>
+            <LinearGradient
+              colors={getStatusGradient(complaint.status)}
+              style={styles.statusGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
             >
-              {status}
-            </Badge>
+              <Text style={styles.statusText}>{status}</Text>
+            </LinearGradient>
           </View>
         )}
       />
@@ -530,7 +573,7 @@ const ComplaintItem = ({ complaint, onPress }) => {
   );
 };
 
-const ComplaintBottomSheet = ({ visible, complaint, onClose }) => {
+const ComplaintBottomSheet = ({ visible, complaint, onClose, onActionComplete }) => {
   const theme = useTheme();
   const [rejectReason, setRejectReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -597,6 +640,7 @@ const ComplaintBottomSheet = ({ visible, complaint, onClose }) => {
       const adminId = await getCurrentAdminId();
       await axios.post(API_ENDPOINTS.COMPLAINT.TAKE(complaint.id, adminId));
       Alert.alert('Başarılı', 'Şikayet işleme alındı.');
+      onActionComplete();
       onClose();
     } catch (error) {
       console.error('Şikayet işleme alınırken hata oluştu:', error);
@@ -612,6 +656,7 @@ const ComplaintBottomSheet = ({ visible, complaint, onClose }) => {
       const adminId = await getCurrentAdminId();
       await axios.post(API_ENDPOINTS.COMPLAINT.RESOLVE(complaint.id, adminId));
       Alert.alert('Başarılı', 'Şikayet çözüldü olarak işaretlendi.');
+      onActionComplete();
       onClose();
     } catch (error) {
       console.error('Şikayet çözülürken hata oluştu:', error);
@@ -634,6 +679,7 @@ const ComplaintBottomSheet = ({ visible, complaint, onClose }) => {
         reason: rejectReason
       });
       Alert.alert('Başarılı', 'Şikayet reddedildi.');
+      onActionComplete();
       onClose();
     } catch (error) {
       console.error('Şikayet reddedilirken hata oluştu:', error);
@@ -646,6 +692,87 @@ const ComplaintBottomSheet = ({ visible, complaint, onClose }) => {
   if (!complaint || !complaintDetails) return null;
 
   const status = getStatusText(complaintDetails.status);
+
+  const renderActionButtons = () => {
+    if (complaintDetails.isOpen) {
+      return (
+        <Button 
+          mode="contained" 
+          onPress={handleProcess}
+          loading={isProcessing}
+          disabled={isProcessing}
+          style={[styles.actionButton, { backgroundColor: '#2196F3' }]}
+          icon="check-circle"
+          labelStyle={styles.actionButtonLabel}
+        >
+          İşleme Al
+        </Button>
+      );
+    } else if (complaintDetails.isInProgress) {
+      return (
+        <View style={styles.actionButtons}>
+          <Button 
+            mode="contained" 
+            onPress={handleResolve}
+            loading={isResolving}
+            disabled={isResolving}
+            style={[styles.actionButton, { backgroundColor: '#4CAF50' }]}
+            icon="check"
+            labelStyle={styles.actionButtonLabel}
+          >
+            Çözüldü
+          </Button>
+          {!showRejectInput ? (
+            <Button 
+              mode="contained" 
+              onPress={() => setShowRejectInput(true)}
+              style={[styles.actionButton, { backgroundColor: '#FF5252' }]}
+              icon="close-circle"
+              labelStyle={styles.actionButtonLabel}
+            >
+              Reddet
+            </Button>
+          ) : (
+            <View style={styles.rejectContainer}>
+              <TextInput
+                style={styles.rejectInput}
+                placeholder="Reddetme sebebini giriniz"
+                placeholderTextColor="#B0B0B0"
+                value={rejectReason}
+                onChangeText={setRejectReason}
+                multiline
+                numberOfLines={3}
+              />
+              <View style={styles.rejectButtons}>
+                <Button 
+                  mode="outlined" 
+                  onPress={() => {
+                    setShowRejectInput(false);
+                    setRejectReason('');
+                  }}
+                  style={styles.rejectButton}
+                  labelStyle={styles.rejectButtonLabel}
+                >
+                  İptal
+                </Button>
+                <Button 
+                  mode="contained" 
+                  onPress={handleReject}
+                  loading={isRejecting}
+                  disabled={isRejecting}
+                  style={[styles.rejectButton, { backgroundColor: '#FF5252' }]}
+                  labelStyle={styles.actionButtonLabel}
+                >
+                  Onayla
+                </Button>
+              </View>
+            </View>
+          )}
+        </View>
+      );
+    }
+    return null;
+  };
 
   return (
     <Modal
@@ -774,78 +901,7 @@ const ComplaintBottomSheet = ({ visible, complaint, onClose }) => {
                       )}
                     </View>
 
-                    {complaintDetails.isOpen && (
-                      <View style={styles.actionButtons}>
-                        <Button 
-                          mode="contained" 
-                          onPress={handleProcess}
-                          loading={isProcessing}
-                          disabled={isProcessing}
-                          style={[styles.actionButton, { backgroundColor: '#2196F3' }]}
-                          icon="check-circle"
-                          labelStyle={styles.actionButtonLabel}
-                        >
-                          İşleme Al
-                        </Button>
-                        <Button 
-                          mode="contained" 
-                          onPress={handleResolve}
-                          loading={isResolving}
-                          disabled={isResolving}
-                          style={[styles.actionButton, { backgroundColor: '#4CAF50' }]}
-                          icon="check"
-                          labelStyle={styles.actionButtonLabel}
-                        >
-                          Çözüldü
-                        </Button>
-                        {!showRejectInput ? (
-                          <Button 
-                            mode="contained" 
-                            onPress={() => setShowRejectInput(true)}
-                            style={[styles.actionButton, { backgroundColor: '#FF5252' }]}
-                            icon="close-circle"
-                            labelStyle={styles.actionButtonLabel}
-                          >
-                            Reddet
-                          </Button>
-                        ) : (
-                          <View style={styles.rejectContainer}>
-                            <TextInput
-                              style={styles.rejectInput}
-                              placeholder="Reddetme sebebini giriniz"
-                              placeholderTextColor="#B0B0B0"
-                              value={rejectReason}
-                              onChangeText={setRejectReason}
-                              multiline
-                              numberOfLines={3}
-                            />
-                            <View style={styles.rejectButtons}>
-                              <Button 
-                                mode="outlined" 
-                                onPress={() => {
-                                  setShowRejectInput(false);
-                                  setRejectReason('');
-                                }}
-                                style={styles.rejectButton}
-                                labelStyle={styles.rejectButtonLabel}
-                              >
-                                İptal
-                              </Button>
-                              <Button 
-                                mode="contained" 
-                                onPress={handleReject}
-                                loading={isRejecting}
-                                disabled={isRejecting}
-                                style={[styles.rejectButton, { backgroundColor: '#FF5252' }]}
-                                labelStyle={styles.actionButtonLabel}
-                              >
-                                Onayla
-                              </Button>
-                            </View>
-                          </View>
-                        )}
-                      </View>
-                    )}
+                    {renderActionButtons()}
                   </View>
                 </ScrollView>
               )}
@@ -886,7 +942,6 @@ const DashboardScreen = () => {
   const screenWidth = Dimensions.get('window').width;
   const itemWidth = screenWidth - 32;
 
-  useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const adminId = await getCurrentAdminId();
@@ -931,6 +986,7 @@ const DashboardScreen = () => {
       }
     };
 
+  useEffect(() => {
     fetchDashboardData();
   }, []);
 
@@ -941,7 +997,11 @@ const DashboardScreen = () => {
 
   const handleCloseModal = () => {
     setModalVisible(false);
-    setTimeout(() => setSelectedComplaint(null), 300); // Animation süresinden sonra state'i temizle
+    setTimeout(() => setSelectedComplaint(null), 300);
+  };
+
+  const handleComplaintAction = async () => {
+    await fetchDashboardData();
   };
 
   const handleTabChange = (index) => {
@@ -1175,6 +1235,7 @@ const DashboardScreen = () => {
         visible={modalVisible}
         complaint={selectedComplaint}
         onClose={handleCloseModal}
+        onActionComplete={handleComplaintAction}
       />
     </View>
   );
@@ -1253,7 +1314,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   activitiesCard: {
-    marginBottom: 24,
+    marginBottom: 80,
     borderRadius: 16,
     overflow: 'hidden',
     elevation: 2,
@@ -1620,6 +1681,22 @@ const styles = StyleSheet.create({
   collectionDetailValue: {
     fontSize: 16,
     fontFamily: Fonts.lato.bold,
+  },
+  statusContainer: {
+    marginTop: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  statusGradient: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  statusText: {
+    color: '#FFFFFF',
+    fontFamily: Fonts.lato.bold,
+    fontSize: 12,
+    textAlign: 'center',
   },
 });
 

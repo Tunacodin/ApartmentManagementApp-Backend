@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -18,6 +19,15 @@ import { BlurView } from 'expo-blur';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_ENDPOINTS, api, setCurrentAdminId, setCurrentUserId, setAuthToken } from '../../config/apiConfig';
 import * as Animatable from 'react-native-animatable';
+
+const { width, height } = Dimensions.get('window');
+
+const roleGradients = {
+  admin: ['#6366F1', '#4F46E5'],
+  tenant: ['#0EA5E9', '#0284C7'],
+  owner: ['#8B5CF6', '#7C3AED'],
+  worker: ['#10B981', '#059669'],
+};
 
 const LoginScreen = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
@@ -72,33 +82,19 @@ const LoginScreen = ({ navigation, route }) => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    console.log('\n=== Giriş İşlemi Başladı ===');
-    console.log('Giriş yapılmaya çalışılan email:', email.trim());
-    console.log('Giriş yapılmaya çalışılan rol:', role);
-
     const loginData = {
       email: email.trim(),
       password: password
     };
 
     try {
-      console.log('\n=== API İsteği Gönderiliyor ===');
-      console.log('Endpoint:', API_ENDPOINTS.AUTH.LOGIN);
-      console.log('Gönderilen veri:', { ...loginData, password: '********' });
-
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, loginData);
 
       if (response.data.message === "Giriş başarılı") {
-        console.log('\n=== Giriş Başarılı ===');
         const { message, userId, email, role, adminId, token } = response.data;
-
-        // Başarılı girişte e-postayı kaydet
         await saveEmail(email);
-
-        // Token'ı header'a ekle
         setAuthToken(token);
 
-        // Önce userId'yi AsyncStorage'a kaydet
         await AsyncStorage.multiSet([
           ['userId', userId?.toString() || ''],
           ['userEmail', email],
@@ -107,21 +103,17 @@ const LoginScreen = ({ navigation, route }) => {
           ...(role === 'admin' ? [['adminId', userId.toString()]] : [])
         ]);
 
-        // API instance'ına userId ve adminId'yi ekle
         setCurrentUserId(userId);
         if (role === 'admin') {
           setCurrentAdminId(userId);
         }
 
-        // Başarılı giriş sonrası yönlendirme
         if (role === 'admin') {
           navigation.reset({
             index: 0,
             routes: [{ name: 'AdminNavigator' }],
           });
         } else if (role === 'tenant') {
-          console.log('\n=== Kiracı Paneline Yönlendiriliyor ===');
-          
           navigation.reset({
             index: 0,
             routes: [{ 
@@ -131,7 +123,6 @@ const LoginScreen = ({ navigation, route }) => {
           });
         }
       } else {
-        // Handle specific error using errorCode
         switch(response.data.errorCode) {
           case 'USER_NOT_FOUND':
             Alert.alert('Hata', 'Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı.');
@@ -148,13 +139,10 @@ const LoginScreen = ({ navigation, route }) => {
       }
     } catch (error) {
       if (error.response) {
-        console.error('Error response:', error.response.data);
         Alert.alert('Hata', error.response.data.message || 'Sunucu hatası oluştu.');
       } else if (error.request) {
-        console.error('No response received:', error.request);
         Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.');
       } else {
-        console.error('Error:', error.message);
         Alert.alert('Hata', 'Bir hata oluştu. Lütfen tekrar deneyin.');
       }
     } finally {
@@ -162,28 +150,22 @@ const LoginScreen = ({ navigation, route }) => {
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleEmailSelect = (selectedEmail) => {
-    setEmail(selectedEmail);
-    setShowSuggestions(false);
-  };
-
   const renderEmailSuggestion = ({ item }) => (
     <TouchableOpacity
       style={styles.suggestionItem}
-      onPress={() => handleEmailSelect(item)}
+      onPress={() => {
+        setEmail(item);
+        setShowSuggestions(false);
+      }}
     >
-      <Icon name="history" size={16} color={colors.darkGray} style={styles.suggestionIcon} />
+      <Icon name="history" size={16} color="#fff" style={styles.suggestionIcon} />
       <Text style={styles.suggestionText}>{item}</Text>
     </TouchableOpacity>
   );
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <LinearGradient
@@ -192,33 +174,35 @@ const LoginScreen = ({ navigation, route }) => {
         end={{ x: 1, y: 1 }}
         style={styles.background}
       >
-        <View style={styles.overlay}>
           <Animatable.View 
-            animation="fadeInDown" 
+          animation="fadeInUp" 
             duration={1000}
-            style={styles.container}
+          style={styles.contentContainer}
           >
-            <View style={styles.iconWrapper}>
+          <View style={styles.headerContainer}>
+            <View style={styles.iconContainer}>
               <LinearGradient
-                colors={['#6366F1', '#4F46E5']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+                colors={roleGradients[role]}
                 style={styles.iconGradient}
               >
-                <Icon name="user-shield" size={60} color="#FFFFFF" />
+                <Icon name={role === 'admin' ? 'user-shield' : 'user'} size={40} color="#fff" />
               </LinearGradient>
             </View>
-
             <Text style={styles.title}>
               {role === 'admin' ? 'Yönetici Girişi' : 'Kiracı Girişi'}
             </Text>
+            <Text style={styles.subtitle}>
+              Hoş geldiniz! Lütfen giriş yapın.
+            </Text>
+          </View>
 
             <View style={styles.formContainer}>
-              <View style={styles.inputContainer}>
-                <Icon name="user" size={20} color="#64748B" style={styles.inputIcon} />
+            <View style={styles.inputWrapper}>
+              <Icon name="envelope" size={20} color="#64748B" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="E-posta"
+                placeholderTextColor="#94A3B8"
                   value={email}
                   onChangeText={(text) => {
                     setEmail(text);
@@ -227,7 +211,6 @@ const LoginScreen = ({ navigation, route }) => {
                   onFocus={() => setShowSuggestions(email.length > 0)}
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  placeholderTextColor="#94A3B8"
                 />
               </View>
 
@@ -244,17 +227,20 @@ const LoginScreen = ({ navigation, route }) => {
                 </View>
               )}
 
-              <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
                 <Icon name="lock" size={20} color="#64748B" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Şifre"
+                placeholderTextColor="#94A3B8"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
-                  placeholderTextColor="#94A3B8"
                 />
-                <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
+              <TouchableOpacity 
+                onPress={() => setShowPassword(!showPassword)} 
+                style={styles.eyeIcon}
+              >
                   <Icon 
                     name={showPassword ? 'eye' : 'eye-slash'} 
                     size={20} 
@@ -264,75 +250,76 @@ const LoginScreen = ({ navigation, route }) => {
               </View>
 
               <TouchableOpacity
-                style={[styles.button, isLoading && styles.buttonDisabled]}
+              style={[styles.loginButton, isLoading && styles.buttonDisabled]}
                 onPress={handleLogin}
                 disabled={isLoading}
               >
                 <LinearGradient
-                  colors={['#6366F1', '#4F46E5']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.buttonGradient}
+                colors={roleGradients[role]}
+                style={styles.loginButtonGradient}
                 >
                   {isLoading ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  <ActivityIndicator color="#fff" size="small" />
                   ) : (
-                    <Text style={styles.buttonText}>Giriş Yap</Text>
+                  <Text style={styles.loginButtonText}>Giriş Yap</Text>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
 
-              <View style={styles.linkContainer}>
+            <View style={styles.linksContainer}>
                 <TouchableOpacity
-                  style={styles.link}
                   onPress={() => {
                     if (role === 'admin') {
                       navigation.navigate('AdminCreate', { screen: 'AdminInfo' });
-                    } else if (role === 'tenant') {
+                  } else {
                       navigation.navigate('TenantNavigator');
                     }
                   }}
                 >
-                  <Text style={styles.linkText}>
+                <Text style={[styles.linkText, { color: roleGradients[role][0] }]}>
                     {role === 'admin' ? 'Yönetici Kaydı' : 'Kiracı Kaydı'}
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.link}
                   onPress={() => navigation.navigate('ForgotPassword', { role })}
                 >
-                  <Text style={styles.linkText}>Şifremi Unuttum</Text>
+                <Text style={[styles.linkText, { color: roleGradients[role][0] }]}>Şifremi Unuttum</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </Animatable.View>
-        </View>
       </LinearGradient>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
+  container: {
     flex: 1,
   },
-  overlay: {
+  background: {
+    flex: 1,
+    width: width,
+    height: height,
+  },
+  contentContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  container: {
-    width: '90%',
+  headerContainer: {
     alignItems: 'center',
+    marginBottom: 40,
   },
-  iconWrapper: {
+  iconContainer: {
     marginBottom: 20,
   },
   iconGradient: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -341,31 +328,36 @@ const styles = StyleSheet.create({
       height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowRadius: 8,
+    elevation: 5,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#0F172A',
-    marginBottom: 30,
+    color: '#1E293B',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#64748B',
     textAlign: 'center',
   },
   formContainer: {
     width: '100%',
-    padding: 20,
-    borderRadius: 16,
+    maxWidth: 400,
     backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  inputContainer: {
+  inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
@@ -382,59 +374,55 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: '100%',
-    color: '#0F172A',
+    color: '#1E293B',
     fontSize: 16,
   },
   eyeIcon: {
     padding: 10,
   },
-  button: {
-    width: '100%',
+  loginButton: {
     height: 55,
     borderRadius: 12,
-    marginTop: 10,
-    marginBottom: 20,
+    marginTop: 20,
     overflow: 'hidden',
   },
-  buttonGradient: {
+  loginButtonGradient: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  buttonText: {
-    color: '#FFFFFF',
+  loginButtonText: {
+    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
   buttonDisabled: {
     opacity: 0.7,
   },
-  linkContainer: {
+  linksContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
-    marginTop: 10,
-  },
-  link: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    backgroundColor: '#F8FAFC',
+    marginTop: 20,
   },
   linkText: {
-    color: '#6366F1',
     fontSize: 14,
     fontWeight: '600',
   },
   suggestionsContainer: {
-    width: '100%',
-    maxHeight: 150,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     marginBottom: 15,
+    maxHeight: 150,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   suggestionsList: {
     padding: 10,
@@ -450,7 +438,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   suggestionText: {
-    color: '#0F172A',
+    color: '#1E293B',
     fontSize: 16,
   },
 });
