@@ -13,6 +13,7 @@ import {
   Animated,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -26,14 +27,41 @@ import { BlurView } from 'expo-blur';
 
 const { width } = Dimensions.get('window');
 
-const PaymentBottomSheet = ({ visible, onClose, paymentId, amount }) => {
+const PaymentBottomSheet = ({ visible, onClose, paymentId, amount, paymentType, description }) => {
   const [loading, setLoading] = useState(false);
+  const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState(null);
+  const [currentMonthPayments, setCurrentMonthPayments] = useState([]);
+
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return '0 ₺';
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: 'TRY',
+    }).format(amount);
+  };
+
+  const fetchTenantData = async () => {
+    try {
+      const [tenantResponse, paymentsResponse] = await Promise.all([
+        api.get(API_ENDPOINTS.TENANT.GET_DETAILS(getCurrentUserId())),
+        api.get(API_ENDPOINTS.TENANT.GET_CURRENT_MONTH_PAYMENTS(getCurrentUserId()))
+      ]);
+      
+      setCurrentMonthPayments(paymentsResponse.data.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTenantData();
+  }, []);
 
   const handlePayment = async () => {
     try {
@@ -87,6 +115,18 @@ const PaymentBottomSheet = ({ visible, onClose, paymentId, amount }) => {
     return cleaned;
   };
 
+  const getPaymentDetails = () => {
+    if (!currentMonthPayments) return { rent: 0, dues: 0 };
+    
+    const rentPayment = currentMonthPayments.find(p => p.paymentType === 'Rent' && !p.isPaid);
+    const duesPayment = currentMonthPayments.find(p => p.paymentType === 'Dues' && !p.isPaid);
+    
+    return {
+      rent: rentPayment ? rentPayment.totalAmount : 0,
+      dues: duesPayment ? duesPayment.totalAmount : 0
+    };
+  };
+
   return (
     <Modal
       visible={visible}
@@ -118,7 +158,7 @@ const PaymentBottomSheet = ({ visible, onClose, paymentId, amount }) => {
                 <View style={styles.paymentDetails}>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Ödeme Tutarı:</Text>
-                    <Text style={styles.detailValue}>{paymentDetails?.amount} TL</Text>
+                    <Text style={styles.detailValue}>{formatCurrency(paymentDetails?.amount)}</Text>
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Ödeme Tarihi:</Text>
@@ -129,29 +169,86 @@ const PaymentBottomSheet = ({ visible, onClose, paymentId, amount }) => {
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Ödeme Tipi:</Text>
                     <Text style={styles.detailValue}>
-                      {paymentDetails?.paymentType === 'rent' ? 'Kira' : 'Aidat'}
+                      {paymentDetails?.paymentType === 'Rent' ? 'Kira' : 'Aidat'}
                     </Text>
                   </View>
                   {paymentDetails?.delayPenaltyAmount > 0 && (
                     <View style={styles.detailRow}>
                       <Text style={styles.detailLabel}>Gecikme Cezası:</Text>
-                      <Text style={styles.detailValue}>{paymentDetails?.delayPenaltyAmount} TL</Text>
+                      <Text style={styles.detailValue}>{formatCurrency(paymentDetails?.delayPenaltyAmount)}</Text>
                     </View>
                   )}
                   <View style={[styles.detailRow, styles.totalRow]}>
                     <Text style={styles.totalLabel}>Toplam Tutar:</Text>
-                    <Text style={styles.totalValue}>{paymentDetails?.totalAmount} TL</Text>
+                    <Text style={styles.totalValue}>{formatCurrency(paymentDetails?.totalAmount)}</Text>
                   </View>
                 </View>
               </View>
             ) : (
               <>
                 <View style={styles.paymentAmount}>
-                  <Text style={styles.amountLabel}>Ödeme Tutarı</Text>
-                  <Text style={styles.amountValue}>{amount} TL</Text>
+                  <View style={styles.paymentBreakdown}>
+                    <View style={styles.paymentRow}>
+                      <LinearGradient
+                        colors={['#6366F1', '#4F46E5']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.paymentBox}
+                      >
+                        <View style={styles.paymentBoxContent}>
+                          <View style={styles.paymentBoxHeader}>
+                            <Ionicons name="home" size={20} color="#FFFFFF" />
+                            <Text style={styles.paymentBoxTitle}>Kira</Text>
+                          </View>
+                          <Text style={styles.paymentBoxAmount}>
+                            {formatCurrency(getPaymentDetails().rent)}
+                          </Text>
+                        </View>
+                      </LinearGradient>
+
+                      <LinearGradient
+                        colors={['#8B5CF6', '#7C3AED']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.paymentBox}
+                      >
+                        <View style={styles.paymentBoxContent}>
+                          <View style={styles.paymentBoxHeader}>
+                            <Ionicons name="building" size={20} color="#FFFFFF" />
+                            <Text style={styles.paymentBoxTitle}>Aidat</Text>
+                          </View>
+                          <Text style={styles.paymentBoxAmount}>
+                            {formatCurrency(getPaymentDetails().dues)}
+                          </Text>
+                        </View>
+                      </LinearGradient>
+                    </View>
+
+                    <LinearGradient
+                      colors={['#10B981', '#059669']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={[styles.paymentBox, styles.totalBox]}
+                    >
+                      <View style={styles.paymentBoxContent}>
+                        <Text style={styles.totalBoxTitle}>Toplam</Text>
+                        <Text style={styles.totalBoxAmount}>
+                          {formatCurrency(getPaymentDetails().rent + getPaymentDetails().dues)}
+                        </Text>
+                      </View>
+                    </LinearGradient>
+                  </View>
                 </View>
 
                 <View style={styles.formContainer}>
+                  <TextInput
+                    label="Kart Üzerindeki İsim"
+                    value={cardName}
+                    onChangeText={setCardName}
+                    mode="outlined"
+                    style={styles.input}
+                  />
+
                   <TextInput
                     label="Kart Numarası"
                     value={cardNumber}
@@ -342,13 +439,19 @@ const DashboardScreen = () => {
   const [paymentSheetVisible, setPaymentSheetVisible] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [complaintSheetVisible, setComplaintSheetVisible] = useState(false);
+  const [currentMonthPayments, setCurrentMonthPayments] = useState([]);
 
   const fetchTenantData = async () => {
     try {
-      const response = await api.get(API_ENDPOINTS.TENANT.GET_DETAILS(getCurrentUserId()));
-      setTenantData(response.data.data);
+      const [tenantResponse, paymentsResponse] = await Promise.all([
+        api.get(API_ENDPOINTS.TENANT.GET_DETAILS(getCurrentUserId())),
+        api.get(API_ENDPOINTS.TENANT.GET_CURRENT_MONTH_PAYMENTS(getCurrentUserId()))
+      ]);
+      
+      setTenantData(tenantResponse.data.data);
+      setCurrentMonthPayments(paymentsResponse.data.data);
     } catch (error) {
-      console.error('Error fetching tenant data:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -381,8 +484,35 @@ const DashboardScreen = () => {
     }
   };
 
-  const handleMakePayment = (payment) => {
-    setSelectedPayment(payment);
+  const handleMakePayment = () => {
+    if (!currentMonthPayments || currentMonthPayments.length === 0) {
+      Alert.alert(
+        'Bilgi',
+        'Bu ay için henüz ödeme bulunmuyor.',
+        [{ text: 'Tamam', style: 'default' }]
+      );
+      return;
+    }
+
+    const unpaidPayments = currentMonthPayments.filter(payment => !payment.isPaid);
+    if (unpaidPayments.length === 0) {
+      Alert.alert(
+        'Bilgi',
+        'Bu ay için tüm ödemeleriniz yapılmış.',
+        [{ text: 'Tamam', style: 'default' }]
+      );
+      return;
+    }
+
+    // İlk ödenmemiş ödemeyi seç
+    const paymentToMake = unpaidPayments[0];
+    setSelectedPayment({
+      id: paymentToMake.id,
+      amount: paymentToMake.totalAmount,
+      paymentType: paymentToMake.paymentType,
+      dueDate: paymentToMake.dueDate,
+      description: paymentToMake.description
+    });
     setPaymentSheetVisible(true);
     setMenuVisible(false);
   };
@@ -390,6 +520,26 @@ const DashboardScreen = () => {
   const handleCreateComplaint = () => {
     setComplaintSheetVisible(true);
     setMenuVisible(false);
+  };
+
+  const getPaymentStatus = () => {
+    if (!currentMonthPayments || currentMonthPayments.length === 0) {
+      return { text: 'Ödeme Yok', color: '#6B7280', icon: 'calendar' };
+    }
+
+    const unpaidPayments = currentMonthPayments.filter(payment => !payment.isPaid);
+    if (unpaidPayments.length === 0) {
+      return { text: 'Ödemeler Tamamlandı', color: '#4CAF50', icon: 'checkmark-circle' };
+    }
+
+    return { text: 'Ödeme Yap', color: '#FF5252', icon: 'cash' };
+  };
+
+  const getTotalUnpaidAmount = () => {
+    if (!currentMonthPayments) return 0;
+    return currentMonthPayments
+      .filter(payment => !payment.isPaid)
+      .reduce((total, payment) => total + payment.totalAmount, 0);
   };
 
   if (loading) {
@@ -536,11 +686,27 @@ const DashboardScreen = () => {
             <>
               <TouchableOpacity 
                 style={[styles.fabAction, styles.fabActionTop]}
-                onPress={() => handleMakePayment({ id: 1, amount: 5000 })}
+                onPress={handleMakePayment}
               >
-                <Text style={styles.fabActionText}>Ödeme Yap</Text>
-                <View style={[styles.fabActionIcon, { backgroundColor: '#4CAF50' }]}>
-                  <Ionicons name="cash" size={20} color="#FFFFFF" />
+                <View style={styles.fabActionContent}>
+                  <Text style={styles.fabActionText}>
+                    {getPaymentStatus().text}
+                  </Text>
+                  {getTotalUnpaidAmount() > 0 && (
+                    <Text style={styles.fabActionSubtext}>
+                      {formatCurrency(getTotalUnpaidAmount())}
+                    </Text>
+                  )}
+                </View>
+                <View style={[
+                  styles.fabActionIcon, 
+                  { backgroundColor: getPaymentStatus().color }
+                ]}>
+                  <Ionicons 
+                    name={getPaymentStatus().icon}
+                    size={20} 
+                    color="#FFFFFF" 
+                  />
                 </View>
               </TouchableOpacity>
               <TouchableOpacity 
@@ -577,6 +743,8 @@ const DashboardScreen = () => {
         onClose={() => setPaymentSheetVisible(false)}
         paymentId={selectedPayment?.id}
         amount={selectedPayment?.amount}
+        paymentType={selectedPayment?.paymentType}
+        description={selectedPayment?.description}
       />
 
       <ComplaintBottomSheet
@@ -785,22 +953,10 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   paymentAmount: {
-    backgroundColor: '#F3F4F6',
-    padding: 16,
-    borderRadius: 12,
     marginBottom: 20,
   },
-  amountLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 4,
-    fontFamily: Fonts.lato.regular,
-  },
-  amountValue: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#1F2937',
-    fontFamily: Fonts.lato.bold,
+  paymentBreakdown: {
+    marginTop: 0,
   },
   formContainer: {
     gap: 16,
@@ -903,6 +1059,105 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     fontFamily: Fonts.lato.regular,
+  },
+  paymentsButton: {
+    padding: 16,
+  },
+  paymentsButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  paymentsInfo: {
+    flex: 1,
+  },
+  paymentsTitle: {
+    fontSize: 18,
+    fontFamily: Fonts.lato.bold,
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  paymentsSubtitle: {
+    fontSize: 14,
+    fontFamily: Fonts.lato.regular,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  fabActionContent: {
+    flex: 1,
+    marginRight: 8,
+  },
+  fabActionSubtext: {
+    fontSize: 12,
+    color: '#1F2937',
+    opacity: 0.7,
+    marginTop: 2,
+    fontFamily: Fonts.lato.regular,
+  },
+  paymentTypeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  paymentTypeText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginLeft: 8,
+    fontFamily: Fonts.lato.bold,
+  },
+  paymentDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 8,
+    fontFamily: Fonts.lato.regular,
+  },
+  paymentRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  paymentBox: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  paymentBoxContent: {
+    padding: 12,
+  },
+  paymentBoxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  paymentBoxTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginLeft: 8,
+    fontFamily: Fonts.lato.bold,
+  },
+  paymentBoxAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    fontFamily: Fonts.lato.bold,
+  },
+  totalBox: {
+    marginTop: 4,
+  },
+  totalBoxTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    fontFamily: Fonts.lato.bold,
+    marginBottom: 4,
+  },
+  totalBoxAmount: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    fontFamily: Fonts.lato.bold,
   },
 });
 

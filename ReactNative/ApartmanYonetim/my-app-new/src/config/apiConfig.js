@@ -14,8 +14,8 @@ export const api = axios.create({
 });
 
 // Admin ID ve User ID yönetimi için global değişkenler ve yönetim fonksiyonları
-let currentAdminId = 4;
-let currentUserId = 4;
+let currentAdminId = null;
+let currentUserId = null;
 
 export const setCurrentAdminId = (adminId) => {
     currentAdminId = adminId;
@@ -30,6 +30,9 @@ export const setCurrentUserId = (userId) => {
 };
 
 export const getCurrentUserId = () => {
+    if (!currentUserId) {
+        console.warn('currentUserId is not set. Make sure to set it after login.');
+    }
     return currentUserId;
 };
 
@@ -190,6 +193,10 @@ export const API_ENDPOINTS = {
         GET_DETAILS: (tenantId) => `${API_BASE_URL}/Tenant/${tenantId}`,
         GET_PAYMENTS: (id = currentUserId) => `${API_BASE_URL}/Tenant/${id}/payments`,
         GET_WITH_PAYMENTS: (id = currentUserId) => `${API_BASE_URL}/Tenant/${id}/with-payments`,
+        GET_ALL_PAYMENTS: (id = currentUserId) => `${API_BASE_URL}/Tenant/${id}/payments`,
+        NEXT_PAYMENTS: (userId = currentUserId) => `${API_BASE_URL}/Tenant/${userId}/next-payments`,
+        GET_CURRENT_MONTH_PAYMENTS: (userId = currentUserId) => `${API_BASE_URL}/Tenant/${userId}/current-month-payments`,
+        MAKE_PAYMENT: (userId, paymentId) => `/Tenant/${userId}/payments/${paymentId}/pay`,
         UPDATE: (id = currentUserId) => `${API_BASE_URL}/Tenant/${id}`,
         UPDATE_PROFILE_IMAGE: (id = currentUserId) => `${API_BASE_URL}/Tenant/${id}/profile-image`,
         DASHBOARD: (id = currentUserId) => `${API_BASE_URL}/Tenant/${id}/dashboard`,
@@ -198,10 +205,9 @@ export const API_ENDPOINTS = {
         MARK_ALL_NOTIFICATIONS_READ: (userId = currentUserId) => `${API_BASE_URL}/notifications/${userId}/read-all`,
         ACTIVITIES: (userId = currentUserId) => `${API_BASE_URL}/Tenant/${userId}/activities`,
         PAYMENT_HISTORY: (userId = currentUserId) => `${API_BASE_URL}/Tenant/${userId}/payments`,
-        MAKE_PAYMENT: (userId, paymentId) => `${API_BASE_URL}/Tenant/${userId}/payments/${paymentId}/pay`,
         RECENT_PAYMENTS: (userId = currentUserId) => `${API_BASE_URL}/Tenant/${userId}/payments`,
-        NEXT_PAYMENTS: (userId = currentUserId) => `${API_BASE_URL}/Tenant/${userId}/next-payments`,
         BY_BUILDING: (buildingId) => `${API_BASE_URL}/Tenant/by-building/${buildingId}`,
+        GET_NEXT_PAYMENTS: (userId) => `${API_BASE_URL}/Tenant/${userId}/next-payments`,
     },
 
     // Owner endpoints

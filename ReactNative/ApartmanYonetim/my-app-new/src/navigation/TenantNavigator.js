@@ -6,11 +6,14 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors } from '../constants/Colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setAuthToken } from '../config/apiConfig';
 
 // Import screens
 import DashboardScreen from '../screens/tenant/dashboard/DashboardScreen';
 import ActivitiesScreen from '../screens/tenant/activities/ActivitiesScreen';
 import ProfileScreen from '../screens/tenant/profile/ProfileScreen';
+import PaymentsScreen from '../screens/tenant/dashboard/PaymentsScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -73,6 +76,9 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
                 case 'Dashboard':
                   iconName = isFocused ? 'home' : 'home-outline';
                   break;
+                case 'Payments':
+                  iconName = isFocused ? 'cash' : 'cash-outline';
+                  break;
                 case 'Activities':
                   iconName = isFocused ? 'time' : 'time-outline';
                   break;
@@ -117,7 +123,28 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
   );
 };
 
-const TenantNavigator = () => {
+const TenantNavigator = ({ navigation }) => {
+  const handleLogout = async () => {
+    try {
+      // Token'ı temizle
+      await AsyncStorage.removeItem('authToken');
+      await AsyncStorage.removeItem('userData');
+      await AsyncStorage.removeItem('userId');
+      await AsyncStorage.removeItem('userRole');
+      
+      // API token'ını temizle
+      setAuthToken(null);
+      
+      // RoleScreen'e yönlendir
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'RoleScreen' }],
+      });
+    } catch (error) {
+      console.error('Çıkış yapılırken hata:', error);
+    }
+  };
+
   return (
     <Tab.Navigator
       tabBar={props => <CustomTabBar {...props} />}
@@ -138,6 +165,13 @@ const TenantNavigator = () => {
         component={DashboardScreen}
         options={{
           title: 'AnaSayfa',
+        }}
+      />
+      <Tab.Screen
+        name="Payments"
+        component={PaymentsScreen}
+        options={{
+          title: 'Ödemeler',
         }}
       />
       <Tab.Screen

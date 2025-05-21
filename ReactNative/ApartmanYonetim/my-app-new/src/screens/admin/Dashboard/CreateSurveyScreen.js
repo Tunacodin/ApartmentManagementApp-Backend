@@ -158,12 +158,12 @@ const CreateSurveyScreen = ({ navigation }) => {
   };
 
   if (loading) {
-    return (
+      return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6366F1" />
-      </View>
-    );
-  }
+          </View>
+      );
+    }
 
   return (
     <KeyboardAvoidingView 
@@ -190,14 +190,14 @@ const CreateSurveyScreen = ({ navigation }) => {
                     ]}
                     onPress={() => toggleBuildingSelection(building.id)}
                   >
-                    <LinearGradient
+      <LinearGradient
                       colors={formData.buildingIds.includes(building.id) 
                         ? ['#6366F1', '#8B5CF6']
                         : ['#F1F5F9', '#E2E8F0']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
                       style={styles.buildingGradient}
-                    >
+      >
                       <View style={styles.buildingItemContent}>
                         <Icon 
                           name="office-building" 
@@ -214,7 +214,7 @@ const CreateSurveyScreen = ({ navigation }) => {
                           {building.name}
                         </Text>
                       </View>
-                    </LinearGradient>
+      </LinearGradient>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -252,7 +252,7 @@ const CreateSurveyScreen = ({ navigation }) => {
             </View>
           </View>
 
-          <View style={styles.dateContainer}>
+            <View style={styles.dateContainer}>
             <View style={styles.dateInputContainer}>
               <Text style={styles.label}>Başlangıç Tarihi</Text>
               <TouchableOpacity
@@ -273,28 +273,28 @@ const CreateSurveyScreen = ({ navigation }) => {
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
+          </View>
 
             <View style={styles.dateInputContainer}>
               <Text style={styles.label}>Bitiş Tarihi</Text>
-              <TouchableOpacity
+                <TouchableOpacity
                 style={styles.dateButton}
                 onPress={() => setShowEndDatePicker(true)}
-              >
-                <LinearGradient
-                  colors={['#6366F1', '#8B5CF6']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.dateButtonGradient}
                 >
+                  <LinearGradient
+                  colors={['#6366F1', '#8B5CF6']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  style={styles.dateButtonGradient}
+                  >
                   <View style={styles.dateButtonContent}>
                     <Icon name="calendar-end" size={24} color="#FFFFFF" />
                     <Text style={styles.dateButtonText}>
                       {formatDate(formData.endDate)}
                     </Text>
                   </View>
-                </LinearGradient>
-              </TouchableOpacity>
+                  </LinearGradient>
+                </TouchableOpacity>
             </View>
           </View>
 
@@ -338,87 +338,87 @@ const CreateSurveyScreen = ({ navigation }) => {
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Soru Ekle</Text>
-            <View style={styles.inputWrapper}>
+              <View style={styles.inputWrapper}>
               <Icon name="help-circle" size={20} color="#6366F1" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                value={currentQuestion.questionText}
-                onChangeText={(text) => setCurrentQuestion(prev => ({ ...prev, questionText: text }))}
-                placeholder="Soru metnini girin"
+                <TextInput
+                  style={styles.input}
+                  value={currentQuestion.questionText}
+                  onChangeText={(text) => setCurrentQuestion(prev => ({ ...prev, questionText: text }))}
+                  placeholder="Soru metnini girin"
                 placeholderTextColor="#94A3B8"
-              />
-            </View>
-
-            {currentQuestion.questionType === 'MultipleChoice' && (
-              <View style={styles.optionsContainer}>
-                {currentQuestion.options.map((option, index) => (
-                  <View key={index} style={styles.optionInputWrapper}>
-                    <Icon name="circle-outline" size={20} color="#6366F1" style={styles.optionIcon} />
-                    <TextInput
-                      style={styles.optionInput}
-                      value={option}
-                      onChangeText={(text) => handleOptionChange(text, index)}
-                      placeholder={`Seçenek ${index + 1}`}
-                      placeholderTextColor="#94A3B8"
-                    />
-                  </View>
-                ))}
-                <TouchableOpacity
-                  style={styles.addOptionButton}
-                  onPress={handleAddOption}
-                >
-                  <LinearGradient
-                    colors={['#6366F1', '#8B5CF6']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.buttonGradient}
-                  >
-                    <Icon name="plus" size={20} color="#FFFFFF" />
-                    <Text style={styles.buttonText}>Seçenek Ekle</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+                />
               </View>
-            )}
-
-            <TouchableOpacity
-              style={styles.addQuestionButton}
-              onPress={handleAddQuestion}
-            >
-              <LinearGradient
-                colors={['#6366F1', '#8B5CF6']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.buttonGradient}
+              
+              {currentQuestion.questionType === 'MultipleChoice' && (
+                <View style={styles.optionsContainer}>
+                  {currentQuestion.options.map((option, index) => (
+                    <View key={index} style={styles.optionInputWrapper}>
+                    <Icon name="circle-outline" size={20} color="#6366F1" style={styles.optionIcon} />
+                      <TextInput
+                        style={styles.optionInput}
+                        value={option}
+                        onChangeText={(text) => handleOptionChange(text, index)}
+                        placeholder={`Seçenek ${index + 1}`}
+                      placeholderTextColor="#94A3B8"
+                      />
+                    </View>
+                  ))}
+                  <TouchableOpacity
+                    style={styles.addOptionButton}
+                    onPress={handleAddOption}
+                  >
+                    <LinearGradient
+                    colors={['#6366F1', '#8B5CF6']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.buttonGradient}
+                    >
+                    <Icon name="plus" size={20} color="#FFFFFF" />
+                      <Text style={styles.buttonText}>Seçenek Ekle</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              )}
+              
+              <TouchableOpacity
+                style={styles.addQuestionButton}
+                onPress={handleAddQuestion}
               >
+                <LinearGradient
+                colors={['#6366F1', '#8B5CF6']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.buttonGradient}
+                >
                 <Icon name="plus" size={24} color="#FFFFFF" />
-                <Text style={styles.buttonText}>Soruyu Ekle</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
+                  <Text style={styles.buttonText}>Soruyu Ekle</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
 
           {formData.questions.length > 0 && (
             <View style={styles.questionsList}>
               <Text style={styles.label}>Eklenen Sorular</Text>
-              {formData.questions.map((question, index) => (
-                <View key={index} style={styles.questionItem}>
-                  <View style={styles.questionHeader}>
+            {formData.questions.map((question, index) => (
+              <View key={index} style={styles.questionItem}>
+                <View style={styles.questionHeader}>
                     <Icon name="help-circle" size={20} color="#6366F1" />
-                    <Text style={styles.questionText}>{question.questionText}</Text>
-                  </View>
-                  {question.questionType === 'MultipleChoice' && (
-                    <View style={styles.optionsList}>
-                      {question.options.map((option, optIndex) => (
-                        <View key={optIndex} style={styles.optionItem}>
-                          <Icon name="circle-outline" size={16} color="#6366F1" />
-                          <Text style={styles.optionText}>{option}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
+                  <Text style={styles.questionText}>{question.questionText}</Text>
                 </View>
-              ))}
+                {question.questionType === 'MultipleChoice' && (
+                  <View style={styles.optionsList}>
+                    {question.options.map((option, optIndex) => (
+                      <View key={optIndex} style={styles.optionItem}>
+                          <Icon name="circle-outline" size={16} color="#6366F1" />
+                        <Text style={styles.optionText}>{option}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            ))}
             </View>
-          )}
+            )}
 
           <TouchableOpacity
             style={styles.submitButton}
@@ -435,8 +435,8 @@ const CreateSurveyScreen = ({ navigation }) => {
               </View>
             </LinearGradient>
           </TouchableOpacity>
-        </View>
-      </ScrollView>
+      </View>
+    </ScrollView>
     </KeyboardAvoidingView>
   );
 };
