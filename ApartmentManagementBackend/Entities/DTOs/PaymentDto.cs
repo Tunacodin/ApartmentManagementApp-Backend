@@ -5,16 +5,19 @@ namespace Entities.DTOs
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public string UserFullName { get; set; } = string.Empty;
-        public string PaymentType { get; set; } = string.Empty;
+        public string UserFullName { get; set; }
+        public string PaymentType { get; set; }
         public decimal Amount { get; set; }
-        public DateTime PaymentDate { get; set; }
+        public DateTime? PaymentDate { get; set; }
         public DateTime DueDate { get; set; }
         public bool IsPaid { get; set; }
+        public string Description { get; set; }
         public int? DelayedDays { get; set; }
         public decimal? DelayPenaltyAmount { get; set; }
-        public decimal? TotalAmount { get; set; }
-        public string? Description { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string Status { get; set; }
+        public string Month { get; set; }
+        public string PaymentTypeTurkish { get; set; }
     }
 
     // Ödeme oluşturma DTO'su
@@ -64,6 +67,7 @@ namespace Entities.DTOs
         public string CardHolderName { get; set; }
         public string ExpiryDate { get; set; }
         public string CVV { get; set; }
+        public decimal Amount { get; set; }
     }
 
     public class PaymentResultDto

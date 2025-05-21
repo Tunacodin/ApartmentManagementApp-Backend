@@ -13,6 +13,7 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Entities.Enums;
+using System.Text.Json;
 
 namespace WebAPI.Controllers
 {
@@ -476,13 +477,49 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("{id}/payments/{paymentId}/pay")]
-        public async Task<IActionResult> Pay(int id, int paymentId)
+        [ProducesResponseType(typeof(ApiResponse<PaymentResultDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<PaymentResultDto>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<PaymentResultDto>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<PaymentResultDto>), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> MakePayment(
+            [FromRoute] int id,
+            [FromRoute] int paymentId,
+            [FromBody] PaymentRequestDto paymentRequest)
         {
-            var result = await _paymentService.ProcessPaymentAsync(id, paymentId);
-            if (!result.Success)
-                return BadRequest(result);
+            try
+            {
+                _logger.LogInformation($"Ödeme isteği alındı - TenantId: {id}, PaymentId: {paymentId}");
+                _logger.LogInformation($"Ödeme detayları: {JsonSerializer.Serialize(paymentRequest)}");
 
-            return Ok(result);
+                if (paymentRequest == null)
+                {
+                    _logger.LogError("Ödeme isteği boş");
+                    return BadRequest(ApiResponse<PaymentResultDto>.ErrorResult("Ödeme bilgileri boş olamaz"));
+                }
+
+                var result = await _tenantService.MakePayment(id, paymentId, paymentRequest);
+                return Ok(ApiResponse<PaymentResultDto>.SuccessResult("Ödeme başarıyla tamamlandı", result));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogError(ex, $"Kayıt bulunamadı - TenantId: {id}, PaymentId: {paymentId}");
+                return NotFound(ApiResponse<PaymentResultDto>.ErrorResult(ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, $"Geçersiz işlem - TenantId: {id}, PaymentId: {paymentId}");
+                return BadRequest(ApiResponse<PaymentResultDto>.ErrorResult(ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, $"Geçersiz parametre - TenantId: {id}, PaymentId: {paymentId}");
+                return BadRequest(ApiResponse<PaymentResultDto>.ErrorResult(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Beklenmeyen hata - TenantId: {id}, PaymentId: {paymentId}, Hata: {ex.Message}");
+                return StatusCode(500, ApiResponse<PaymentResultDto>.ErrorResult($"Ödeme işlemi başarısız: {ex.Message}"));
+            }
         }
 
         [HttpGet("by-building/{buildingId}")]
@@ -501,6 +538,47 @@ namespace WebAPI.Controllers
             {
                 _logger.LogError(ex, "Error getting tenants for building {BuildingId}", buildingId);
                 return StatusCode(500, ApiResponse<List<TenantListDto>>.ErrorResult(Messages.UnexpectedError));
+            }
+        }
+
+        [HttpGet("{id}/all-payments")]
+        public IActionResult GetAllPayments(int id)
+        {
+            try
+            {
+                var payments = _tenantService.GetTenantAllPayments(id);
+                return Ok(ApiResponse<List<PaymentDto>>.SuccessResult(Messages.PaymentsListed, payments));
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(ApiResponse<List<PaymentDto>>.ErrorResult(Messages.TenantNotFound));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all payments for tenant {TenantId}", id);
+                return StatusCode(500, ApiResponse<List<PaymentDto>>.ErrorResult(Messages.UnexpectedError));
+            }
+        }
+
+        [HttpGet("{id}/current-month-payments")]
+        [ProducesResponseType(typeof(ApiResponse<List<PaymentDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<List<PaymentDto>>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<List<PaymentDto>>), StatusCodes.Status500InternalServerError)]
+        public IActionResult GetCurrentMonthPayments(int id)
+        {
+            try
+            {
+                var payments = _tenantService.GetCurrentMonthPayments(id);
+                return Ok(ApiResponse<List<PaymentDto>>.SuccessResult(Messages.PaymentsListed, payments));
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(ApiResponse<List<PaymentDto>>.ErrorResult(Messages.TenantNotFound));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting current month payments for tenant {TenantId}", id);
+                return StatusCode(500, ApiResponse<List<PaymentDto>>.ErrorResult(Messages.UnexpectedError));
             }
         }
 

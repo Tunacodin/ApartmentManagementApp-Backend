@@ -947,49 +947,123 @@ namespace Business.Concrete
 
         public async Task<PaymentResultDto> MakePayment(int tenantId, int paymentId, PaymentRequestDto paymentRequest)
         {
-            var tenant = GetById(tenantId);
-            if (tenant == null)
-                throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
-
-            var payment = _paymentDal.Get(p => p.Id == paymentId && p.UserId == tenantId);
-            if (payment == null)
-                throw new KeyNotFoundException($"Payment with ID {paymentId} not found.");
-
-            if (payment.IsPaid)
-                throw new InvalidOperationException("This payment has already been made.");
-
             try
             {
+                _logger.LogInformation($"Ödeme işlemi başlatıldı - TenantId: {tenantId}, PaymentId: {paymentId}");
+
+                // Giriş parametrelerini kontrol et
+                if (paymentRequest == null)
+                {
+                    _logger.LogError("Ödeme bilgileri boş");
+                    throw new ArgumentNullException(nameof(paymentRequest), "Ödeme bilgileri boş olamaz.");
+                }
+
+                if (string.IsNullOrEmpty(paymentRequest.PaymentMethod))
+                {
+                    _logger.LogError("Ödeme yöntemi belirtilmemiş");
+                    throw new ArgumentException("Ödeme yöntemi belirtilmelidir.");
+                }
+
+                if (paymentRequest.PaymentMethod != "CreditCard")
+                {
+                    _logger.LogError($"Geçersiz ödeme yöntemi: {paymentRequest.PaymentMethod}");
+                    throw new ArgumentException("Geçersiz ödeme yöntemi. Sadece 'CreditCard' desteklenmektedir.");
+                }
+
+                if (string.IsNullOrEmpty(paymentRequest.CardNumber) ||
+                    string.IsNullOrEmpty(paymentRequest.CardHolderName) ||
+                    string.IsNullOrEmpty(paymentRequest.ExpiryDate) ||
+                    string.IsNullOrEmpty(paymentRequest.CVV))
+                {
+                    _logger.LogError("Eksik kart bilgileri");
+                    throw new ArgumentException("Kart bilgileri eksik.");
+                }
+
+                if (paymentRequest.Amount <= 0)
+                {
+                    _logger.LogError($"Geçersiz ödeme tutarı: {paymentRequest.Amount}");
+                    throw new ArgumentException("Ödeme tutarı 0'dan büyük olmalıdır.");
+                }
+
+                var tenant = GetById(tenantId);
+                if (tenant == null)
+                {
+                    _logger.LogError($"Kiracı bulunamadı - TenantId: {tenantId}");
+                    throw new KeyNotFoundException($"Kiracı bulunamadı. ID: {tenantId}");
+                }
+
+                var payment = _paymentDal.Get(p => p.Id == paymentId && p.UserId == tenantId);
+                if (payment == null)
+                {
+                    _logger.LogError($"Ödeme bulunamadı - PaymentId: {paymentId}, TenantId: {tenantId}");
+                    throw new KeyNotFoundException($"Ödeme bulunamadı. ID: {paymentId}");
+                }
+
+                if (payment.IsPaid)
+                {
+                    _logger.LogError($"Ödeme zaten yapılmış - PaymentId: {paymentId}");
+                    throw new InvalidOperationException("Bu ödeme zaten yapılmış.");
+                }
+
+                _logger.LogInformation($"Ödeme detayları - Tutar: {payment.Amount}, Vade: {payment.DueDate}");
+
                 // Gecikme kontrolü ve ceza hesaplama
                 var isDelayed = payment.DueDate < DateTime.Now;
                 var delayedDays = isDelayed ? (DateTime.Now - payment.DueDate).Days : 0;
                 var penaltyAmount = isDelayed ? CalculatePenalty(payment.Amount, delayedDays) : 0;
                 var totalAmount = payment.Amount + penaltyAmount;
 
-                // Ödeme bilgilerini güncelle
-                payment.IsPaid = true;
-                payment.PaymentDate = DateTime.Now;
-                payment.DelayedDays = isDelayed ? delayedDays : null;
-                payment.DelayPenaltyAmount = isDelayed ? penaltyAmount : null;
-                payment.TotalAmount = totalAmount;
-                payment.Description = $"{payment.Description} - {payment.PaymentType} ödemesi yapıldı - " +
-                    $"{(isDelayed ? $"Gecikme: {delayedDays} gün, Ceza: {penaltyAmount} TL, " : "")}" +
-                    $"Toplam: {totalAmount} TL - {DateTime.Now:dd/MM/yyyy}";
+                _logger.LogInformation($"Hesaplanan tutarlar - Ana Tutar: {payment.Amount}, Ceza: {penaltyAmount}, Toplam: {totalAmount}");
 
-                _paymentDal.Update(payment);
-
-                // Admin'e bildirim gönder
-                var apartment = _apartmentDal.Get(a => a.Id == payment.ApartmentId);
-                var notificationDto = new NotificationCreateDto
+                // Ödeme tutarı kontrolü
+                if (paymentRequest.Amount < totalAmount)
                 {
-                    Title = $"Yeni {GetPaymentTypeTurkish(payment.PaymentType)} Ödemesi",
-                    Message = $"{tenant.FirstName} {tenant.LastName} tarafından {GetPaymentTypeTurkish(payment.PaymentType)} ödemesi yapıldı. " +
+                    _logger.LogError($"Yetersiz ödeme tutarı - Beklenen: {totalAmount}, Gönderilen: {paymentRequest.Amount}");
+                    throw new InvalidOperationException($"Yetersiz ödeme tutarı. Beklenen tutar: {totalAmount} TL");
+                }
+
+                try
+                {
+                    // Ödeme bilgilerini güncelle
+                    payment.IsPaid = true;
+                    payment.PaymentDate = DateTime.Now;
+                    payment.DelayedDays = isDelayed ? delayedDays : null;
+                    payment.DelayPenaltyAmount = isDelayed ? penaltyAmount : null;
+                    payment.TotalAmount = totalAmount;
+                    payment.Description = $"{payment.Description} - {payment.PaymentType} ödemesi yapıldı - " +
                         $"{(isDelayed ? $"Gecikme: {delayedDays} gün, Ceza: {penaltyAmount} TL, " : "")}" +
-                        $"Toplam: {totalAmount} TL",
-                    BuildingIds = new List<int> { apartment.BuildingId },
-                    CreatedByAdminId = tenant.AdminId ?? 1
-                };
-                await _notificationService.CreateBuildingNotificationsAsync(notificationDto);
+                        $"Toplam: {totalAmount} TL - {DateTime.Now:dd/MM/yyyy}";
+
+                    _paymentDal.Update(payment);
+                    _logger.LogInformation($"Ödeme başarıyla güncellendi - PaymentId: {payment.Id}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Ödeme güncellenirken hata oluştu - PaymentId: {payment.Id}");
+                    throw new Exception($"Ödeme güncellenirken hata oluştu: {ex.Message}");
+                }
+
+                try
+                {
+                    // Admin'e bildirim gönder
+                    var apartment = _apartmentDal.Get(a => a.Id == payment.ApartmentId);
+                    var notificationDto = new NotificationCreateDto
+                    {
+                        Title = $"Yeni {GetPaymentTypeTurkish(payment.PaymentType)} Ödemesi",
+                        Message = $"{tenant.FirstName} {tenant.LastName} tarafından {GetPaymentTypeTurkish(payment.PaymentType)} ödemesi yapıldı. " +
+                            $"{(isDelayed ? $"Gecikme: {delayedDays} gün, Ceza: {penaltyAmount} TL, " : "")}" +
+                            $"Toplam: {totalAmount} TL",
+                        BuildingIds = new List<int> { apartment.BuildingId },
+                        CreatedByAdminId = tenant.AdminId ?? 1
+                    };
+                    await _notificationService.CreateBuildingNotificationsAsync(notificationDto);
+                    _logger.LogInformation($"Bildirim başarıyla gönderildi - TenantId: {tenantId}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Bildirim gönderilirken hata oluştu");
+                    // Bildirim hatası ödeme işlemini etkilemesin
+                }
 
                 return new PaymentResultDto
                 {
@@ -1005,8 +1079,8 @@ namespace Business.Concrete
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error making payment for tenant {TenantId}, payment {PaymentId}", tenantId, paymentId);
-                throw;
+                _logger.LogError(ex, $"Ödeme hatası - TenantId: {tenantId}, PaymentId: {paymentId}, Hata: {ex.Message}");
+                throw new Exception($"Ödeme işlemi başarısız: {ex.Message}");
             }
         }
 
@@ -1168,6 +1242,334 @@ namespace Business.Concrete
             {
                 _logger.LogError(ex, "Error getting tenants for building {BuildingId}", buildingId);
                 return null;
+            }
+        }
+
+        public List<PaymentDto> GetTenantAllPayments(int tenantId)
+        {
+            try
+            {
+                var tenant = GetById(tenantId);
+                if (tenant == null)
+                    throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+                var contract = _contractDal.Get(c => c.TenantId == tenantId);
+                var apartment = _apartmentDal.Get(a => a.Id == tenant.ApartmentId);
+                var building = apartment != null ? _buildingDal.Get(b => b.Id == apartment.BuildingId) : null;
+
+                var startDate = contract?.StartDate ?? tenant.LeaseStartDate;
+                var endDate = contract?.EndDate ?? DateTime.Now.AddYears(1);
+
+                // Tüm ödemeleri al
+                var allPayments = _paymentDal.GetAll(p =>
+                    p.UserId == tenantId &&
+                    p.DueDate >= startDate &&
+                    p.DueDate <= endDate)
+                    .OrderBy(p => p.DueDate)
+                    .Select(p =>
+                    {
+                        // Gecikme kontrolü
+                        var isDelayed = p.DueDate < DateTime.Now && !p.IsPaid;
+                        var delayedDays = isDelayed ? (DateTime.Now - p.DueDate).Days : 0;
+                        var penaltyAmount = isDelayed ? CalculatePenalty(p.Amount, delayedDays) : 0;
+                        var totalAmount = p.Amount + penaltyAmount;
+
+                        // Ödeme durumu belirleme
+                        string status;
+                        if (p.IsPaid)
+                        {
+                            status = "Ödendi";
+                        }
+                        else if (p.DueDate < DateTime.Now)
+                        {
+                            status = "Gecikmiş";
+                        }
+                        else if (p.DueDate <= DateTime.Now)
+                        {
+                            status = "Vadesi Geçmiş";
+                        }
+                        else
+                        {
+                            status = "Bekliyor";
+                        }
+
+                        return new PaymentDto
+                        {
+                            Id = p.Id,
+                            UserId = tenant.Id,
+                            UserFullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
+                            PaymentType = p.PaymentType,
+                            Amount = p.Amount,
+                            PaymentDate = p.PaymentDate,
+                            DueDate = p.DueDate,
+                            IsPaid = p.IsPaid,
+                            Description = p.Description ?? string.Empty,
+                            DelayedDays = isDelayed ? delayedDays : null,
+                            DelayPenaltyAmount = isDelayed ? penaltyAmount : null,
+                            TotalAmount = totalAmount,
+                            Status = status,
+                            Month = p.DueDate.ToString("MMMM yyyy"),
+                            PaymentTypeTurkish = GetPaymentTypeTurkish(p.PaymentType)
+                        };
+                    })
+                    .ToList();
+
+                // Eksik ödemeleri oluştur
+                var existingMonths = allPayments.Select(p => p.DueDate.ToString("yyyy-MM")).Distinct().ToList();
+                var currentDate = startDate;
+                var missingPayments = new List<PaymentDto>();
+
+                while (currentDate <= endDate)
+                {
+                    var monthKey = currentDate.ToString("yyyy-MM");
+                    if (!existingMonths.Contains(monthKey))
+                    {
+                        // Kira ödemesi
+                        var rentAmount = contract?.RentAmount ?? tenant.MonthlyRent;
+                        var isRentDelayed = currentDate < DateTime.Now;
+                        var rentDelayedDays = isRentDelayed ? (DateTime.Now - currentDate).Days : 0;
+                        var rentPenaltyAmount = isRentDelayed ? CalculatePenalty(rentAmount, rentDelayedDays) : 0;
+                        var rentTotalAmount = rentAmount + rentPenaltyAmount;
+
+                        var rentPayment = new Payment
+                        {
+                            UserId = tenant.Id,
+                            ApartmentId = tenant.ApartmentId,
+                            PaymentType = "Rent",
+                            Amount = rentAmount,
+                            DueDate = currentDate,
+                            IsPaid = false,
+                            Description = $"{currentDate.ToString("MMMM yyyy")} Kira Ödemesi",
+                            DelayedDays = isRentDelayed ? rentDelayedDays : null,
+                            DelayPenaltyAmount = isRentDelayed ? rentPenaltyAmount : null,
+                            TotalAmount = rentTotalAmount
+                        };
+                        _paymentDal.Add(rentPayment);
+
+                        missingPayments.Add(new PaymentDto
+                        {
+                            Id = rentPayment.Id,
+                            UserId = tenant.Id,
+                            UserFullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
+                            PaymentType = "Rent",
+                            Amount = rentAmount,
+                            DueDate = currentDate,
+                            IsPaid = false,
+                            Description = $"{currentDate.ToString("MMMM yyyy")} Kira Ödemesi",
+                            DelayedDays = isRentDelayed ? rentDelayedDays : null,
+                            DelayPenaltyAmount = isRentDelayed ? rentPenaltyAmount : null,
+                            TotalAmount = rentTotalAmount,
+                            Status = isRentDelayed ? "Gecikmiş" : "Bekliyor",
+                            Month = currentDate.ToString("MMMM yyyy"),
+                            PaymentTypeTurkish = "Kira"
+                        });
+
+                        // Aidat ödemesi
+                        var duesAmount = building?.DuesAmount ?? tenant.MonthlyDues;
+                        var isDuesDelayed = currentDate < DateTime.Now;
+                        var duesDelayedDays = isDuesDelayed ? (DateTime.Now - currentDate).Days : 0;
+                        var duesPenaltyAmount = isDuesDelayed ? CalculatePenalty(duesAmount, duesDelayedDays) : 0;
+                        var duesTotalAmount = duesAmount + duesPenaltyAmount;
+
+                        var duesPayment = new Payment
+                        {
+                            UserId = tenant.Id,
+                            ApartmentId = tenant.ApartmentId,
+                            PaymentType = "Dues",
+                            Amount = duesAmount,
+                            DueDate = currentDate,
+                            IsPaid = false,
+                            Description = $"{currentDate.ToString("MMMM yyyy")} Aidat Ödemesi",
+                            DelayedDays = isDuesDelayed ? duesDelayedDays : null,
+                            DelayPenaltyAmount = isDuesDelayed ? duesPenaltyAmount : null,
+                            TotalAmount = duesTotalAmount
+                        };
+                        _paymentDal.Add(duesPayment);
+
+                        missingPayments.Add(new PaymentDto
+                        {
+                            Id = duesPayment.Id,
+                            UserId = tenant.Id,
+                            UserFullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
+                            PaymentType = "Dues",
+                            Amount = duesAmount,
+                            DueDate = currentDate,
+                            IsPaid = false,
+                            Description = $"{currentDate.ToString("MMMM yyyy")} Aidat Ödemesi",
+                            DelayedDays = isDuesDelayed ? duesDelayedDays : null,
+                            DelayPenaltyAmount = isDuesDelayed ? duesPenaltyAmount : null,
+                            TotalAmount = duesTotalAmount,
+                            Status = isDuesDelayed ? "Gecikmiş" : "Bekliyor",
+                            Month = currentDate.ToString("MMMM yyyy"),
+                            PaymentTypeTurkish = "Aidat"
+                        });
+                    }
+                    currentDate = currentDate.AddMonths(1);
+                }
+
+                // Tüm ödemeleri birleştir ve sırala
+                var allPaymentsWithMissing = allPayments.Concat(missingPayments)
+                    .OrderBy(p => p.DueDate)
+                    .ToList();
+
+                return allPaymentsWithMissing;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all payments for tenant {TenantId}", tenantId);
+                throw;
+            }
+        }
+
+        private string GetPaymentStatus(Payment payment, bool isDelayed)
+        {
+            if (payment.IsPaid)
+                return "Ödendi";
+            if (isDelayed)
+                return "Gecikmiş";
+            if (payment.DueDate <= DateTime.Now)
+                return "Vadesi Geçmiş";
+            return "Bekliyor";
+        }
+
+        public List<PaymentDto> GetCurrentMonthPayments(int tenantId)
+        {
+            try
+            {
+                var tenant = GetById(tenantId);
+                if (tenant == null)
+                    throw new KeyNotFoundException($"Tenant with ID {tenantId} not found.");
+
+                var currentDate = DateTime.Now;
+                var firstDayOfMonth = new DateTime(currentDate.Year, currentDate.Month, 1);
+                var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+                // Mevcut ayın ödemelerini al
+                var currentMonthPayments = _paymentDal.GetAll(p =>
+                    p.UserId == tenantId &&
+                    p.DueDate >= firstDayOfMonth &&
+                    p.DueDate <= lastDayOfMonth)
+                    .OrderBy(p => p.DueDate)
+                    .Select(p =>
+                    {
+                        // Gecikme kontrolü
+                        var isDelayed = p.DueDate < DateTime.Now && !p.IsPaid;
+                        var delayedDays = isDelayed ? (DateTime.Now - p.DueDate).Days : 0;
+                        var penaltyAmount = isDelayed ? CalculatePenalty(p.Amount, delayedDays) : 0;
+                        var totalAmount = p.Amount + penaltyAmount;
+
+                        // Ödeme durumu belirleme
+                        string status;
+                        if (p.IsPaid)
+                        {
+                            status = "Ödendi";
+                        }
+                        else if (p.DueDate < DateTime.Now)
+                        {
+                            status = "Gecikmiş";
+                        }
+                        else if (p.DueDate <= DateTime.Now)
+                        {
+                            status = "Vadesi Geçmiş";
+                        }
+                        else
+                        {
+                            status = "Bekliyor";
+                        }
+
+                        return new PaymentDto
+                        {
+                            Id = p.Id,
+                            UserId = tenant.Id,
+                            UserFullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
+                            PaymentType = p.PaymentType,
+                            Amount = p.Amount,
+                            PaymentDate = p.PaymentDate,
+                            DueDate = p.DueDate,
+                            IsPaid = p.IsPaid,
+                            Description = p.Description ?? string.Empty,
+                            DelayedDays = isDelayed ? delayedDays : null,
+                            DelayPenaltyAmount = isDelayed ? penaltyAmount : null,
+                            TotalAmount = totalAmount,
+                            Status = status,
+                            Month = p.DueDate.ToString("MMMM yyyy"),
+                            PaymentTypeTurkish = GetPaymentTypeTurkish(p.PaymentType)
+                        };
+                    })
+                    .ToList();
+
+                // Eğer mevcut ay için ödeme kaydı yoksa, yeni kayıtlar oluştur
+                if (!currentMonthPayments.Any())
+                {
+                    var contract = _contractDal.Get(c => c.TenantId == tenantId);
+                    var apartment = _apartmentDal.Get(a => a.Id == tenant.ApartmentId);
+                    var building = apartment != null ? _buildingDal.Get(b => b.Id == apartment.BuildingId) : null;
+
+                    // Kira ödemesi
+                    var rentAmount = contract?.RentAmount ?? tenant.MonthlyRent;
+                    var rentPayment = new Payment
+                    {
+                        UserId = tenant.Id,
+                        ApartmentId = tenant.ApartmentId,
+                        PaymentType = "Rent",
+                        Amount = rentAmount,
+                        DueDate = firstDayOfMonth,
+                        IsPaid = false,
+                        Description = $"{firstDayOfMonth.ToString("MMMM yyyy")} Kira Ödemesi"
+                    };
+                    _paymentDal.Add(rentPayment);
+
+                    currentMonthPayments.Add(new PaymentDto
+                    {
+                        Id = rentPayment.Id,
+                        UserId = tenant.Id,
+                        UserFullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
+                        PaymentType = "Rent",
+                        Amount = rentAmount,
+                        DueDate = firstDayOfMonth,
+                        IsPaid = false,
+                        Description = $"{firstDayOfMonth.ToString("MMMM yyyy")} Kira Ödemesi",
+                        Status = "Bekliyor",
+                        Month = firstDayOfMonth.ToString("MMMM yyyy"),
+                        PaymentTypeTurkish = "Kira"
+                    });
+
+                    // Aidat ödemesi
+                    var duesAmount = building?.DuesAmount ?? tenant.MonthlyDues;
+                    var duesPayment = new Payment
+                    {
+                        UserId = tenant.Id,
+                        ApartmentId = tenant.ApartmentId,
+                        PaymentType = "Dues",
+                        Amount = duesAmount,
+                        DueDate = firstDayOfMonth,
+                        IsPaid = false,
+                        Description = $"{firstDayOfMonth.ToString("MMMM yyyy")} Aidat Ödemesi"
+                    };
+                    _paymentDal.Add(duesPayment);
+
+                    currentMonthPayments.Add(new PaymentDto
+                    {
+                        Id = duesPayment.Id,
+                        UserId = tenant.Id,
+                        UserFullName = $"{tenant.FirstName} {tenant.LastName}".Trim(),
+                        PaymentType = "Dues",
+                        Amount = duesAmount,
+                        DueDate = firstDayOfMonth,
+                        IsPaid = false,
+                        Description = $"{firstDayOfMonth.ToString("MMMM yyyy")} Aidat Ödemesi",
+                        Status = "Bekliyor",
+                        Month = firstDayOfMonth.ToString("MMMM yyyy"),
+                        PaymentTypeTurkish = "Aidat"
+                    });
+                }
+
+                return currentMonthPayments;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting current month payments for tenant {TenantId}", tenantId);
+                throw;
             }
         }
     }
