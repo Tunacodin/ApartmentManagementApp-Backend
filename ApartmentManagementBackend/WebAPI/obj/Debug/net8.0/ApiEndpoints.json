@@ -1630,8 +1630,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "meeting",
-        "Type": "Entities.Concrete.Meeting",
+        "Name": "meetingDto",
+        "Type": "Entities.DTOs.MeetingCreateDto",
         "IsRequired": true
       }
     ],
@@ -1683,8 +1683,66 @@
         "IsRequired": true
       },
       {
-        "Name": "reason",
-        "Type": "System.String",
+        "Name": "cancellationDto",
+        "Type": "Entities.DTOs.MeetingCancellationDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.MeetingController",
+    "Method": "AddParticipants",
+    "RelativePath": "api/Meeting/{id}/participants",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "participantIds",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.MeetingController",
+    "Method": "GetParticipants",
+    "RelativePath": "api/Meeting/{id}/participants",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.MeetingController",
+    "Method": "RemoveParticipant",
+    "RelativePath": "api/Meeting/{id}/participants/{participantId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "participantId",
+        "Type": "System.Int32",
         "IsRequired": true
       }
     ],
@@ -1747,8 +1805,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "notification",
-        "Type": "Entities.Concrete.Notification",
+        "Name": "notificationDto",
+        "Type": "Entities.DTOs.NotificationCreateDto",
         "IsRequired": true
       }
     ],
@@ -1782,6 +1840,32 @@
         "Name": "notificationId",
         "Type": "System.Int32",
         "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebAPI.Controllers.NotificationController",
+    "Method": "GetBuildingNotifications",
+    "RelativePath": "api/Notification/building/{buildingId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "buildingId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []

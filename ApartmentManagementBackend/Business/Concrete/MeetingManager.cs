@@ -64,16 +64,63 @@ namespace Business.Concrete
             }
         }
 
-        public async Task<ApiResponse<Meeting>> CreateMeetingAsync(Meeting meeting)
+        public async Task<ApiResponse<Meeting>> CreateMeetingAsync(MeetingCreateDto meetingDto)
         {
             try
             {
+                _logger.LogInformation("Creating new meeting with title: {Title}", meetingDto.Title);
+
+                // Validation
+                if (meetingDto.MeetingDate <= DateTime.Now)
+                {
+                    return ApiResponse<Meeting>.ErrorResult("Toplantı tarihi geçmiş bir tarih olamaz.");
+                }
+
+                if (string.IsNullOrWhiteSpace(meetingDto.Title))
+                {
+                    return ApiResponse<Meeting>.ErrorResult("Toplantı başlığı gereklidir.");
+                }
+
+                if (string.IsNullOrWhiteSpace(meetingDto.Location))
+                {
+                    return ApiResponse<Meeting>.ErrorResult("Toplantı lokasyonu gereklidir.");
+                }
+
+                var meeting = new Meeting
+                {
+                    BuildingId = meetingDto.BuildingId,
+                    Title = meetingDto.Title,
+                    Description = meetingDto.Description,
+                    MeetingDate = meetingDto.MeetingDate,
+                    CreatedAt = DateTime.Now,
+                    OrganizedById = meetingDto.OrganizedById,
+                    OrganizedByName = meetingDto.OrganizedByName,
+                    Location = meetingDto.Location,
+                    Status = "Scheduled", // Varsayılan durum
+                    IsCancelled = false,  // Varsayılan değer
+                    CancellationReason = string.Empty // İptal edilmemiş toplantılar için boş
+                };
+
+                _logger.LogInformation("Meeting object created with ID: {Id}", meeting.Id);
+
                 await _meetingDal.AddAsync(meeting);
+                _logger.LogInformation("Meeting successfully added to database with ID: {Id}", meeting.Id);
+
                 return ApiResponse<Meeting>.SuccessResult(Messages.MeetingAdded, meeting);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating meeting");
+                _logger.LogError(ex, "Error creating meeting. Details: BuildingId: {BuildingId}, Title: {Title}, OrganizedById: {OrganizedById}, Error: {ErrorMessage}",
+                    meetingDto.BuildingId,
+                    meetingDto.Title,
+                    meetingDto.OrganizedById,
+                    ex.Message);
+
+                if (ex.InnerException != null)
+                {
+                    _logger.LogError("Inner exception: {InnerException}", ex.InnerException.Message);
+                }
+
                 return ApiResponse<Meeting>.ErrorResult(Messages.UnexpectedError);
             }
         }
@@ -343,6 +390,66 @@ namespace Business.Concrete
             {
                 _logger.LogError(ex, "Error getting meetings by tenant ID");
                 return new List<MeetingDto>();
+            }
+        }
+
+        public async Task<ApiResponse<bool>> AddParticipantsAsync(int meetingId, List<int> participantIds)
+        {
+            try
+            {
+                var meeting = await _meetingDal.GetByIdAsync(meetingId);
+                if (meeting == null)
+                    return ApiResponse<bool>.ErrorResult(Messages.MeetingNotFound);
+
+                // TODO: Implement participant addition logic
+                // This would typically involve adding records to a MeetingParticipants table
+                // For now, we'll just return success
+                return ApiResponse<bool>.SuccessResult(Messages.ParticipantsAdded, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding participants to meeting");
+                return ApiResponse<bool>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<bool>> RemoveParticipantAsync(int meetingId, int participantId)
+        {
+            try
+            {
+                var meeting = await _meetingDal.GetByIdAsync(meetingId);
+                if (meeting == null)
+                    return ApiResponse<bool>.ErrorResult(Messages.MeetingNotFound);
+
+                // TODO: Implement participant removal logic
+                // This would typically involve removing a record from a MeetingParticipants table
+                // For now, we'll just return success
+                return ApiResponse<bool>.SuccessResult(Messages.ParticipantRemoved, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing participant from meeting");
+                return ApiResponse<bool>.ErrorResult(Messages.UnexpectedError);
+            }
+        }
+
+        public async Task<ApiResponse<List<MeetingParticipantDto>>> GetParticipantsAsync(int meetingId)
+        {
+            try
+            {
+                var meeting = await _meetingDal.GetByIdAsync(meetingId);
+                if (meeting == null)
+                    return ApiResponse<List<MeetingParticipantDto>>.ErrorResult(Messages.MeetingNotFound);
+
+                // TODO: Implement getting participants logic
+                // This would typically involve querying a MeetingParticipants table
+                // For now, we'll return an empty list
+                return ApiResponse<List<MeetingParticipantDto>>.SuccessResult(Messages.Success, new List<MeetingParticipantDto>());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting meeting participants");
+                return ApiResponse<List<MeetingParticipantDto>>.ErrorResult(Messages.UnexpectedError);
             }
         }
     }

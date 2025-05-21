@@ -170,5 +170,8 @@ namespace Core.Constants
         public const string SurveyResponseSubmitted = "Survey response submitted successfully";
         public const string ActivitiesListed = "Aktiviteler başarıyla listelendi";
         public const string SurveysListed = "Anketler başarıyla listelendi";
+
+        public const string ParticipantsAdded = "Katılımcılar başarıyla eklendi.";
+        public const string ParticipantRemoved = "Katılımcı başarıyla kaldırıldı.";
     }
 }

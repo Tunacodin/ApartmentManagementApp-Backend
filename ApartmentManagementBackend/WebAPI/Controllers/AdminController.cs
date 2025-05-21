@@ -363,7 +363,9 @@ namespace WebAPI.Controllers
                         UserId = c.UserId,
                         Status = c.Status,
                         CreatedByName = c.CreatedByName ?? string.Empty,
-                        ProfileImageUrl = c.ProfileImageUrl ?? string.Empty
+                        ProfileImageUrl = c.ProfileImageUrl ?? string.Empty,
+                        ApartmentId = c.ApartmentId,
+                        ApartmentNumber = c.ApartmentNumber
                     }).ToList() ?? new List<ComplaintWithUserDto>(),
 
                     MostComplainedBuilding = building != null ? new MostComplainedBuildingDto

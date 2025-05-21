@@ -58,5 +58,15 @@ namespace DataAccess.Concrete.EntityFramework
                 .Take(pageSize)
                 .ToListAsync();
         }
+
+        public async Task<List<Notification>> GetNotificationsByBuildingIdAsync(int buildingId, int page = 1, int pageSize = 10)
+        {
+            return await _context.Notifications
+                .Where(n => n.UserId == 0) // Bina geneli bildirimler için UserId = 0
+                .OrderByDescending(n => n.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
     }
-} 
+}

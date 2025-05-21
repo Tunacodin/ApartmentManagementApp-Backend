@@ -1,14 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Business.Abstract;
 using Entities.Concrete;
+using Entities.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-   
-
     public class NotificationController : ControllerBase
     {
         private readonly INotificationService _notificationService;
@@ -24,6 +23,13 @@ namespace WebAPI.Controllers
         public async Task<IActionResult> GetUserNotifications(int userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             var result = await _notificationService.GetUserNotificationsAsync(userId, page, pageSize);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpGet("building/{buildingId}")]
+        public async Task<IActionResult> GetBuildingNotifications(int buildingId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var result = await _notificationService.GetBuildingNotificationsAsync(buildingId, page, pageSize);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
@@ -56,10 +62,15 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Notification notification)
+        public async Task<IActionResult> Create([FromBody] NotificationCreateDto notificationDto)
         {
-            var result = await _notificationService.CreateNotificationAsync(notification);
-            return result.Success ? CreatedAtAction(nameof(GetUserNotifications), new { userId = notification.UserId }, result) : BadRequest(result);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _notificationService.CreateBuildingNotificationsAsync(notificationDto);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpDelete("{id}")]
@@ -69,4 +80,4 @@ namespace WebAPI.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
     }
-} 
+}

@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using System.Transactions;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace Business.Concrete
 {
@@ -944,7 +945,7 @@ namespace Business.Concrete
             return payments;
         }
 
-        public PaymentResultDto MakePayment(int tenantId, int paymentId, PaymentRequestDto paymentRequest)
+        public async Task<PaymentResultDto> MakePayment(int tenantId, int paymentId, PaymentRequestDto paymentRequest)
         {
             var tenant = GetById(tenantId);
             if (tenant == null)
@@ -978,17 +979,17 @@ namespace Business.Concrete
                 _paymentDal.Update(payment);
 
                 // Admin'e bildirim gönder
-                var notification = new Notification
+                var apartment = _apartmentDal.Get(a => a.Id == payment.ApartmentId);
+                var notificationDto = new NotificationCreateDto
                 {
                     Title = $"Yeni {GetPaymentTypeTurkish(payment.PaymentType)} Ödemesi",
                     Message = $"{tenant.FirstName} {tenant.LastName} tarafından {GetPaymentTypeTurkish(payment.PaymentType)} ödemesi yapıldı. " +
                         $"{(isDelayed ? $"Gecikme: {delayedDays} gün, Ceza: {penaltyAmount} TL, " : "")}" +
                         $"Toplam: {totalAmount} TL",
-                    UserId = tenant.AdminId ?? 0,
-                    CreatedAt = DateTime.Now,
-                    IsRead = false
+                    BuildingIds = new List<int> { apartment.BuildingId },
+                    CreatedByAdminId = tenant.AdminId ?? 1
                 };
-                _notificationService.CreateNotificationAsync(notification);
+                await _notificationService.CreateBuildingNotificationsAsync(notificationDto);
 
                 return new PaymentResultDto
                 {

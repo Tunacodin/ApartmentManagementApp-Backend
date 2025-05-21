@@ -18,7 +18,7 @@ namespace Business.Abstract
         Task<ApiResponse<List<MeetingDetailDto>>> GetBuildingMeetingsAsync(int buildingId);
         Task<ApiResponse<MeetingDetailDto>> GetMeetingDetailAsync(int meetingId);
         Task<ApiResponse<List<MeetingDetailDto>>> GetUpcomingMeetingsAsync(int buildingId);
-        Task<ApiResponse<Meeting>> CreateMeetingAsync(Meeting meeting);
+        Task<ApiResponse<Meeting>> CreateMeetingAsync(MeetingCreateDto meetingDto);
         Task<ApiResponse<bool>> CancelMeetingAsync(int meetingId, string reason);
         Task<ApiResponse<bool>> DeleteMeetingAsync(int meetingId);
         Task<ApiResponse<int>> GetUpcomingMeetingsCountAsync(int buildingId);
@@ -27,5 +27,8 @@ namespace Business.Abstract
         void Add(MeetingDto meeting);
         void Update(MeetingDto meeting);
         List<MeetingDto> GetMeetingsByTenantId(int tenantId);
+        Task<ApiResponse<bool>> AddParticipantsAsync(int meetingId, List<int> participantIds);
+        Task<ApiResponse<bool>> RemoveParticipantAsync(int meetingId, int participantId);
+        Task<ApiResponse<List<MeetingParticipantDto>>> GetParticipantsAsync(int meetingId);
     }
 }

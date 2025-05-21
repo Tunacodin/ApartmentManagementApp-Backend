@@ -89,35 +89,68 @@ namespace Business.Concrete
             }
         }
 
-        public async Task<ApiResponse<Notification>> CreateNotificationAsync(Notification notification)
+        public async Task<ApiResponse<Notification>> CreateBuildingNotificationsAsync(NotificationCreateDto notificationDto)
         {
             try
             {
-                await _notificationDal.AddAsync(notification);
-                return ApiResponse<Notification>.SuccessResult(Messages.NotificationCreated, notification);
+                Notification lastCreatedNotification = null;
+
+                // Eğer BuildingIds listesi boşsa, tek kullanıcıya bildirim gönder
+                if (notificationDto.BuildingIds == null || !notificationDto.BuildingIds.Any())
+                {
+                    var notification = new Notification
+                    {
+                        Title = notificationDto.Title,
+                        Message = notificationDto.Message,
+                        CreatedByAdminId = notificationDto.CreatedByAdminId,
+                        CreatedAt = DateTime.Now,
+                        IsRead = false,
+                        UserId = 0 // Tüm kullanıcılar için
+                    };
+
+                    await _notificationDal.AddAsync(notification);
+                    lastCreatedNotification = notification;
+                }
+                else
+                {
+                    // Her bina için ayrı bildirim oluştur
+                    foreach (var buildingId in notificationDto.BuildingIds)
+                    {
+                        var notification = new Notification
+                        {
+                            Title = notificationDto.Title,
+                            Message = notificationDto.Message,
+                            CreatedByAdminId = notificationDto.CreatedByAdminId,
+                            CreatedAt = DateTime.Now,
+                            IsRead = false,
+                            UserId = 0 // Bina geneli bildirimler için UserId = 0
+                        };
+
+                        await _notificationDal.AddAsync(notification);
+                        lastCreatedNotification = notification;
+                    }
+                }
+
+                return ApiResponse<Notification>.SuccessResult(Messages.NotificationCreated, lastCreatedNotification);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating notification");
+                _logger.LogError(ex, "Error creating building notifications");
                 return ApiResponse<Notification>.ErrorResult(Messages.UnexpectedError);
             }
         }
 
-        public async Task<ApiResponse<bool>> DeleteNotificationAsync(int notificationId)
+        public async Task<ApiResponse<List<Notification>>> GetBuildingNotificationsAsync(int buildingId, int page = 1, int pageSize = 10)
         {
             try
             {
-                var notification = await _notificationDal.GetByIdAsync(notificationId);
-                if (notification == null)
-                    return ApiResponse<bool>.ErrorResult(Messages.NotificationNotFound);
-
-                await _notificationDal.DeleteAsync(notification);
-                return ApiResponse<bool>.SuccessResult(Messages.NotificationDeleted, true);
+                var notifications = await _notificationDal.GetNotificationsByBuildingIdAsync(buildingId, page, pageSize);
+                return ApiResponse<List<Notification>>.SuccessResult(Messages.NotificationsListed, notifications);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting notification");
-                return ApiResponse<bool>.ErrorResult(Messages.UnexpectedError);
+                _logger.LogError(ex, "Error getting building notifications for buildingId: {BuildingId}", buildingId);
+                return ApiResponse<List<Notification>>.ErrorResult(Messages.UnexpectedError);
             }
         }
 
@@ -244,6 +277,24 @@ namespace Business.Concrete
             {
                 _logger.LogError(ex, "Error marking notification as read");
                 throw;
+            }
+        }
+
+        public async Task<ApiResponse<bool>> DeleteNotificationAsync(int notificationId)
+        {
+            try
+            {
+                var notification = await _notificationDal.GetByIdAsync(notificationId);
+                if (notification == null)
+                    return ApiResponse<bool>.ErrorResult(Messages.NotificationNotFound);
+
+                await _notificationDal.DeleteAsync(notification);
+                return ApiResponse<bool>.SuccessResult(Messages.NotificationDeleted, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting notification");
+                return ApiResponse<bool>.ErrorResult(Messages.UnexpectedError);
             }
         }
     }

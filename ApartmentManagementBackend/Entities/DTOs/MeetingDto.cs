@@ -58,5 +58,6 @@ namespace Entities.DTOs
         public string FullName { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
         public bool HasAttended { get; set; }
+        public List<int> ParticipantIds { get; set; } = new();
     }
 }

@@ -16,6 +16,5 @@ namespace Entities.Concrete
         public string Status { get; set; } = string.Empty;
         public bool IsCancelled { get; set; }
         public string CancellationReason { get; set; } = string.Empty;
-        public double AttendanceRate { get; set; }
     }
 }

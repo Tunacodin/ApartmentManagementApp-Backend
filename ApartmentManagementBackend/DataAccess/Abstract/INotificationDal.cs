@@ -12,5 +12,6 @@ namespace DataAccess.Abstract
         Task MarkAsReadAsync(int notificationId);
         Task MarkAllAsReadAsync(int userId);
         Task<List<Notification>> GetNotificationsByUserIdAsync(int userId, int page = 1, int pageSize = 10);
+        Task<List<Notification>> GetNotificationsByBuildingIdAsync(int buildingId, int page = 1, int pageSize = 10);
     }
 }

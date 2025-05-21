@@ -16,5 +16,7 @@ namespace Entities.DTOs
         public string CreatedByName { get; set; }
         public string UserFullName { get; set; }
         public string ProfileImageUrl { get; set; }
+        public int ApartmentId { get; set; }
+        public int ApartmentNumber { get; set; }
     }
 }

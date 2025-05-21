@@ -6,6 +6,7 @@ using System;
 using System.Threading.Tasks;
 using Entities.DTOs;
 using Entities.Enums;
+using System.Collections.Generic;
 
 namespace WebAPI.Controllers
 {
@@ -192,17 +193,15 @@ namespace WebAPI.Controllers
                 }
 
                 // Tenant'a bildirim gönder
-                var notification = new Notification
+                var notification = new NotificationCreateDto
                 {
                     Title = "Şikayetiniz İşleme Alındı",
                     Message = $"'{complaintDetail.Data.Subject}' başlıklı şikayetiniz işleme alındı",
-                    UserId = complaintDetail.Data.UserId,
                     CreatedByAdminId = adminId,
-                    CreatedAt = DateTime.Now,
-                    IsRead = false
+                    BuildingIds = new List<int> { complaintDetail.Data.BuildingId }
                 };
 
-                await _notificationService.CreateNotificationAsync(notification);
+                await _notificationService.CreateBuildingNotificationsAsync(notification);
                 _logger.LogInformation($"Complaint {id} processed successfully");
 
                 return Ok(result);
@@ -253,17 +252,15 @@ namespace WebAPI.Controllers
                 }
 
                 // Tenant'a bildirim gönder
-                var notification = new Notification
+                var notification = new NotificationCreateDto
                 {
                     Title = "Şikayetiniz Çözüldü",
                     Message = $"'{complaintDetail.Data.Subject}' başlıklı şikayetiniz çözüldü.",
-                    UserId = complaintDetail.Data.UserId,
                     CreatedByAdminId = adminId,
-                    CreatedAt = DateTime.Now,
-                    IsRead = false
+                    BuildingIds = new List<int> { complaintDetail.Data.BuildingId }
                 };
 
-                await _notificationService.CreateNotificationAsync(notification);
+                await _notificationService.CreateBuildingNotificationsAsync(notification);
                 _logger.LogInformation($"Complaint {id} resolved successfully");
 
                 return Ok(result);
@@ -299,17 +296,15 @@ namespace WebAPI.Controllers
                 }
 
                 // Tenant'a bildirim gönder
-                var notification = new Notification
+                var notification = new NotificationCreateDto
                 {
                     Title = "Şikayetiniz Reddedildi",
                     Message = $"'{complaintDetail.Data.Subject}' başlıklı şikayetiniz reddedildi. Sebep: {rejectDto.Reason}",
-                    UserId = complaintDetail.Data.UserId,
                     CreatedByAdminId = adminId,
-                    CreatedAt = DateTime.Now,
-                    IsRead = false
+                    BuildingIds = new List<int> { complaintDetail.Data.BuildingId }
                 };
 
-                await _notificationService.CreateNotificationAsync(notification);
+                await _notificationService.CreateBuildingNotificationsAsync(notification);
                 _logger.LogInformation($"Complaint {id} rejected successfully");
 
                 return Ok(result);

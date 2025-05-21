@@ -272,17 +272,33 @@ namespace DataAccess.Concrete.EntityFramework
                 .Join(_context.Users,
                     c => c.UserId,
                     u => u.Id,
-                    (c, u) => new ComplaintWithUserDto
+                    (c, u) => new { Complaint = c, User = u })
+                .GroupJoin(_context.Tenants,
+                    x => x.User.Id,
+                    t => t.Id,
+                    (x, t) => new { x.Complaint, x.User, Tenants = t })
+                .SelectMany(
+                    x => x.Tenants.DefaultIfEmpty(),
+                    (x, t) => new { x.Complaint, x.User, Tenant = t })
+                .GroupJoin(_context.Apartments,
+                    x => x.Tenant != null ? x.Tenant.ApartmentId : 0,
+                    a => a.Id,
+                    (x, a) => new { x.Complaint, x.User, x.Tenant, Apartments = a })
+                .SelectMany(
+                    x => x.Apartments.DefaultIfEmpty(),
+                    (x, a) => new ComplaintWithUserDto
                     {
-                        Id = c.Id,
-                        Subject = c.Subject,
-                        Description = c.Description ?? string.Empty,
-                        CreatedAt = c.CreatedAt,
-                        BuildingId = c.BuildingId,
-                        UserId = c.UserId,
-                        Status = c.Status ?? 0,
-                        CreatedByName = $"{u.FirstName ?? string.Empty} {u.LastName ?? string.Empty}",
-                        ProfileImageUrl = u.ProfileImageUrl ?? string.Empty
+                        Id = x.Complaint.Id,
+                        Subject = x.Complaint.Subject,
+                        Description = x.Complaint.Description ?? string.Empty,
+                        CreatedAt = x.Complaint.CreatedAt,
+                        BuildingId = x.Complaint.BuildingId,
+                        UserId = x.Complaint.UserId,
+                        Status = x.Complaint.Status ?? 0,
+                        CreatedByName = $"{x.User.FirstName ?? string.Empty} {x.User.LastName ?? string.Empty}",
+                        ProfileImageUrl = x.User.ProfileImageUrl ?? string.Empty,
+                        ApartmentId = x.Tenant != null ? x.Tenant.ApartmentId : 0,
+                        ApartmentNumber = a != null ? a.UnitNumber : 0
                     })
                 .ToListAsync();
         }

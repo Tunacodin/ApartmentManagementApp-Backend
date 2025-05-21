@@ -3,6 +3,7 @@ using Entities.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace Business.Abstract
 {
@@ -29,7 +30,7 @@ namespace Business.Abstract
         List<SurveyDto> GetActiveSurveys(int tenantId);
         List<ComplaintDto> GetRecentComplaints(int tenantId);
         List<PaymentDto> GetNextPayments(int tenantId);
-        PaymentResultDto MakePayment(int tenantId, int paymentId, PaymentRequestDto paymentRequest);
+        Task<PaymentResultDto> MakePayment(int tenantId, int paymentId, PaymentRequestDto paymentRequest);
         List<TenantListDto>? GetTenantsByBuilding(int buildingId);
     }
 }
